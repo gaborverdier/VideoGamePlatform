@@ -1,0 +1,38 @@
+# Gradle
+.gradle/
+build/
+
+# Java
+*.class
+
+# Kotlin
+*.kt~
+
+# Logs
+*.log
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Docker
+**/docker-compose.override.yml
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Generated files
+out/
+*.jar
+*.war
+*.ear
+
+# Avro generated classes
+common/avro-schemas/build/
+
+# Node.js
+node_modules/
