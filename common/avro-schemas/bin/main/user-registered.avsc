@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.events",
+  "name": "UserRegistered",
+  "fields": [
+    { "name": "userId", "type": "string" },
+    { "name": "username", "type": "string" },
+    { "name": "email", "type": "string" },
+    { "name": "registrationTimestamp", "type": "long" }
+  ]
+}
