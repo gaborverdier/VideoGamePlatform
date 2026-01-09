@@ -1,6 +1,8 @@
 plugins {
     application
     java
+    id("org.springframework.boot") version "3.4.1"
+    id("io.spring.dependency-management") version "1.1.7"
 }
 
 repositories {
@@ -17,9 +19,16 @@ dependencies {
     implementation("io.confluent:kafka-avro-serializer:7.8.3")
     implementation("org.apache.avro:avro:1.11.3")
 
-    //API
-    implementation("")
-
+    //API - Spring Boot
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
+    
+    // Base de données (H2 pour dev/test, commentez si vous utilisez une autre DB)
+    runtimeOnly("com.h2database:h2")
+    
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(libs.junit)
 }
 
@@ -31,5 +40,5 @@ java {
 }
 
 application {
-    mainClass = "org.example.App"
+    mainClass = "com.vgp.App"
 }
