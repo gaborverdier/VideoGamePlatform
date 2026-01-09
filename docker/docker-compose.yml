@@ -32,6 +32,20 @@ services:
     networks:
       - app-net
 
+  kafka-init:
+    image: confluentinc/cp-kafka:7.8.3
+    container_name: kafka-init
+    depends_on:
+      - kafka
+    networks:
+      - app-net
+    volumes:
+      - ../scripts:/scripts:ro
+    environment:
+      BOOTSTRAP_SERVER: "kafka:29092"
+    entrypoint: ["/bin/bash", "/scripts/create-topics.sh"]
+    restart: "no"
+
   schema-registry:
     image: confluentinc/cp-schema-registry:7.8.3
     hostname: schema-registry
