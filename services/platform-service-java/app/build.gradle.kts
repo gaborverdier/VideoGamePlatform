@@ -17,6 +17,9 @@ dependencies {
     implementation("io.confluent:kafka-avro-serializer:7.8.3")
     implementation("org.apache.avro:avro:1.11.3")
 
+    //API
+    implementation("")
+
     testImplementation(libs.junit)
 }
 

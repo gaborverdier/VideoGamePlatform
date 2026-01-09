@@ -1,0 +1,61 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.events",
+  "name": "GameCrashReportedEvent",
+  "doc": "Événement émis lorsqu'un crash de jeu est détecté",
+  "fields": [
+    {
+      "name": "crashId",
+      "type": "string",
+      "doc": "Identifiant unique du crash"
+    },
+    {
+      "name": "gameId",
+      "type": "string",
+      "doc": "Identifiant du jeu concerné"
+    },
+    {
+      "name": "gameTitle",
+      "type": "string",
+      "doc": "Titre du jeu"
+    },
+    {
+      "name": "errorCode",
+      "type": "string",
+      "doc": "Code d'erreur technique"
+    },
+    {
+      "name": "errorMessage",
+      "type": "string",
+      "doc": "Message d'erreur détaillé"
+    },
+    {
+      "name": "stackTrace",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Stack trace complet (optionnel)"
+    },
+    {
+      "name": "platform",
+      "type": "string",
+      "doc": "Plateforme où le crash s'est produit"
+    },
+    {
+      "name": "gameVersion",
+      "type": "string",
+      "doc": "Version du jeu lors du crash"
+    },
+    {
+      "name": "crashTimestamp",
+      "type": "long",
+      "doc": "Timestamp du crash (epoch milliseconds)"
+    },
+    {
+      "name": "userId",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "ID de l'utilisateur affecté (optionnel)"
+    }
+  ]
+}
+
