@@ -51,11 +51,6 @@ public class PurchaseService {
             User user = userRepository.findById(request.getUserId())
                     .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + request.getUserId()));
             
-            // Validate price
-            if (request.getPrice() < 0) {
-                throw new IllegalArgumentException("Price must not be negative");
-            }
-            
             // Save purchase to database
             Purchase purchase = new Purchase(
                 user,

@@ -35,7 +35,6 @@ public class Purchase {
         this.currency = currency;
         this.platform = platform;
         this.paymentMethod = paymentMethod;
-        this.purchaseTimestamp = Instant.now();
     }
     
     @PrePersist

@@ -18,7 +18,7 @@ public class Patch {
     @Column(length = 2000)
     private String content;
 
-    private Instant releasedAt = Instant.now();
+    private Instant releasedAt;
 
     public Patch() {}
 
@@ -26,6 +26,13 @@ public class Patch {
         this.game = game;
         this.version = version;
         this.content = content;
+    }
+    
+    @PrePersist
+    protected void onCreate() {
+        if (releasedAt == null) {
+            releasedAt = Instant.now();
+        }
     }
 
     // getters & setters

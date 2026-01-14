@@ -15,7 +15,7 @@ public class PurchaseRequest {
     
     @JsonProperty("price")
     @NotNull(message = "Price is required")
-    @Min(value = 0, message = "Price must not be negative")
+    @Min(value = 0, message = "Price cannot be negative")
     private Double price;
     
     @JsonProperty("platform")
