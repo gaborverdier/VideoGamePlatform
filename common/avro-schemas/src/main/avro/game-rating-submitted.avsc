@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.events",
+  "name": "GameRatingSubmittedEvent",
+  "doc": "Event emitted when a player rates a game",
+  "fields": [
+    {"name": "ratingId", "type": "string", "doc": "Unique rating ID"},
+    {"name": "userId", "type": "string", "doc": "User ID"},
+    {"name": "gameId", "type": "string", "doc": "Game ID"},
+    {"name": "rating", "type": "int", "doc": "Rating value (1-5)"},
+    {"name": "review", "type": ["null", "string"], "default": null, "doc": "Optional review text"},
+    {"name": "submittedTimestamp", "type": "long", "doc": "Submission timestamp"}
+  ]
+}

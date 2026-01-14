@@ -13,21 +13,24 @@ repositories {
 }
 
 dependencies {
-    implementation("org.apache.kafka:kafka-clients:7.8.3-ce")
-
-    // Avro + Schema Registry
-    implementation("io.confluent:kafka-avro-serializer:7.8.3")
-    implementation("org.apache.avro:avro:1.11.3")
-
-    //API - Spring Boot
+    // Spring Boot Starters
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
     
-    // Base de données (H2 pour dev/test, commentez si vous utilisez une autre DB)
+    // Kafka + Avro + Schema Registry
+    implementation("org.apache.kafka:kafka-clients:3.6.1")
+    implementation("io.confluent:kafka-avro-serializer:7.5.3")
+    implementation("org.apache.avro:avro:1.11.3")
+    
+    // Database (H2 for development)
     runtimeOnly("com.h2database:h2")
     
+    // Avro Schemas project dependency
+    implementation(files("../../../common/avro-schemas/build/libs/avro-schemas-1.0.0.jar"))
+    
+    // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(libs.junit)
 }
@@ -35,10 +38,10 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(23)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
 application {
-    mainClass = "com.vgp.App"
+    mainClass = "com.vgp.PlatformServiceApplication"
 }

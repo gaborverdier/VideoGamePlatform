@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.events",
+  "name": "GamePurchasedEvent",
+  "doc": "Event emitted when a user purchases a game",
+  "fields": [
+    {"name": "purchaseId", "type": "string", "doc": "Unique purchase ID"},
+    {"name": "userId", "type": "string", "doc": "User ID"},
+    {"name": "gameId", "type": "string", "doc": "Game ID"},
+    {"name": "gameTitle", "type": "string", "doc": "Game title"},
+    {"name": "price", "type": "double", "doc": "Purchase price"},
+    {"name": "currency", "type": "string", "default": "USD", "doc": "Currency code"},
+    {"name": "platform", "type": "string", "doc": "Platform (PC, PS5, Xbox, etc.)"},
+    {"name": "purchaseTimestamp", "type": "long", "doc": "Purchase timestamp (epoch ms)"},
+    {"name": "paymentMethod", "type": ["null", "string"], "default": null, "doc": "Payment method (optional)"}
+  ]
+}
