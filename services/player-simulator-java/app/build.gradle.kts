@@ -1,32 +1,23 @@
 plugins {
-    application
-    java
+    id("application")
+    id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
 repositories {
     mavenCentral()
-    maven {
-        url = uri("https://packages.confluent.io/maven/")
-    }
+}
+
+javafx {
+    version = "23"
+    modules = listOf("javafx.controls", "javafx.fxml", "javafx.graphics")
 }
 
 dependencies {
-    implementation("org.apache.kafka:kafka-clients:7.8.3-ce")
-
-    // Avro + Schema Registry
-    implementation("io.confluent:kafka-avro-serializer:7.8.3")
-    implementation("org.apache.avro:avro:1.11.3")
-
-    testImplementation(libs.junit)
-}
-
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(23)
-    }
+    implementation("org.apache.kafka:kafka-clients:3.6.0")
+    implementation("org.slf4j:slf4j-simple:2.0.7")
+    implementation("net.datafaker:datafaker:2.0.2")
 }
 
 application {
-    mainClass = "org.example.App"
+    mainClass.set("org.example.Launcher") 
 }
