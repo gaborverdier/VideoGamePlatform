@@ -1,6 +1,7 @@
 package com.vgp.game;
 
-// import com.vgp.game.Game;
+import com.vgp.shared.entity.Game;
+import com.vgp.shared.repository.GameRepository;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
