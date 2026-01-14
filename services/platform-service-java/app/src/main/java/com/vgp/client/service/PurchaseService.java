@@ -52,8 +52,8 @@ public class PurchaseService {
                     .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + request.getUserId()));
             
             // Validate price
-            if (request.getPrice() <= 0) {
-                throw new IllegalArgumentException("Price must be greater than 0");
+            if (request.getPrice() < 0) {
+                throw new IllegalArgumentException("Price must not be negative");
             }
             
             // Save purchase to database

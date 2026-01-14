@@ -24,7 +24,7 @@ public class Purchase {
     private String paymentMethod;
     
     @Column(name = "purchase_timestamp")
-    private Instant purchaseTimestamp = Instant.now();
+    private Instant purchaseTimestamp;
     
     public Purchase() {}
     
@@ -35,6 +35,14 @@ public class Purchase {
         this.currency = currency;
         this.platform = platform;
         this.paymentMethod = paymentMethod;
+        this.purchaseTimestamp = Instant.now();
+    }
+    
+    @PrePersist
+    protected void onCreate() {
+        if (purchaseTimestamp == null) {
+            purchaseTimestamp = Instant.now();
+        }
     }
     
     // Getters and setters
