@@ -1,61 +1,44 @@
 {
   "type": "record",
-  "namespace": "com.gaming.events",
-  "name": "GameCrashReportedEvent",
-  "doc": "Événement émis lorsqu'un crash de jeu est détecté",
-  "fields": [
+  "namespace": "com.gaming. events",
+  "name": "GameCrashReported",
+  "doc": "Event published when a game crash is reported",
+  "fields":  [
     {
       "name": "crashId",
       "type": "string",
-      "doc": "Identifiant unique du crash"
+      "doc": "Unique identifier for the crash report"
+    },
+    {
+      "name": "userId",
+      "type": "string",
+      "doc": "User who experienced the crash"
     },
     {
       "name": "gameId",
       "type": "string",
-      "doc": "Identifiant du jeu concerné"
-    },
-    {
-      "name": "gameTitle",
-      "type": "string",
-      "doc": "Titre du jeu"
-    },
-    {
-      "name": "errorCode",
-      "type": "string",
-      "doc": "Code d'erreur technique"
-    },
-    {
-      "name": "errorMessage",
-      "type": "string",
-      "doc": "Message d'erreur détaillé"
-    },
-    {
-      "name": "stackTrace",
-      "type": ["null", "string"],
-      "default": null,
-      "doc": "Stack trace complet (optionnel)"
-    },
-    {
-      "name": "platform",
-      "type": "string",
-      "doc": "Plateforme où le crash s'est produit"
+      "doc": "Game that crashed"
     },
     {
       "name": "gameVersion",
       "type": "string",
-      "doc": "Version du jeu lors du crash"
+      "doc": "Version of the game"
+    },
+    {
+      "name": "platform",
+      "type": "string",
+      "doc": "Platform where crash occurred"
+    },
+    {
+      "name": "errorMessage",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Error message from the crash"
     },
     {
       "name": "crashTimestamp",
       "type": "long",
-      "doc": "Timestamp du crash (epoch milliseconds)"
-    },
-    {
-      "name": "userId",
-      "type": ["null", "string"],
-      "default": null,
-      "doc": "ID de l'utilisateur affecté (optionnel)"
+      "doc": "Unix timestamp (milliseconds) when crash occurred"
     }
   ]
 }
-

@@ -1,11 +1,34 @@
 {
-  "type": "record",
-  "namespace": "com.gaming.events",
-  "name": "UserRegistered",
-  "fields": [
-    { "name": "userId", "type": "string" },
-    { "name": "username", "type": "string" },
-    { "name": "email", "type": "string" },
-    { "name": "registrationTimestamp", "type": "long" }
-  ]
+	"type": "record",
+	"namespace": "com.gaming.events",
+	"name": "UserRegistered",
+	"doc": "Event published when a new user registers on the platform",
+	"fields": [
+		{
+			"name": "userId",
+			"type": "string",
+			"doc": "Unique identifier for the user"
+		},
+		{
+			"name": "username",
+			"type": "string",
+			"doc": "Username chosen by the user"
+		},
+		{
+			"name": "email",
+			"type": "string",
+			"doc": "User's email address"
+		},
+		{
+			"name": "registrationTimestamp",
+			"type": "long",
+			"doc": "Unix timestamp (milliseconds) when user registered"
+		},
+		{
+			"name": "country",
+			"type": ["null", "string"],
+			"default": null,
+			"doc": "User's country"
+		}
+	]
 }
