@@ -18,6 +18,12 @@ dependencies {
     implementation("org.apache.avro:avro:1.11.3")
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 // Configuration pour générer les classes Java depuis les schémas Avro
 avro {
     isCreateSetters.set(true)

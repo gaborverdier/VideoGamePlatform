@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
 BOOTSTRAP_SERVER="${BOOTSTRAP_SERVER:-kafka:9092}"
 
@@ -12,9 +12,9 @@ done
 echo "[kafka-init] Kafka is up. Creating topics..."
 
 create_topic () {
-  local topic="$1"
-  local partitions="$2"
-  local rf="$3"
+  topic="$1"
+  partitions="$2"
+  rf="$3"
 
   kafka-topics \
     --bootstrap-server "${BOOTSTRAP_SERVER}" \
@@ -26,10 +26,13 @@ create_topic () {
   echo "[kafka-init] ensured topic: ${topic} (partitions=${partitions}, rf=${rf})"
 }
 
-create_topic "game.events"        3 1
-create_topic "users.registered"   1 1
-create_topic "games.published"    1 1
-create_topic "games.purchased"    3 1
-create_topic "games.reviews"      3 1
+# Topics pour Publisher Service
+create_topic "game-patched"              3 1
+create_topic "game-metadata-updated"     3 1
+create_topic "game-crash-reported"       3 1
+create_topic "game-rating-aggregated"    3 1
 
-echo "[kafka-init] Done."
+# Topics pour Platform Service
+create_topic "user-registered"           3 1
+
+echo "[kafka-init] Done. All topics created."
