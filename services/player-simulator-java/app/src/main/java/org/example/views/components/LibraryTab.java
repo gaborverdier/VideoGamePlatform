@@ -70,7 +70,10 @@ public class LibraryTab extends ScrollPane {
         for (Game game : games) {
             VBox gameCard = createGameCard(game);
             gameGrid.getChildren().add(gameCard);
+            game.addDLC("dlc trop cool");
+            game.addUpdate("update super utile");
         }
+        
     }
 
     private VBox createGameCard(Game game) {

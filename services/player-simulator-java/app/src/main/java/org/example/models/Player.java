@@ -6,8 +6,8 @@ import java.util.List;
 public class Player {
     private String id;
     private String username;
-    private double wallet; // Solde du joueur
-    private List<Game> ownedGames; // Jeux possédés
+    private double wallet;
+    private List<Game> ownedGames;
     
     public Player(String id, String username, double wallet) {
         this.id = id;
@@ -17,7 +17,7 @@ public class Player {
     }
     
     public Player(String username) {
-        this(generateId(), username, 100.0); // 100€ par défaut
+        this(generateId(), username, 100.0);
     }
     
     private static String generateId() {

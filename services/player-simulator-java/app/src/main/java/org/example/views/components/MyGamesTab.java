@@ -2,7 +2,7 @@ package org.example. views.components;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene. control.*;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import org.example.models.Game;
@@ -84,13 +84,7 @@ public class MyGamesTab extends ScrollPane {
         card.setOnMouseExited(e -> card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5; -fx-cursor: hand;"));
 
         // Click pour lancer le jeu (simulé)
-        card.setOnMouseClicked(e -> {
-            Alert info = new Alert(Alert.AlertType.INFORMATION);
-            info.setTitle("Lancer le jeu");
-            info.setHeaderText(game.getName());
-            info.setContentText("Lancement du jeu en cours...");
-            info.showAndWait();
-        });
+        card.setOnMouseClicked(e -> OwnedGameDetailsDialog.show(game));
 
         return card;
     }

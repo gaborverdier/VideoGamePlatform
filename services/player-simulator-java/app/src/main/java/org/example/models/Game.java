@@ -1,5 +1,8 @@
 package org.example.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.scene.image.Image;
 
 public class Game {
@@ -12,8 +15,12 @@ public class Game {
     private Image coverImage;
     private boolean owned;
     private String description;
-    private double rating; // Note sur 5
-    private int playtime; // Temps de jeu en heures
+    private double rating;
+    private int playtime;
+    private boolean isFavorite = false;
+    private int playedTime = 0; // en minutes
+    private List<String> availableUpdates = new ArrayList<>();
+    private List<String> availableDLCs = new ArrayList<>();
     
     // Constructeur complet
     public Game(String id, String name, double price, String genre, String publisher, 
@@ -54,10 +61,21 @@ public class Game {
     public String getDescription() { return description; }
     public double getRating() { return rating; }
     public int getPlaytime() { return playtime; }
-    
+    public boolean isFavorite() { return isFavorite; }
+    public int getPlayedTime() { return playedTime; }
+    public List<String> getAvailableUpdates() { return availableUpdates; }
+    public List<String> getAvailableDLCs() { return availableDLCs; }
+
     // Setters
     public void setOwned(boolean owned) { this.owned = owned; }
     public void setPrice(double price) { this.price = price; }
+    public void setFavorite(boolean favorite) { isFavorite = favorite; }
+    public void addPlayedTime(int minutes) { this.playedTime += minutes; }
+    public void addUpdate(String update) { availableUpdates.add(update); }
+    public void addDLC(String dlc) { availableDLCs.add(dlc); }
+
+
+
     
     public void purchase() {
         this.owned = true;
