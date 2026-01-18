@@ -19,5 +19,5 @@ dependencies {
 }
 
 application {
-    mainClass.set("org.example.Launcher") 
+    mainClass.set("org.example.Main") 
 }
