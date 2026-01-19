@@ -1,17 +1,17 @@
-package org.example. views. components;
+package org.example.views.components;
 
 import javafx.geometry. Insets;
-import javafx.geometry.Pos;
+import javafx. geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene. control.*;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx. stage. Modality;
-import javafx. stage.Stage;
+import javafx.stage. Modality;
+import javafx.stage.Stage;
 import org.example.models.Game;
 
 public class GamePlayDialog {
     
-    public static void show(Game game) {
+    public static void show(Game game, Runnable onUpdate) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("En jeu :  " + game.getName());
@@ -24,7 +24,7 @@ public class GamePlayDialog {
         Label titleLabel = new Label("🎮 " + game.getName());
         titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;");
         
-        Label timeLabel = new Label("Temps de jeu:  " + game.getPlayedTime() + " min");
+        Label timeLabel = new Label("Temps de jeu: " + game.getPlayedTime() + " min");
         timeLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #aaa;");
         
         // Boutons +/- temps de jeu
@@ -52,16 +52,19 @@ public class GamePlayDialog {
         crashBtn.setStyle("-fx-background-color: #ff5722; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
         crashBtn.setOnAction(e -> {
             Alert crash = new Alert(Alert.AlertType.ERROR);
-            crash.setTitle("Crash !");
+            crash. setTitle("Crash !");
             crash.setHeaderText("Le jeu a planté !");
-            crash.setContentText("Rapport envoyé à l'éditeur.");
+            crash.setContentText("Rapport de crash généré.\n(Sera envoyé via Kafka par ton collègue)");
             crash.showAndWait();
             dialog.close();
         });
         
         Button quitBtn = new Button("Quitter le jeu");
-        quitBtn.setStyle("-fx-background-color: #555; -fx-text-fill:  white;");
-        quitBtn.setOnAction(e -> dialog.close());
+        quitBtn.setStyle("-fx-background-color: #555; -fx-text-fill: white;");
+        quitBtn.setOnAction(e -> {
+            if (onUpdate != null) onUpdate.run();
+            dialog.close();
+        });
         
         root.getChildren().addAll(titleLabel, timeLabel, timeBox, new Separator(), crashBtn, quitBtn);
         

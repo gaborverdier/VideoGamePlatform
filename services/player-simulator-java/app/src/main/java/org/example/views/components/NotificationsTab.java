@@ -1,24 +1,29 @@
-package org.example.views.components;
+package org. example.views.components;
 
-import javafx.geometry. Insets;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
-import javafx.scene. layout.*;
+import javafx. scene.layout.*;
 import org.example.models.Game;
+import org.example.models. Notification;
 
 import java.util.ArrayList;
+import java.util. Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class NotificationsTab extends ScrollPane {
     
     private VBox notifList;
     private List<Game> allGames;
+    private List<Notification> notifications;
     
     public NotificationsTab() {
         this.allGames = new ArrayList<>();
+        this.notifications = new ArrayList<>();
         
         notifList = new VBox(10);
-        notifList.setPadding(new Insets(20));
-        notifList.setStyle("-fx-background-color: #2b2b2b;");
+        notifList. setPadding(new Insets(20));
+        notifList.setStyle("-fx-background-color:  #2b2b2b;");
         
         updateNotifications();
         
@@ -29,73 +34,133 @@ public class NotificationsTab extends ScrollPane {
     
     public void setGames(List<Game> games) {
         this.allGames = games;
+        generateNotifications();
         updateNotifications();
+    }
+    
+    private void generateNotifications() {
+        notifications. clear();
+        
+        // Générer des notifications pour les MAJ/DLC
+        for (Game game : allGames) {
+            if (!game.isOwned()) continue;
+            
+            boolean isFav = game.isFavorite();
+            
+            for (String update : game.getPendingUpdates()) {
+                notifications.add(new Notification(
+                    Notification.Type. GAME_UPDATE,
+                    game.getName(),
+                    "Nouvelle mise à jour disponible : " + update,
+                    isFav,
+                    game.getId()
+                ));
+            }
+            
+            // CORRECTION ICI : utiliser DLC au lieu de String
+            for (Game. DLC dlc : game.getPendingDLCs()) {
+                notifications.add(new Notification(
+                    Notification.Type. GAME_DLC,
+                    game.getName(),
+                    "Nouveau DLC disponible : " + dlc.getName() + " - " + dlc. getFormattedPrice(),
+                    isFav,
+                    game. getId()
+                ));
+            }
+        }
+        
+        // Générer des notifications pour les jeux wishlistés
+        for (Game game : allGames) {
+            if (! game.isWishlisted()) continue;
+            
+            // Simuler une baisse de prix (exemple)
+            if (game.getPrice() < 50 && ! game.isOwned()) {
+                notifications. add(new Notification(
+                    Notification.Type.PRICE_DROP,
+                    game.getName(),
+                    "Prix actuel : " + game.getFormattedPrice(),
+                    false,
+                    game.getId()
+                ));
+            }
+            
+            // Nouveaux avis
+            if (! game.getReviews().isEmpty()) {
+                notifications.add(new Notification(
+                    Notification.Type.NEW_REVIEW,
+                    game.getName(),
+                    game.getReviews().size() + " nouveau(x) avis disponible(s)",
+                    false,
+                    game.getId()
+                ));
+            }
+        }
     }
     
     private void updateNotifications() {
         notifList.getChildren().clear();
         
-        // Favoris en premier (bandeau rouge)
-        Label favHeader = new Label("⭐ Jeux Favoris");
-        favHeader. setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10;");
-        favHeader.setMaxWidth(Double.MAX_VALUE);
-        
-        boolean hasFavorites = false;
-        for (Game game : allGames) {
-            if (game.isFavorite() && (! game.getAvailableUpdates().isEmpty() || !game.getAvailableDLCs().isEmpty())) {
-                if (! hasFavorites) {
-                    notifList.getChildren().add(favHeader);
-                    hasFavorites = true;
-                }
-                notifList.getChildren().add(createNotifCard(game));
-            }
-        }
-        
-        // Autres jeux
-        Label otherHeader = new Label("📢 Autres notifications");
-        otherHeader.setStyle("-fx-background-color:  #555; -fx-text-fill:  white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10;");
-        otherHeader.setMaxWidth(Double.MAX_VALUE);
-        
-        boolean hasOthers = false;
-        for (Game game : allGames) {
-            if (!game.isFavorite() && (!game.getAvailableUpdates().isEmpty() || !game.getAvailableDLCs().isEmpty())) {
-                if (!hasOthers) {
-                    notifList.getChildren().add(otherHeader);
-                    hasOthers = true;
-                }
-                notifList.getChildren().add(createNotifCard(game));
-            }
-        }
-        
-        if (!hasFavorites && !hasOthers) {
+        if (notifications.isEmpty()) {
             Label empty = new Label("Aucune notification pour le moment.");
             empty.setStyle("-fx-text-fill: #aaa; -fx-font-size: 16px;");
             notifList.getChildren().add(empty);
+            return;
+        }
+        
+        // Séparer favoris et autres
+        List<Notification> favNotifs = notifications.stream()
+            .filter(Notification::isFromFavorite)
+            .sorted(Comparator.comparing(Notification::getCreatedAt).reversed())
+            .collect(Collectors.toList());
+            
+        List<Notification> otherNotifs = notifications.stream()
+            .filter(n -> !n.isFromFavorite())
+            .sorted(Comparator.comparing(Notification::getCreatedAt).reversed())
+            .collect(Collectors.toList());
+        
+        // Favoris en premier (bandeau rouge)
+        if (!favNotifs.isEmpty()) {
+            Label favHeader = new Label("⭐ Jeux Favoris");
+            favHeader. setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10;");
+            favHeader.setMaxWidth(Double.MAX_VALUE);
+            notifList.getChildren().add(favHeader);
+            
+            for (Notification notif : favNotifs) {
+                notifList.getChildren().add(createNotifCard(notif));
+            }
+        }
+        
+        // Autres notifications
+        if (!otherNotifs.isEmpty()) {
+            Label otherHeader = new Label("���� Autres notifications");
+            otherHeader.setStyle("-fx-background-color:  #555; -fx-text-fill:  white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10;");
+            otherHeader.setMaxWidth(Double.MAX_VALUE);
+            notifList.getChildren().add(otherHeader);
+            
+            for (Notification notif : otherNotifs) {
+                notifList.getChildren().add(createNotifCard(notif));
+            }
         }
     }
     
-    private VBox createNotifCard(Game game) {
+    private VBox createNotifCard(Notification notif) {
         VBox card = new VBox(5);
         card.setPadding(new Insets(10));
         card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5;");
         
-        Label gameLabel = new Label(game.getName());
-        gameLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 14px;");
+        Label titleLabel = new Label(notif.getIcon() + " " + notif.getTitle());
+        titleLabel. setStyle("-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 14px;");
         
-        card.getChildren().add(gameLabel);
+        Label messageLabel = new Label(notif. getMessage());
+        messageLabel.setStyle("-fx-text-fill:  #aaa;");
         
-        for (String update : game.getAvailableUpdates()) {
-            Label updateLabel = new Label("⬇ MAJ: " + update);
-            updateLabel.setStyle("-fx-text-fill: #4CAF50;");
-            card.getChildren().add(updateLabel);
-        }
-        
-        for (String dlc : game.getAvailableDLCs()) {
-            Label dlcLabel = new Label("🎁 DLC: " + dlc);
-            dlcLabel.setStyle("-fx-text-fill: #FF9800;");
-            card.getChildren().add(dlcLabel);
-        }
+        card.getChildren().addAll(titleLabel, messageLabel);
         
         return card;
+    }
+    
+    public void refresh() {
+        generateNotifications();
+        updateNotifications();
     }
 }
