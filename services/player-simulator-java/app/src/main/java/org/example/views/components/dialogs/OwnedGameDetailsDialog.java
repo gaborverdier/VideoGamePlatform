@@ -1,14 +1,15 @@
-package org.example.views.components;
+package org.example.views.components.dialogs;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene. image.ImageView;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
-import javafx.stage. Stage;
-import org.example. models.Game;
+import javafx.stage.Stage;
+import org.example.models.Game;
+import org.example.services.SessionManager;
 
 
 public class OwnedGameDetailsDialog {
@@ -21,7 +22,7 @@ public class OwnedGameDetailsDialog {
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: #2b2b2b;");
         
-        // GAUCHE:  Image
+        // GAUCHE: Image
         VBox leftPane = new VBox(10);
         leftPane.setPadding(new Insets(20));
         leftPane.setAlignment(Pos.TOP_CENTER);
@@ -46,7 +47,7 @@ public class OwnedGameDetailsDialog {
         supportedLabel.setStyle("-fx-text-fill: #aaa;");
         
         Label statusLabel = new Label(game.isInstalled() ? "✅ Installé" : "⬇ Pas encore installé");
-        statusLabel. setStyle("-fx-text-fill: " + (game.isInstalled() ? "#4CAF50" : "#FF9800") + "; -fx-font-size:  14px;");
+        statusLabel.setStyle("-fx-text-fill: " + (game.isInstalled() ? "#4CAF50" : "#FF9800") + "; -fx-font-size: 14px;");
         
         Label timeLabel = new Label("Temps de jeu: " + game.getPlayedTime() + " min");
         timeLabel.setStyle("-fx-text-fill: #aaa;");
@@ -74,15 +75,15 @@ public class OwnedGameDetailsDialog {
         reviewBtn.setMaxWidth(Double.MAX_VALUE);
         reviewBtn.setOnAction(e -> ReviewDialog.show(game));
         
-        Button seeReviewsBtn = new Button("👁 Voir les avis (" + game.getReviews().size() + ")");
-        seeReviewsBtn.setMaxWidth(Double. MAX_VALUE);
-        seeReviewsBtn.setOnAction(e -> ReviewsListDialog. show(game));
+        Button seeReviewsBtn = new Button("Voir les avis (" + game.getReviews().size() + ")");
+        seeReviewsBtn.setMaxWidth(Double.MAX_VALUE);
+        seeReviewsBtn.setOnAction(e -> ReviewsListDialog.show(game));
         
-        Button favoriteBtn = new Button(game.isFavorite() ? "❤ Retirer des favoris" : "🤍 Ajouter aux favoris");
+        Button favoriteBtn = new Button(game.isFavorite() ? "❤ Retirer des favoris" : "❤ Ajouter aux favoris");
         favoriteBtn.setMaxWidth(Double.MAX_VALUE);
         favoriteBtn.setOnAction(e -> {
             game.setFavorite(!game.isFavorite());
-            favoriteBtn.setText(game. isFavorite() ? "❤ Retirer des favoris" : "🤍 Ajouter aux favoris");
+            favoriteBtn.setText(game.isFavorite() ? "❤ Retirer des favoris" : "❤ Ajouter aux favoris");
             if (onUpdate != null) onUpdate.run();
         });
         
@@ -91,7 +92,7 @@ public class OwnedGameDetailsDialog {
         Button updateBtn = new Button("⬇ Télécharger MAJ (" + pendingUpdates + ")");
         updateBtn.setMaxWidth(Double.MAX_VALUE);
         updateBtn.setDisable(pendingUpdates == 0);
-        updateBtn. setOnAction(e -> showUpdatesDialog(game, updateBtn, onUpdate));
+        updateBtn.setOnAction(e -> showUpdatesDialog(game, updateBtn, onUpdate));
         
         // DLCs
         int totalDLCs = game.getAvailableDLCs().size();
@@ -125,19 +126,19 @@ public class OwnedGameDetailsDialog {
     private static void showUpdatesDialog(Game game, Button updateBtn, Runnable onUpdate) {
         if (game.getPendingUpdates().isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert. setContentText("Aucune mise à jour disponible.");
+            alert.setContentText("Aucune mise à jour disponible.");
             alert.showAndWait();
             return;
         }
         
-        Alert alert = new Alert(Alert.AlertType. CONFIRMATION);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Mises à jour disponibles");
         alert.setHeaderText(game.getName());
         alert.setContentText("Installer :\n" + String.join("\n", game.getPendingUpdates()));
         
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                for (String update : new java.util.ArrayList<>(game. getPendingUpdates())) {
+                for (String update : new java.util.ArrayList<>(game.getPendingUpdates())) {
                     game.installUpdate(update);
                 }
                 updateBtn.setText("⬇ Télécharger MAJ (0)");
@@ -210,13 +211,9 @@ public class OwnedGameDetailsDialog {
                 Label timeLabel = new Label("⏱ " + dlc.getPlayedTime() + " min jouées");
                 timeLabel.setStyle("-fx-text-fill: #aaa;");
                 
-                double avgRating = dlc.getAverageRating();
-                Label ratingLabel = new Label(avgRating > 0 ? String.format("⭐ %.1f/5", avgRating) : "Pas de note");
-                ratingLabel.setStyle("-fx-text-fill: #FFD700;");
-                
-                infoRow.getChildren().addAll(timeLabel, ratingLabel);
+                infoRow.getChildren().addAll(timeLabel);
             }
-            
+
             // Boutons d'action
             HBox actionsRow = new HBox(10);
             actionsRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -235,21 +232,19 @@ public class OwnedGameDetailsDialog {
                 Button reviewDlcBtn = new Button("⭐ Évaluer");
                 reviewDlcBtn.setOnAction(e -> ReviewDialog.showForDLC(dlc));
                 
-                Button seeReviewsDlcBtn = new Button("👁 Avis (" + dlc.getReviews().size() + ")");
-                seeReviewsDlcBtn.setOnAction(e -> ReviewsListDialog.showForDLC(dlc));
-                
-                actionsRow.getChildren().addAll(playDlcBtn, reviewDlcBtn, seeReviewsDlcBtn);
+                actionsRow.getChildren().addAll(playDlcBtn, reviewDlcBtn);
             } else {
+                // Acheter le DLC
                 Button buyBtn = new Button("Acheter");
                 buyBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
                 buyBtn.setOnAction(e -> {
-                    if (org.example.services.SessionManager.getInstance().getCurrentPlayer().getWallet() < dlc.getPrice()) {
+                    if (SessionManager.getInstance().getCurrentPlayer().getWallet() < dlc.getPrice()) {
                         Alert error = new Alert(Alert.AlertType.ERROR);
                         error.setContentText("Solde insuffisant !");
                         error.showAndWait();
                     } else {
-                        org.example.services.SessionManager.getInstance().getCurrentPlayer()
-                            .setWallet(org.example.services.SessionManager.getInstance().getCurrentPlayer().getWallet() - dlc.getPrice());
+                        SessionManager.getInstance().getCurrentPlayer()
+                            .setWallet(SessionManager.getInstance().getCurrentPlayer().getWallet() - dlc.getPrice());
                         
                         game.installDLC(dlc);
                         
@@ -264,8 +259,17 @@ public class OwnedGameDetailsDialog {
                         if (onUpdate != null) onUpdate.run();
                     }
                 });
-                actionsRow.getChildren().add(buyBtn);
+                actionsRow.getChildren().addAll(buyBtn);
             }
+            
+            // Avis
+            Button seeReviewsDlcBtn = new Button("Avis (" + dlc.getReviews().size() + ")");
+            seeReviewsDlcBtn.setOnAction(e -> ReviewsListDialog.showForDLC(dlc));
+
+            double avgRating = dlc.getAverageRating();
+            Label ratingLabel = new Label(avgRating > 0 ? String.format("⭐ %.1f/5", avgRating) : "Pas de note");
+            ratingLabel.setStyle("-fx-text-fill: #FFD700;");
+            actionsRow.getChildren().addAll(seeReviewsDlcBtn, ratingLabel);
             
             dlcItem.getChildren().addAll(headerRow);
             if (!infoRow.getChildren().isEmpty()) {

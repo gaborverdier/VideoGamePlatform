@@ -1,13 +1,13 @@
-package org.example.views.components;
+package org.example.views.components.tabs;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
-import javafx. scene.layout.*;
+import javafx.scene.layout.*;
 import org.example.models.Game;
-import org.example.models. Notification;
+import org.example.models.Notification;
 
 import java.util.ArrayList;
-import java.util. Comparator;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,8 +22,8 @@ public class NotificationsTab extends ScrollPane {
         this.notifications = new ArrayList<>();
         
         notifList = new VBox(10);
-        notifList. setPadding(new Insets(20));
-        notifList.setStyle("-fx-background-color:  #2b2b2b;");
+        notifList.setPadding(new Insets(20));
+        notifList.setStyle("-fx-background-color: #2b2b2b;");
         
         updateNotifications();
         
@@ -39,7 +39,7 @@ public class NotificationsTab extends ScrollPane {
     }
     
     private void generateNotifications() {
-        notifications. clear();
+        notifications.clear();
         
         // Générer des notifications pour les MAJ/DLC
         for (Game game : allGames) {
@@ -49,7 +49,7 @@ public class NotificationsTab extends ScrollPane {
             
             for (String update : game.getPendingUpdates()) {
                 notifications.add(new Notification(
-                    Notification.Type. GAME_UPDATE,
+                    Notification.Type.GAME_UPDATE,
                     game.getName(),
                     "Nouvelle mise à jour disponible : " + update,
                     isFav,
@@ -57,14 +57,13 @@ public class NotificationsTab extends ScrollPane {
                 ));
             }
             
-            // CORRECTION ICI : utiliser DLC au lieu de String
-            for (Game. DLC dlc : game.getPendingDLCs()) {
+            for (Game.DLC dlc : game.getPendingDLCs()) {
                 notifications.add(new Notification(
-                    Notification.Type. GAME_DLC,
+                    Notification.Type.GAME_DLC,
                     game.getName(),
-                    "Nouveau DLC disponible : " + dlc.getName() + " - " + dlc. getFormattedPrice(),
+                    "Nouveau DLC disponible : " + dlc.getName() + " - " + dlc.getFormattedPrice(),
                     isFav,
-                    game. getId()
+                    game.getId()
                 ));
             }
         }
@@ -121,7 +120,7 @@ public class NotificationsTab extends ScrollPane {
         // Favoris en premier (bandeau rouge)
         if (!favNotifs.isEmpty()) {
             Label favHeader = new Label("⭐ Jeux Favoris");
-            favHeader. setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10;");
+            favHeader.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10;");
             favHeader.setMaxWidth(Double.MAX_VALUE);
             notifList.getChildren().add(favHeader);
             
@@ -132,8 +131,8 @@ public class NotificationsTab extends ScrollPane {
         
         // Autres notifications
         if (!otherNotifs.isEmpty()) {
-            Label otherHeader = new Label("���� Autres notifications");
-            otherHeader.setStyle("-fx-background-color:  #555; -fx-text-fill:  white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10;");
+            Label otherHeader = new Label("🔔 Autres notifications");
+            otherHeader.setStyle("-fx-background-color: #555; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10;");
             otherHeader.setMaxWidth(Double.MAX_VALUE);
             notifList.getChildren().add(otherHeader);
             
@@ -148,19 +147,23 @@ public class NotificationsTab extends ScrollPane {
         card.setPadding(new Insets(10));
         card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5;");
         
-        Label titleLabel = new Label(notif.getIcon() + " " + notif.getTitle());
-        titleLabel. setStyle("-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 14px;");
+        HBox header = new HBox(10);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         
-        Label messageLabel = new Label(notif. getMessage());
-        messageLabel.setStyle("-fx-text-fill:  #aaa;");
+        Label iconLabel = new Label(notif.getIcon());
+        iconLabel.setStyle("-fx-font-size: 18px;");
         
-        card.getChildren().addAll(titleLabel, messageLabel);
+        Label titleLabel = new Label(notif.getTitle());
+        titleLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+        
+        header.getChildren().addAll(iconLabel, titleLabel);
+        
+        Label messageLabel = new Label(notif.getMessage());
+        messageLabel.setStyle("-fx-text-fill: #aaa;");
+        messageLabel.setWrapText(true);
+        
+        card.getChildren().addAll(header, messageLabel);
         
         return card;
-    }
-    
-    public void refresh() {
-        generateNotifications();
-        updateNotifications();
     }
 }

@@ -1,11 +1,12 @@
-package org.example.views.components;
+package org.example.views.components.tabs;
 
 import javafx.geometry.Insets;
-import javafx.geometry. Pos;
-import javafx. scene.control.*;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import org.example.models.Game;
+import org.example.views.components.dialogs.GameDetailsDialog;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -48,7 +49,7 @@ public class WishlistTab extends ScrollPane {
 
         if (wishlistedGames.isEmpty()) {
             Label emptyLabel = new Label("Aucun jeu dans votre liste de souhaits.\nAjoutez des jeux depuis la Bibliothèque !");
-            emptyLabel.setStyle("-fx-font-size:  18px; -fx-text-fill: #aaa; -fx-padding: 50;");
+            emptyLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #aaa; -fx-padding: 50;");
             emptyLabel.setAlignment(Pos.CENTER);
             gameGrid.getChildren().add(emptyLabel);
         } else {
@@ -62,30 +63,30 @@ public class WishlistTab extends ScrollPane {
     private VBox createWishlistCard(Game game) {
         VBox card = new VBox(10);
         card.setPadding(new Insets(10));
-        card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius:  5; -fx-cursor:  hand;");
+        card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5; -fx-cursor: hand;");
         card.setAlignment(Pos.TOP_CENTER);
         card.setPrefWidth(350);
 
-        ImageView imageView = new ImageView(game. getCoverImage());
+        ImageView imageView = new ImageView(game.getCoverImage());
         imageView.setFitWidth(330);
         imageView.setFitHeight(155);
         imageView.setPreserveRatio(true);
 
         Label nameLabel = new Label(game.getName());
-        nameLabel.setStyle("-fx-font-size: 16px; -fx-font-weight:  bold; -fx-text-fill: white;");
+        nameLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
 
-        Label genreLabel = new Label(game. getGenre());
+        Label genreLabel = new Label(game.getGenre());
         genreLabel.setStyle("-fx-text-fill: #aaa;");
 
         Label priceLabel = new Label(game.getFormattedPrice());
-        priceLabel. setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;");
+        priceLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;");
 
         Label wishlistBadge = new Label("❤ Liste de souhaits");
         wishlistBadge.setStyle("-fx-text-fill: #f44336; -fx-font-weight: bold;");
 
         card.getChildren().addAll(imageView, nameLabel, genreLabel, priceLabel, wishlistBadge);
 
-        card.setOnMouseEntered(e -> card. setStyle("-fx-background-color: #4a4a4a; -fx-background-radius:  5; -fx-cursor:  hand;"));
+        card.setOnMouseEntered(e -> card.setStyle("-fx-background-color: #4a4a4a; -fx-background-radius: 5; -fx-cursor: hand;"));
         card.setOnMouseExited(e -> card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5; -fx-cursor: hand;"));
 
         card.setOnMouseClicked(e -> {

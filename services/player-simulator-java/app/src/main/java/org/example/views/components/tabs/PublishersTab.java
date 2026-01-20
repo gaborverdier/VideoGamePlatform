@@ -1,4 +1,4 @@
-package org.example.views.components;
+package org.example.views.components.tabs;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -6,6 +6,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import org.example.models.Game;
 import org.example.services.GameDataService;
+import org.example.views.components.dialogs.GameDetailsDialog;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;

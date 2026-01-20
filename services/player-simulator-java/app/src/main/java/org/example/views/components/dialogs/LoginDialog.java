@@ -1,4 +1,4 @@
-package org.example.views.components;
+package org.example.views.components.dialogs;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -23,7 +23,7 @@ public class LoginDialog {
         root.setStyle("-fx-background-color: #2b2b2b;");
         
         Label titleLabel = new Label("Plateforme de Jeux");
-        titleLabel. setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;");
+        titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;");
         
         // Toggle entre connexion et création de compte
         ToggleGroup modeGroup = new ToggleGroup();
@@ -34,7 +34,7 @@ public class LoginDialog {
         
         RadioButton registerMode = new RadioButton("Créer un compte");
         registerMode.setToggleGroup(modeGroup);
-        registerMode.setStyle("-fx-text-fill:  white;");
+        registerMode.setStyle("-fx-text-fill: white;");
         
         HBox modeBox = new HBox(15);
         modeBox.setAlignment(Pos.CENTER);
@@ -127,7 +127,7 @@ public class LoginDialog {
                 // Création de compte - besoin des 3 champs
                 if (lastNameField.getText().isEmpty() || firstNameField.getText().isEmpty() || birthDateField.getText().isEmpty() || usernameField.getText().isEmpty() || emailField.getText().isEmpty() || passwordField.getText().isEmpty()) {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert. setContentText("Veuillez remplir tous les champs !");
+                    alert.setContentText("Veuillez remplir tous les champs !");
                     alert.showAndWait();
                 } else {
                     Player player = new Player(usernameField.getText(), emailField.getText());
@@ -148,7 +148,7 @@ public class LoginDialog {
                     alert.showAndWait();
                 } else {
                     // Pour l'instant on simule juste la connexion
-                    Player player = new Player(loginField. getText(), "user@email.com");
+                    Player player = new Player(loginField.getText(), "user@email.com");
                     SessionManager.getInstance().login(player);
                     
                     Alert success = new Alert(Alert.AlertType.INFORMATION);
@@ -167,7 +167,7 @@ public class LoginDialog {
             System.exit(0);
         });
         
-        buttonBox. getChildren().addAll(actionBtn, quitBtn);
+        buttonBox.getChildren().addAll(actionBtn, quitBtn);
         
         root.getChildren().addAll(titleLabel, modeBox, form, buttonBox);
         

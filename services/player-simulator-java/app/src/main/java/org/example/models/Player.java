@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.example.models.Platform;
-
 public class Player {
     private String id;
     private String username;
@@ -100,6 +98,10 @@ public class Player {
         if (!friendIds.contains(friendId)) {
             friendIds.add(friendId);
         }
+    }
+
+    public void removeFriend(String friendId) {
+        friendIds.remove(friendId);
     }
     
     public void followPublisher(String publisherId) {

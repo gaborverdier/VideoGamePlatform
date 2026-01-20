@@ -1,12 +1,12 @@
-package org.example.views.components;
+package org.example.views.components.dialogs;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene. control.*;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx. stage. Modality;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.example.models.Game;
 import org.example.models.Platform;
@@ -35,14 +35,14 @@ public class GameDetailsDialog {
         dialog.setTitle(game.getName());
         
         BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color:  #2b2b2b;");
+        root.setStyle("-fx-background-color: #2b2b2b;");
         
         // GAUCHE : Image
         VBox leftPane = new VBox(10);
         leftPane.setPadding(new Insets(20));
-        leftPane.setAlignment(Pos. TOP_CENTER);
+        leftPane.setAlignment(Pos.TOP_CENTER);
         
-        ImageView imageView = new ImageView(game. getCoverImage());
+        ImageView imageView = new ImageView(game.getCoverImage());
         imageView.setFitWidth(300);
         imageView.setFitHeight(140);
         imageView.setPreserveRatio(true);
@@ -56,7 +56,7 @@ public class GameDetailsDialog {
         Label titleLabel = new Label(game.getName());
         titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;");
         
-        Label genreLabel = new Label("Genre:  " + game.getGenre());
+        Label genreLabel = new Label("Genre: " + game.getGenre());
         genreLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #aaa;");
         
         Label publisherLabel = new Label("Éditeur: " + game.getPublisherName());
@@ -65,7 +65,7 @@ public class GameDetailsDialog {
         
         // Note moyenne
         HBox ratingBox = new HBox(5);
-        Label ratingLabel = new Label("Note:  ");
+        Label ratingLabel = new Label("Note: ");
         ratingLabel.setStyle("-fx-text-fill: white;");
         Label starsLabel = new Label(getStars(game.getAverageRating()) + " (" + String.format("%.1f", game.getAverageRating()) + "/5)");
         starsLabel.setStyle("-fx-text-fill: #FFD700; -fx-font-size: 16px;");
@@ -115,7 +115,7 @@ public class GameDetailsDialog {
         Label priceLabel = new Label(game.getFormattedPrice());
         priceLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;");
         
-        centerPane. getChildren().addAll(
+        centerPane.getChildren().addAll(
             titleLabel, genreLabel, publisherLabel, ratingBox, seeReviewsBtn,
             new Separator(), platformTitle, platformBox,
             new Separator(), descLabel, descArea,
@@ -141,13 +141,13 @@ public class GameDetailsDialog {
         });
         
         Button cancelBtn = new Button("Fermer");
-        cancelBtn.setStyle("-fx-background-color:  #555; -fx-text-fill: white; -fx-font-size: 14px;");
+        cancelBtn.setStyle("-fx-background-color: #555; -fx-text-fill: white; -fx-font-size: 14px;");
         cancelBtn.setOnAction(e -> dialog.close());
         
         boolean ownsAllPlatforms = game.ownsAllSupportedPlatforms();
         Button buyBtn = new Button(ownsAllPlatforms ? "Déjà possédé sur tous les supports" : "Acheter");
         buyBtn.setDisable(ownsAllPlatforms);
-        buyBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill:  white; -fx-font-size: 14px; -fx-font-weight: bold;");
+        buyBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
         buyBtn.setOnAction(e -> {
             Toggle selected = platformGroup.getSelectedToggle();
             if (selected == null) {
