@@ -1,4 +1,4 @@
-package org. example.views.components;
+package org.example.views.components;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -71,25 +71,25 @@ public class NotificationsTab extends ScrollPane {
         
         // Générer des notifications pour les jeux wishlistés
         for (Game game : allGames) {
-            if (! game.isWishlisted()) continue;
+            if (!game.isWishlisted()) continue;
             
-            // Simuler une baisse de prix (exemple)
-            if (game.getPrice() < 50 && ! game.isOwned()) {
-                notifications. add(new Notification(
+            // Baisse de prix pour les jeux wishlistés
+            if (game.getPrice() < 50 && !game.isOwned()) {
+                notifications.add(new Notification(
                     Notification.Type.PRICE_DROP,
                     game.getName(),
-                    "Prix actuel : " + game.getFormattedPrice(),
+                    "Baisse de prix ! Prix actuel : " + game.getFormattedPrice(),
                     false,
                     game.getId()
                 ));
             }
             
-            // Nouveaux avis
-            if (! game.getReviews().isEmpty()) {
+            // Nouveaux avis pour les jeux wishlistés
+            if (!game.getReviews().isEmpty()) {
                 notifications.add(new Notification(
                     Notification.Type.NEW_REVIEW,
                     game.getName(),
-                    game.getReviews().size() + " nouveau(x) avis disponible(s)",
+                    game.getReviews().size() + " avis disponible(s)",
                     false,
                     game.getId()
                 ));

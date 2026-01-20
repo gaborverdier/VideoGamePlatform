@@ -1,12 +1,12 @@
-package org.example.views. components;
+package org.example.views.components;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene. control.*;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.stage. Modality;
-import javafx. stage.Stage;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.example.models.Player;
 import org.example.services.SessionManager;
 
@@ -22,10 +22,10 @@ public class LoginDialog {
         root.setAlignment(Pos.CENTER);
         root.setStyle("-fx-background-color: #2b2b2b;");
         
-        Label titleLabel = new Label("🎮 Plateforme de Jeux");
+        Label titleLabel = new Label("Plateforme de Jeux");
         titleLabel. setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;");
         
-        // Toggle entre connexion et création
+        // Toggle entre connexion et création de compte
         ToggleGroup modeGroup = new ToggleGroup();
         RadioButton loginMode = new RadioButton("Se connecter");
         loginMode.setToggleGroup(modeGroup);
@@ -61,39 +61,31 @@ public class LoginDialog {
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Votre mot de passe");
         
-        Label loginInfoLabel = new Label("Username OU Email:");
-        loginInfoLabel. setStyle("-fx-text-fill: white;");
+        Label loginInfoLabel = new Label("Pseudo/Email:");
+        loginInfoLabel.setStyle("-fx-text-fill: white;");
         TextField loginField = new TextField();
         loginField.setPromptText("Pseudo ou email");
+
+        Label lastName = new Label("Nom :");
+        lastName.setStyle("-fx-text-fill: white;");
+        TextField lastNameField = new TextField();
+        lastNameField.setPromptText("DUPONT");
+
+        Label firstName = new Label("Prénom :");
+        firstName.setStyle("-fx-text-fill: white;");
+        TextField firstNameField = new TextField();
+        firstNameField.setPromptText("Martin");
+
+        Label birthDate = new Label("Date de naissance :");
+        birthDate.setStyle("-fx-text-fill: white;");
+        TextField birthDateField = new TextField();
+        birthDateField.setPromptText("01/01/1990");
         
-        // Affichage conditionnel selon le mode
-        form.add(usernameLabel, 0, 0);
-        form.add(usernameField, 1, 0);
-        form.add(emailLabel, 0, 1);
-        form.add(emailField, 1, 1);
-        form.add(passwordLabel, 0, 2);
-        form.add(passwordField, 1, 2);
-        
-        // Changer le formulaire selon le mode
-        modeGroup.selectedToggleProperty().addListener((obs, old, newVal) -> {
-            form.getChildren().clear();
-            
-            if (newVal == registerMode) {
-                // Création :  username + email + password
-                form.add(usernameLabel, 0, 0);
-                form.add(usernameField, 1, 0);
-                form.add(emailLabel, 0, 1);
-                form.add(emailField, 1, 1);
-                form.add(passwordLabel, 0, 2);
-                form.add(passwordField, 1, 2);
-            } else {
-                // Connexion : username OU email + password
-                form.add(loginInfoLabel, 0, 0);
-                form.add(loginField, 1, 0);
-                form.add(passwordLabel, 0, 1);
-                form.add(passwordField, 1, 1);
-            }
-        });
+        // Affichage initial pour le mode connexion (sélectionné par défaut)
+        form.add(loginInfoLabel, 0, 0);
+        form.add(loginField, 1, 0);
+        form.add(passwordLabel, 0, 1);
+        form.add(passwordField, 1, 1);
         
         // Boutons
         HBox buttonBox = new HBox(10);
@@ -101,10 +93,39 @@ public class LoginDialog {
         
         Button actionBtn = new Button("Se connecter");
         actionBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;");
+        
+        // Listener pour changer de mode (connexion/création)
+        modeGroup.selectedToggleProperty().addListener((obs, old, newVal) -> {
+            form.getChildren().clear();
+            
+            if (newVal == registerMode) {
+                form.add(lastName, 0, 0);
+                form.add(lastNameField, 1, 0);
+                form.add(firstName, 0, 1);
+                form.add(firstNameField, 1, 1);
+                form.add(birthDate, 0, 2);
+                form.add(birthDateField, 1, 2);
+                form.add(usernameLabel, 0, 3);
+                form.add(usernameField, 1, 3);
+                form.add(emailLabel, 0, 4);
+                form.add(emailField, 1, 4);
+                form.add(passwordLabel, 0, 5);
+                form.add(passwordField, 1, 5);
+                actionBtn.setText("Créer mon compte");
+            } else {
+                form.add(loginInfoLabel, 0, 0);
+                form.add(loginField, 1, 0);
+                form.add(passwordLabel, 0, 1);
+                form.add(passwordField, 1, 1);
+                actionBtn.setText("Se connecter");
+            }
+        });
+
+        // Appui sur le bouton de validation --> vérification
         actionBtn.setOnAction(e -> {
             if (registerMode.isSelected()) {
                 // Création de compte - besoin des 3 champs
-                if (usernameField.getText().isEmpty() || emailField.getText().isEmpty() || passwordField.getText().isEmpty()) {
+                if (lastNameField.getText().isEmpty() || firstNameField.getText().isEmpty() || birthDateField.getText().isEmpty() || usernameField.getText().isEmpty() || emailField.getText().isEmpty() || passwordField.getText().isEmpty()) {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert. setContentText("Veuillez remplir tous les champs !");
                     alert.showAndWait();
@@ -137,15 +158,6 @@ public class LoginDialog {
                     
                     dialog.close();
                 }
-            }
-        });
-        
-        // Changer le texte du bouton selon le mode
-        modeGroup.selectedToggleProperty().addListener((obs, old, newVal) -> {
-            if (newVal == registerMode) {
-                actionBtn. setText("Créer mon compte");
-            } else {
-                actionBtn.setText("Se connecter");
             }
         });
         

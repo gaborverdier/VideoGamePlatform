@@ -1,4 +1,4 @@
-package org. example.views.components;
+package org.example.views.components;
 
 import javafx.application.Platform;
 import javafx. geometry.Insets;

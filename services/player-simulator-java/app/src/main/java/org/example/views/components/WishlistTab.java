@@ -1,4 +1,4 @@
-package org. example.views.components;
+package org.example.views.components;
 
 import javafx.geometry.Insets;
 import javafx.geometry. Pos;
@@ -6,19 +6,19 @@ import javafx. scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import org.example.models.Game;
-import org.example.services.GameDataService;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream. Collectors;
 
 public class WishlistTab extends ScrollPane {
 
     private FlowPane gameGrid;
     private Consumer<Game> onGamePurchased;
+    private LibraryTab libraryTab;
 
     public WishlistTab(Consumer<Game> onGamePurchased) {
         this.onGamePurchased = onGamePurchased;
+        this.libraryTab = null; // Will be set later
         
         gameGrid = new FlowPane();
         gameGrid.setHgap(15);
@@ -33,20 +33,26 @@ public class WishlistTab extends ScrollPane {
         this.setStyle("-fx-background-color: #2b2b2b;");
     }
 
+    public void setLibraryTab(LibraryTab libraryTab) {
+        this.libraryTab = libraryTab;
+    }
+
     public void updateView() {
-        gameGrid. getChildren().clear();
+        gameGrid.getChildren().clear();
 
-        List<Game> wishlistedGames = GameDataService. getInstance().getAllGames().stream()
-            .filter(Game::isWishlisted)
-            .collect(Collectors.toList());
+        List<Game> wishlistedGames = libraryTab != null 
+            ? libraryTab.getGames().stream()
+                .filter(Game::isWishlisted)
+                .toList()
+            : java.util.Collections.emptyList();
 
-        if (wishlistedGames. isEmpty()) {
+        if (wishlistedGames.isEmpty()) {
             Label emptyLabel = new Label("Aucun jeu dans votre liste de souhaits.\nAjoutez des jeux depuis la Bibliothèque !");
             emptyLabel.setStyle("-fx-font-size:  18px; -fx-text-fill: #aaa; -fx-padding: 50;");
             emptyLabel.setAlignment(Pos.CENTER);
             gameGrid.getChildren().add(emptyLabel);
         } else {
-            for (Game game :  wishlistedGames) {
+            for (Game game : wishlistedGames) {
                 VBox gameCard = createWishlistCard(game);
                 gameGrid.getChildren().add(gameCard);
             }
@@ -83,7 +89,7 @@ public class WishlistTab extends ScrollPane {
         card.setOnMouseExited(e -> card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5; -fx-cursor: hand;"));
 
         card.setOnMouseClicked(e -> {
-            GameDetailsDialog dialog = new GameDetailsDialog(game);
+            GameDetailsDialog dialog = new GameDetailsDialog(game, this::updateView);
             boolean purchased = dialog.show();
             
             if (purchased && onGamePurchased != null) {

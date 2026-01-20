@@ -15,9 +15,12 @@ public class LibraryTab extends ScrollPane {
 
     private FlowPane gameGrid;
     private Consumer<Game> onGamePurchased;
+    private List<Game> games;
+    private Runnable onRefreshAll;
 
     public LibraryTab(Consumer<Game> onGamePurchased) {
         this.onGamePurchased = onGamePurchased;
+        this.games = GameDataService.getInstance().getAllGames();
         
         gameGrid = new FlowPane();
         gameGrid.setHgap(15);
@@ -32,9 +35,11 @@ public class LibraryTab extends ScrollPane {
         this.setStyle("-fx-background-color: #2b2b2b;");
     }
 
-    private void loadGames() {
-        List<Game> games = GameDataService.getInstance().getAllGames();
+    public void setOnRefreshAll(Runnable onRefreshAll) {
+        this.onRefreshAll = onRefreshAll;
+    }
 
+    private void loadGames() {
         for (Game game : games) {
             VBox gameCard = createGameCard(game);
             gameGrid.getChildren().add(gameCard);
@@ -69,7 +74,8 @@ public class LibraryTab extends ScrollPane {
 
         // Ouvrir les détails au clic
         card.setOnMouseClicked(e -> {
-            GameDetailsDialog dialog = new GameDetailsDialog(game);
+            Runnable wishlistCallback = onRefreshAll != null ? onRefreshAll : this::refresh;
+            GameDetailsDialog dialog = new GameDetailsDialog(game, wishlistCallback);
             boolean purchased = dialog.show();
             
             if (purchased && onGamePurchased != null) {
@@ -83,5 +89,9 @@ public class LibraryTab extends ScrollPane {
     public void refresh() {
         gameGrid.getChildren().clear();
         loadGames();
+    }
+    
+    public List<Game> getGames() {
+        return games;
     }
 }

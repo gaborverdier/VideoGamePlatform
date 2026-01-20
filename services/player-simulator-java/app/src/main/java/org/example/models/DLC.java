@@ -7,8 +7,8 @@ public class DLC {
     
     public DLC(String name, double price) {
         this.name = name;
-        this. price = price;
-        this. installed = false;
+        this.price = price;
+        this.installed = false;
     }
     
     public String getName() { return name; }

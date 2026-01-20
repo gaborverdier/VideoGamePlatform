@@ -1,6 +1,8 @@
 package org.example.models;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Review {
     private String id;
@@ -13,6 +15,8 @@ public class Review {
     private int helpfulCount = 0;
     private int notHelpfulCount = 0;
     private int authorPlaytime; // temps de jeu de l'auteur au moment de l'avis
+    private Set<String> helpfulVoters = new HashSet<>(); // IDs des joueurs qui ont voté utile
+    private Set<String> notHelpfulVoters = new HashSet<>(); // IDs des joueurs qui ont voté pas utile
     
     public Review(String gameId, String authorId, String authorName, int rating, String comment, int authorPlaytime) {
         this.id = "REV-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 1000);
@@ -38,12 +42,26 @@ public class Review {
     public int getAuthorPlaytime() { return authorPlaytime; }
     
     // Méthodes
-    public void markHelpful() {
+    public boolean markHelpful(String playerId) {
+        if (helpfulVoters.contains(playerId) || notHelpfulVoters.contains(playerId)) {
+            return false; // Déjà voté
+        }
+        helpfulVoters.add(playerId);
         helpfulCount++;
+        return true;
     }
     
-    public void markNotHelpful() {
+    public boolean markNotHelpful(String playerId) {
+        if (helpfulVoters.contains(playerId) || notHelpfulVoters.contains(playerId)) {
+            return false; // Déjà voté
+        }
+        notHelpfulVoters.add(playerId);
         notHelpfulCount++;
+        return true;
+    }
+    
+    public boolean hasVoted(String playerId) {
+        return helpfulVoters.contains(playerId) || notHelpfulVoters.contains(playerId);
     }
     
     public String getStars() {

@@ -1,4 +1,4 @@
-package org.example. views.components;
+package org.example.views.components;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -67,11 +67,14 @@ public class MyGamesTab extends ScrollPane {
         Label genreLabel = new Label(game.getGenre());
         genreLabel.setStyle("-fx-text-fill: #aaa;");
 
+        Label platformLabel = new Label("Support: " + (game.getOwnedPlatforms().isEmpty() ? "N/A" : game.getOwnedPlatformsLabel()));
+        platformLabel.setStyle("-fx-text-fill: #aaa;");
+
         // Status installé ou non
         Label statusLabel = new Label(game.isInstalled() ? "✅ Installé" : "⬇ Pas installé");
         statusLabel. setStyle("-fx-font-weight: bold; -fx-text-fill: " + (game.isInstalled() ? "#4CAF50" : "#FF9800") + ";");
 
-        card.getChildren().addAll(imageView, nameLabel, genreLabel, statusLabel);
+        card.getChildren().addAll(imageView, nameLabel, genreLabel, platformLabel, statusLabel);
 
         card.setOnMouseEntered(e -> card.setStyle("-fx-background-color: #4a4a4a; -fx-background-radius: 5; -fx-cursor: hand;"));
         card.setOnMouseExited(e -> card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5; -fx-cursor: hand;"));
@@ -87,10 +90,10 @@ public class MyGamesTab extends ScrollPane {
     }
 
     public void addOwnedGame(Game game) {
-        if (! ownedGames.contains(game)) {
+        if (!ownedGames.contains(game)) {
             ownedGames.add(game);
-            updateView();
         }
+        updateView();
     }
 
     public List<Game> getOwnedGames() {

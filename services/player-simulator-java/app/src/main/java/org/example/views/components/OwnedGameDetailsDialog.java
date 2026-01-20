@@ -1,4 +1,4 @@
-package org.example.views. components;
+package org.example.views.components;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -39,6 +39,11 @@ public class OwnedGameDetailsDialog {
         
         Label titleLabel = new Label(game.getName());
         titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;");
+
+        Label platformLabel = new Label("Support acheté: " + (game.getOwnedPlatforms().isEmpty() ? "N/A" : game.getOwnedPlatformsLabel()));
+        platformLabel.setStyle("-fx-text-fill: #aaa;");
+        Label supportedLabel = new Label("Supports disponibles: " + game.getSupportedPlatformsLabel());
+        supportedLabel.setStyle("-fx-text-fill: #aaa;");
         
         Label statusLabel = new Label(game.isInstalled() ? "✅ Installé" : "⬇ Pas encore installé");
         statusLabel. setStyle("-fx-text-fill: " + (game.isInstalled() ? "#4CAF50" : "#FF9800") + "; -fx-font-size:  14px;");
@@ -89,15 +94,15 @@ public class OwnedGameDetailsDialog {
         updateBtn. setOnAction(e -> showUpdatesDialog(game, updateBtn, onUpdate));
         
         // DLCs
-        int pendingDLCs = game.getPendingDLCs().size();
-        Button dlcBtn = new Button("🎁 Télécharger DLC (" + pendingDLCs + ")");
+        int totalDLCs = game.getAvailableDLCs().size();
+        Button dlcBtn = new Button("🎁 DLCs (" + totalDLCs + ")");
         dlcBtn.setMaxWidth(Double.MAX_VALUE);
-        dlcBtn.setDisable(pendingDLCs == 0);
+        dlcBtn.setDisable(totalDLCs == 0);
         dlcBtn.setOnAction(e -> showDLCsDialog(game, dlcBtn, onUpdate));
         
         actionsBox.getChildren().addAll(playBtn, reviewBtn, seeReviewsBtn, favoriteBtn, updateBtn, dlcBtn);
         
-        centerPane.getChildren().addAll(titleLabel, statusLabel, timeLabel, new Separator(), actionsBox);
+        centerPane.getChildren().addAll(titleLabel, platformLabel, supportedLabel, statusLabel, timeLabel, new Separator(), actionsBox);
         
         // BAS: Bouton fermer
         HBox buttonBox = new HBox();
@@ -148,7 +153,7 @@ public class OwnedGameDetailsDialog {
     }
     
     private static void showDLCsDialog(Game game, Button dlcBtn, Runnable onUpdate) {
-        if (game.getPendingDLCs().isEmpty()) {
+        if (game.getPendingDLCs().isEmpty() && game.getAvailableDLCs().stream().noneMatch(Game.DLC::isInstalled)) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("Aucun DLC disponible.");
             alert.showAndWait();
@@ -157,70 +162,127 @@ public class OwnedGameDetailsDialog {
         
         // Créer une dialog personnalisée pour choisir les DLCs
         Stage dialog = new Stage();
-        dialog.initModality(javafx.stage.Modality. APPLICATION_MODAL);
-        dialog.setTitle("DLCs disponibles - " + game.getName());
+        dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+        dialog.setTitle("DLCs - " + game.getName());
         
         VBox root = new VBox(15);
         root.setPadding(new javafx.geometry.Insets(20));
         root.setStyle("-fx-background-color: #2b2b2b;");
         
-        Label titleLabel = new Label("DLCs disponibles pour " + game.getName());
+        Label titleLabel = new Label("DLCs pour " + game.getName());
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;");
         
-        VBox dlcList = new VBox(10);
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background: #2b2b2b; -fx-background-color: #2b2b2b;");
         
-        for (Game. DLC dlc : game.getPendingDLCs()) {
-            HBox dlcItem = new HBox(10);
-            dlcItem.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        VBox dlcList = new VBox(10);
+        dlcList.setPadding(new javafx.geometry.Insets(5));
+        
+        // Afficher tous les DLCs (installés et non installés)
+        for (Game.DLC dlc : game.getAvailableDLCs()) {
+            VBox dlcItem = new VBox(5);
             dlcItem.setPadding(new javafx.geometry.Insets(10));
             dlcItem.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5;");
             
-            Label nameLabel = new Label(dlc. getName());
-            nameLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+            HBox headerRow = new HBox(10);
+            headerRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             
-            Label priceLabel = new Label(dlc.getFormattedPrice());
-            priceLabel.setStyle("-fx-text-fill:  #4CAF50; -fx-font-weight: bold; -fx-font-size: 14px;");
+            Label nameLabel = new Label(dlc.getName());
+            nameLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
             
-            javafx.scene.layout.Region spacer = new javafx.scene. layout.Region();
+            Label statusLabel = new Label(dlc.isInstalled() ? "✅ Installé" : "⬇ Non installé");
+            statusLabel.setStyle("-fx-text-fill: " + (dlc.isInstalled() ? "#4CAF50" : "#FF9800") + ";");
+            
+            javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
             javafx.scene.layout.HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
             
-            Button buyBtn = new Button("Acheter");
-            buyBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
-            buyBtn.setOnAction(e -> {
-                if (org.example.services.SessionManager.getInstance().getCurrentPlayer().getWallet() < dlc.getPrice()) {
-                    Alert error = new Alert(Alert.AlertType.ERROR);
-                    error.setContentText("Solde insuffisant !");
-                    error.showAndWait();
-                } else {
-                    // Déduire le prix
-                    org.example.services.SessionManager. getInstance().getCurrentPlayer()
-                        .setWallet(org.example.services.SessionManager.getInstance().getCurrentPlayer().getWallet() - dlc.getPrice());
-                    
-                    game.installDLC(dlc);
-                    
-                    Alert success = new Alert(Alert.AlertType.INFORMATION);
-                    success.setContentText("DLC acheté et installé !");
-                    success.showAndWait();
-                    
-                    dialog.close();
-                    
-                    dlcBtn.setText("🎁 Télécharger DLC (" + game.getPendingDLCs().size() + ")");
-                    dlcBtn.setDisable(game.getPendingDLCs().isEmpty());
-                    
-                    if (onUpdate != null) onUpdate.run();
-                }
-            });
+            Label priceLabel = new Label(dlc.getFormattedPrice());
+            priceLabel.setStyle("-fx-text-fill: #4CAF50; -fx-font-weight: bold; -fx-font-size: 14px;");
             
-            dlcItem.getChildren().addAll(nameLabel, spacer, priceLabel, buyBtn);
+            headerRow.getChildren().addAll(nameLabel, statusLabel, spacer, priceLabel);
+            
+            // Infos supplémentaires pour DLC installé
+            HBox infoRow = new HBox(15);
+            infoRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            
+            if (dlc.isInstalled()) {
+                Label timeLabel = new Label("⏱ " + dlc.getPlayedTime() + " min jouées");
+                timeLabel.setStyle("-fx-text-fill: #aaa;");
+                
+                double avgRating = dlc.getAverageRating();
+                Label ratingLabel = new Label(avgRating > 0 ? String.format("⭐ %.1f/5", avgRating) : "Pas de note");
+                ratingLabel.setStyle("-fx-text-fill: #FFD700;");
+                
+                infoRow.getChildren().addAll(timeLabel, ratingLabel);
+            }
+            
+            // Boutons d'action
+            HBox actionsRow = new HBox(10);
+            actionsRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            
+            if (dlc.isInstalled()) {
+                Button playDlcBtn = new Button("▶ Jouer");
+                playDlcBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+                playDlcBtn.setOnAction(e -> {
+                    // Simuler 15 min de jeu sur le DLC
+                    dlc.addPlayedTime(15);
+                    Alert info = new Alert(Alert.AlertType.INFORMATION);
+                    info.setContentText("Vous avez joué 15 minutes au DLC " + dlc.getName() + " !");
+                    info.showAndWait();
+                });
+                
+                Button reviewDlcBtn = new Button("⭐ Évaluer");
+                reviewDlcBtn.setOnAction(e -> ReviewDialog.showForDLC(dlc));
+                
+                Button seeReviewsDlcBtn = new Button("👁 Avis (" + dlc.getReviews().size() + ")");
+                seeReviewsDlcBtn.setOnAction(e -> ReviewsListDialog.showForDLC(dlc));
+                
+                actionsRow.getChildren().addAll(playDlcBtn, reviewDlcBtn, seeReviewsDlcBtn);
+            } else {
+                Button buyBtn = new Button("Acheter");
+                buyBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+                buyBtn.setOnAction(e -> {
+                    if (org.example.services.SessionManager.getInstance().getCurrentPlayer().getWallet() < dlc.getPrice()) {
+                        Alert error = new Alert(Alert.AlertType.ERROR);
+                        error.setContentText("Solde insuffisant !");
+                        error.showAndWait();
+                    } else {
+                        org.example.services.SessionManager.getInstance().getCurrentPlayer()
+                            .setWallet(org.example.services.SessionManager.getInstance().getCurrentPlayer().getWallet() - dlc.getPrice());
+                        
+                        game.installDLC(dlc);
+                        
+                        Alert success = new Alert(Alert.AlertType.INFORMATION);
+                        success.setContentText("DLC acheté et installé !");
+                        success.showAndWait();
+                        
+                        dialog.close();
+                        
+                        dlcBtn.setText("🎁 DLCs (" + game.getAvailableDLCs().size() + ")");
+                        
+                        if (onUpdate != null) onUpdate.run();
+                    }
+                });
+                actionsRow.getChildren().add(buyBtn);
+            }
+            
+            dlcItem.getChildren().addAll(headerRow);
+            if (!infoRow.getChildren().isEmpty()) {
+                dlcItem.getChildren().add(infoRow);
+            }
+            dlcItem.getChildren().add(actionsRow);
             dlcList.getChildren().add(dlcItem);
         }
+        
+        scrollPane.setContent(dlcList);
         
         Button closeBtn = new Button("Fermer");
         closeBtn.setOnAction(e -> dialog.close());
         
-        root.getChildren().addAll(titleLabel, new javafx.scene.control. Separator(), dlcList, closeBtn);
+        root.getChildren().addAll(titleLabel, new javafx.scene.control.Separator(), scrollPane, closeBtn);
         
-        javafx.scene.Scene scene = new javafx.scene. Scene(root, 500, 400);
+        javafx.scene.Scene scene = new javafx.scene.Scene(root, 550, 450);
         dialog.setScene(scene);
         dialog.showAndWait();
     }

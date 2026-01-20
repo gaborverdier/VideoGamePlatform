@@ -1,11 +1,11 @@
 package org.example.views.components;
 
-import javafx. geometry.Insets;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene. control.*;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx. stage.Modality;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.example.models.Game;
 import org.example.models.Review;
@@ -16,21 +16,38 @@ public class ReviewDialog {
     public static void show(Game game) {
         if (game.getPlayedTime() < 30) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert. setTitle("Temps de jeu insuffisant");
+            alert.setTitle("Temps de jeu insuffisant");
             alert.setContentText("Vous devez jouer au moins 30 minutes avant de pouvoir laisser un avis.");
             alert.showAndWait();
             return;
         }
         
+        showReviewForm(game.getName(), game.getId(), game.getPlayedTime(), review -> game.addReview(review));
+    }
+    
+    // Méthode pour évaluer un DLC
+    public static void showForDLC(Game.DLC dlc) {
+        if (dlc.getPlayedTime() < 30) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Temps de jeu insuffisant");
+            alert.setContentText("Vous devez jouer au moins 30 minutes au DLC avant de pouvoir laisser un avis.");
+            alert.showAndWait();
+            return;
+        }
+        
+        showReviewForm(dlc.getName(), dlc.getId(), dlc.getPlayedTime(), review -> dlc.addReview(review));
+    }
+    
+    private static void showReviewForm(String itemName, String itemId, int playedTime, java.util.function.Consumer<Review> onReviewSubmit) {
         Stage dialog = new Stage();
-        dialog.initModality(Modality. APPLICATION_MODAL);
-        dialog.setTitle("Évaluer " + game.getName());
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.setTitle("Évaluer " + itemName);
         
         VBox root = new VBox(15);
         root.setPadding(new Insets(20));
         root.setStyle("-fx-background-color: #2b2b2b;");
         
-        Label titleLabel = new Label("Évaluer " + game.getName());
+        Label titleLabel = new Label("Évaluer " + itemName);
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;");
         
         // Sélection étoiles
@@ -52,7 +69,7 @@ public class ReviewDialog {
         commentLabel.setStyle("-fx-text-fill: white;");
         
         TextArea commentArea = new TextArea();
-        commentArea.setPromptText("Partagez votre expérience.. .");
+        commentArea.setPromptText("Partagez votre expérience...");
         commentArea.setPrefRowCount(4);
         
         // Boutons
@@ -74,21 +91,21 @@ public class ReviewDialog {
                 String comment = commentArea.getText();
                 
                 Review review = new Review(
-                    game.getId(),
+                    itemId,
                     SessionManager.getInstance().getCurrentPlayer().getId(),
                     SessionManager.getInstance().getCurrentPlayer().getUsername(),
                     rating,
                     comment,
-                    game.getPlayedTime()
+                    playedTime
                 );
                 
-                game.addReview(review);
+                onReviewSubmit.accept(review);
                 
                 Alert success = new Alert(Alert.AlertType.INFORMATION);
                 success.setContentText("Avis publié !");
                 success.showAndWait();
                 
-                dialog. close();
+                dialog.close();
             }
         });
         

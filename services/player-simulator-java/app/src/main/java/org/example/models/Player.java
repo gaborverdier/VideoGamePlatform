@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.example.models.Platform;
+
 public class Player {
     private String id;
     private String username;
@@ -12,6 +14,13 @@ public class Player {
     private List<Game> ownedGames;
     private List<String> friendIds;
     private List<String> followedPublisherIds;
+
+    public enum PurchaseResult {
+        SUCCESS,
+        ALREADY_OWNED,
+        INSUFFICIENT_FUNDS,
+        UNSUPPORTED_PLATFORM
+    }
     
     public Player(String id, String username, String email, double wallet) {
         this.id = id;
@@ -43,23 +52,30 @@ public class Player {
     // Setters
     public void setWallet(double wallet) { this.wallet = wallet; }
     
-    // Acheter un jeu
-    public boolean purchaseGame(Game game) {
-        if (game.isOwned()) {
-            System.out.println("Jeu déjà possédé !");
-            return false;
+    // Acheter un jeu sur une plateforme donnée
+    public PurchaseResult purchaseGame(Game game, Platform platform) {
+        if (game == null || platform == null) {
+            return PurchaseResult.UNSUPPORTED_PLATFORM;
         }
-        
+
+        if (!game.getSupportedPlatforms().contains(platform)) {
+            return PurchaseResult.UNSUPPORTED_PLATFORM;
+        }
+
+        if (game.isOwnedOnPlatform(platform)) {
+            return PurchaseResult.ALREADY_OWNED;
+        }
+
         if (wallet < game.getPrice()) {
-            System.out.println("Solde insuffisant !");
-            return false;
+            return PurchaseResult.INSUFFICIENT_FUNDS;
         }
-        
+
         wallet -= game.getPrice();
-        game.purchase();
-        ownedGames.add(game);
-        System.out.println("Jeu acheté :  " + game.getName());
-        return true;
+        game.purchase(platform);
+        if (!ownedGames.contains(game)) {
+            ownedGames.add(game);
+        }
+        return PurchaseResult.SUCCESS;
     }
     
     public boolean ownsGame(String gameId) {

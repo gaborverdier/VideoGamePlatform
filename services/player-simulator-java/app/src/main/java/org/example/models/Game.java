@@ -1,7 +1,10 @@
 package org.example. models;
 import javafx.scene.image.Image;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Game {
     private String id;
@@ -16,6 +19,8 @@ public class Game {
     private String description;
     private double rating;
     private int playtime;
+    private Set<Platform> supportedPlatforms;
+    private Set<Platform> ownedPlatforms;
     
     // Nouveaux attributs
     private boolean isInstalled = false;
@@ -29,7 +34,8 @@ public class Game {
     
     // Constructeur complet
     public Game(String id, String name, double price, String genre, String publisherId, String publisherName,
-                String coverImageUrl, String description, double rating, int playtime) {
+                String coverImageUrl, String description, double rating, int playtime,
+                Set<Platform> supportedPlatforms) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -42,17 +48,39 @@ public class Game {
         this.description = description;
         this.rating = rating;
         this.playtime = playtime;
+        this.supportedPlatforms = normalizeSupportedPlatforms(supportedPlatforms);
+        this.ownedPlatforms = EnumSet.noneOf(Platform.class);
     }
     
+    // Constructeur complet avec plateformes par défaut (PC)
+    public Game(String id, String name, double price, String genre, String publisherId, String publisherName,
+                String coverImageUrl, String description, double rating, int playtime) {
+        this(id, name, price, genre, publisherId, publisherName, coverImageUrl, description, rating, playtime,
+                EnumSet.of(Platform.PC));
+    }
+
     // Constructeur simplifié
-    public Game(String name, double price, String genre, String coverImageUrl, 
+    public Game(String name, double price, String genre, String coverImageUrl,
+                String description, double rating, int playtime, Set<Platform> supportedPlatforms) {
+        this(generateId(), name, price, genre, "PUB-" + System.currentTimeMillis(),
+             "Unknown Publisher", coverImageUrl, description, rating, playtime, supportedPlatforms);
+    }
+
+    // Constructeur simplifié avec plateformes par défaut (PC)
+    public Game(String name, double price, String genre, String coverImageUrl,
                 String description, double rating, int playtime) {
-        this(generateId(), name, price, genre, "PUB-" + System.currentTimeMillis(), 
-             "Unknown Publisher", coverImageUrl, description, rating, playtime);
+        this(name, price, genre, coverImageUrl, description, rating, playtime, EnumSet.of(Platform.PC));
     }
     
     private static String generateId() {
         return "GAME-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 1000);
+    }
+
+    private Set<Platform> normalizeSupportedPlatforms(Set<Platform> platforms) {
+        if (platforms == null || platforms.isEmpty()) {
+            return EnumSet.of(Platform.PC);
+        }
+        return EnumSet.copyOf(platforms);
     }
     
     // Getters
@@ -68,6 +96,8 @@ public class Game {
     public String getDescription() { return description; }
     public double getRating() { return rating; }
     public int getPlaytime() { return playtime; }
+    public Set<Platform> getSupportedPlatforms() { return EnumSet.copyOf(supportedPlatforms); }
+    public Set<Platform> getOwnedPlatforms() { return EnumSet.copyOf(ownedPlatforms); }
     public boolean isInstalled() { return isInstalled; }
     public boolean isFavorite() { return isFavorite; }
     public boolean isWishlisted() { return isWishlisted; }
@@ -76,6 +106,10 @@ public class Game {
     public List<String> getInstalledUpdates() { return installedUpdates; }
     public List<DLC> getAvailableDLCs() { return availableDLCs; }
     public List<Review> getReviews() { return reviews; }
+    public boolean isOwnedOnPlatform(Platform platform) { return platform != null && ownedPlatforms.contains(platform); }
+    public boolean ownsAllSupportedPlatforms() { return ownedPlatforms.containsAll(supportedPlatforms); }
+    public String getSupportedPlatformsLabel() { return supportedPlatforms.stream().map(Platform::getLabel).collect(Collectors.joining(", ")); }
+    public String getOwnedPlatformsLabel() { return ownedPlatforms.stream().map(Platform::getLabel).collect(Collectors.joining(", ")); }
     
     // Setters
     public void setOwned(boolean owned) { this.owned = owned; }
@@ -85,9 +119,14 @@ public class Game {
     public void setPrice(double price) { this.price = price; }
     
     // Méthodes
-    public void purchase() {
+    public boolean purchase(Platform platform) {
+        if (platform == null || !supportedPlatforms.contains(platform)) {
+            return false;
+        }
+        ownedPlatforms.add(platform);
         this.owned = true;
         this.isWishlisted = false;
+        return true;
     }
     
     public void addPlayedTime(int minutes) {
@@ -165,20 +204,34 @@ public class Game {
 
     // Classe interne pour les DLCs
     public static class DLC {
+        private String id;
         private String name;
         private double price;
         private boolean installed;
+        private int playedTime = 0;
+        private List<Review> reviews = new ArrayList<>();
         
         public DLC(String name, double price) {
+            this.id = "DLC-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 1000);
             this.name = name;
             this.price = price;
             this.installed = false;
         }
         
+        public String getId() { return id; }
         public String getName() { return name; }
         public double getPrice() { return price; }
         public boolean isInstalled() { return installed; }
         public void setInstalled(boolean installed) { this.installed = installed; }
+        public int getPlayedTime() { return playedTime; }
+        public void addPlayedTime(int minutes) { this.playedTime += minutes; }
+        public List<Review> getReviews() { return reviews; }
+        public void addReview(Review review) { reviews.add(review); }
+        
+        public double getAverageRating() {
+            if (reviews.isEmpty()) return 0;
+            return reviews.stream().mapToDouble(Review::getRating).average().orElse(0);
+        }
         
         public String getFormattedPrice() {
             return String.format("%.2f€", price);
