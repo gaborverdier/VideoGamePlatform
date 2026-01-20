@@ -78,19 +78,21 @@ services:
     networks:
       - app-net
 
+
   postgres:
     image: postgres:16
     container_name: postgres
-    environment:
-      POSTGRES_DB: videogames_db
-      POSTGRES_USER: videogames_user
-      POSTGRES_PASSWORD: secretpassword
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespw
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./init-multi-db.sql:/docker-entrypoint-initdb.d/init-multi-db.sql:ro
     networks:
       - app-net
+
 
   pgadmin:
     image: dpage/pgadmin4:latest
