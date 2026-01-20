@@ -98,21 +98,21 @@ public class UserService {
 
 
     private UserModel toUserResponse(User user) {
-        return UserModel.newBuilder()
-                .setUserId(user.getUserId())
-                .setUsername(user.getUsername())
-                .setEmail(user.getEmail())
-                .setRegisteredAt(
-                    user.getRegistrationDate() != null 
-                        ? user.getRegistrationDate().toInstant(ZoneOffset.UTC).toEpochMilli()
-                        : System.currentTimeMillis()
-                )
-                .setLastLogin(
-                    user.getLastLogin() != null 
-                        ? user.getLastLogin().toInstant(ZoneOffset. UTC).toEpochMilli()
-                        : null
-                )
-                .setCountry(user.getCountry())
-                .build();
-    }
+    return UserModel.newBuilder()
+            .setUserId(user.getUserId() != null ? user.getUserId() : "") 
+            .setUsername(user.getUsername() != null ? user.getUsername() : "")
+            .setEmail(user.getEmail() != null ? user.getEmail() : "")
+            .setRegisteredAt(
+                user.getRegistrationDate() != null 
+                    ? user.getRegistrationDate().toInstant(ZoneOffset.UTC).toEpochMilli()
+                    : System.currentTimeMillis()
+            )
+            .setLastLogin(
+                user.getLastLogin() != null 
+                    ?  user.getLastLogin().toInstant(ZoneOffset.UTC).toEpochMilli()
+                    : null
+            )
+            .setCountry(user.getCountry())
+            .build();
+}
 }

@@ -33,6 +33,9 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
 
+    // Jackson Avro support
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-avro:2.15.3")
+
     // Local dependency to Avro schemas
     implementation(files("../../../common/avro-schemas/build/libs/avro-schemas-1.0.0.jar"))
 
