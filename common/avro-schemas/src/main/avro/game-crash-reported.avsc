@@ -11,7 +11,7 @@
     },
     {
       "name": "gameId",
-      "type": "string",
+      "type": "long",
       "doc": "Identifiant du jeu concerné"
     },
     {
