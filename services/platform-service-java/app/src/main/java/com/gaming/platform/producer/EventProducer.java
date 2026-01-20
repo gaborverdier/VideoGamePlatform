@@ -1,7 +1,7 @@
 package com.gaming.platform. producer;
 
 import com.gaming.events.*;
-import com.gaming.platform. model.Game;
+import com.gaming.platform.model.Game;
 import com.gaming.platform.model.Purchase;
 import com.gaming.platform.model.User;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +10,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients. producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -28,7 +29,7 @@ public class EventProducer {
     private static final String GAME_PURCHASED_TOPIC = "game-purchased";
     private static final String USER_LOGIN_TOPIC = "user-login";
     
-    public EventProducer(Properties producerProperties) {
+    public EventProducer(@Qualifier("producerProperties") Properties producerProperties) {
         this.producerProperties = producerProperties;
     }
     

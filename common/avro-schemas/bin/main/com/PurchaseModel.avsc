@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.model",
+  "name": "PurchaseModel",
+  "doc": "API response after purchase",
+  "fields": [
+    {"name": "purchaseId", "type": "string"},
+    {"name": "userId", "type": "string"},
+    {"name": "gameId", "type": "string"},
+    {"name": "gameTitle", "type": "string"},
+    {"name": "price", "type": "double"},
+    {"name": "purchaseTimestamp", "type": "long"},
+    {"name": "status", "type": "string"}
+  ]
+}

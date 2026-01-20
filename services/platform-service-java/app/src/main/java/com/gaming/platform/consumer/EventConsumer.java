@@ -11,6 +11,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework. context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import jakarta.annotation.PreDestroy;
 import java.math.BigDecimal;
@@ -39,7 +40,7 @@ public class EventConsumer {
     private static final String GAME_PATCH_RELEASED_TOPIC = "game-patch-released";
     private static final String GAME_AVAILABILITY_CHANGED_TOPIC = "game-availability-changed";
     
-    public EventConsumer(Properties consumerProperties, GameRepository gameRepository) {
+    public EventConsumer(@Qualifier("consumerProperties") Properties consumerProperties, GameRepository gameRepository) {
         this.consumerProperties = consumerProperties;
         this.gameRepository = gameRepository;
         this.executorService = Executors.newSingleThreadExecutor();
@@ -55,8 +56,10 @@ public class EventConsumer {
     @PreDestroy
     public void cleanup() {
         running.set(false);
-        if (consumer != null) {
-            consumer.close();
+        synchronized (this) {
+            if (consumer != null) {
+                consumer.close();
+            }
         }
         executorService.shutdown();
         log.info("Kafka Consumer closed");

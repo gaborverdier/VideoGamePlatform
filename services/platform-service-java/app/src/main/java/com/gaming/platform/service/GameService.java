@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.gaming.platform.dto.GameDTO;
+import com.gaming.api.models.GameModel;
 import com.gaming.platform.model.Game;
 import com.gaming.platform.repository.GameRepository;
 
@@ -19,51 +19,50 @@ import lombok.extern.slf4j.Slf4j;
 public class GameService {
     private final GameRepository gameRepository;
 
-    public List<GameDTO> getAllAvailableGames() {
-        return gameRepository.findByAvailableTrue()
-                .stream()
-                .map(this::convertToDTO)
+    public List<GameModel> getAllAvailableGames() {
+        return gameRepository.findByAvailableTrue().stream()
+                .map(this::toGameModel)
                 .collect(Collectors.toList());
     }
 
-    public Optional<GameDTO> getGameById(String gameId) {
-        return gameRepository.findById(gameId).map(this::convertToDTO);
+    public Optional<GameModel> getGameById(String gameId) {
+        return gameRepository.findById(gameId).map(this::toGameModel);
     }
 
-    public List<GameDTO> searchGames(String title) {
+    public List<GameModel> searchGames(String title) {
         return gameRepository.findByTitleContainingIgnoreCase(title)
                 .stream()
-                .map(this::convertToDTO)
+                .map(this::toGameModel)
                 .collect(Collectors.toList());
     }
 
-    public List<GameDTO> getGamesByGenre(String genre) {
+    public List<GameModel> getGamesByGenre(String genre) {
         return gameRepository.findByTitleContainingIgnoreCase(genre)
                 .stream()
-                .map(this::convertToDTO)
+                .map(this::toGameModel)
                 .collect(Collectors.toList());
     }
 
-    public List<GameDTO> getGamesByPlatform(String platform) {
+    public List<GameModel> getGamesByPlatform(String platform) {
         return gameRepository.findByPlatform(platform)
                 .stream()
-                .map(this::convertToDTO)
+                .map(this::toGameModel)
                 .collect(Collectors.toList());
     }
 
-    private GameDTO convertToDTO(Game game) {
-        GameDTO dto = new GameDTO();
-        dto.setGameId(game.getGameId());
-        dto.setTitle(game.getTitle());
-        dto.setPublisher(game.getPublisher());
-        dto.setPlatform(game.getPlatform());
-        dto.setGenre(game.getGenre());
-        dto.setReleaseYear(game.getReleaseYear());
-        dto.setPrice(game.getPrice());
-        dto.setVersion(game.getVersion());
-        dto.setAvailable(game.getAvailable());
-        dto.setDescription(game.getDescription());
-        return dto;
+    private GameModel toGameModel(Game game) {
+        return GameModel.newBuilder()
+                .setGameId(game.getGameId())
+                .setTitle(game.getTitle())
+                .setPublisher(game.getPublisher())
+                .setPlatform(game.getPlatform())
+                .setGenre(game.getGenre())
+                .setReleaseYear(game.getReleaseYear())
+                .setPrice(game.getPrice().doubleValue())
+                .setVersion(game.getVersion())
+                .setAvailable(game.getAvailable())
+                .setDescription(game.getDescription())
+                .build();
     }
 
 }

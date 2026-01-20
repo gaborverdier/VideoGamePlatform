@@ -1,7 +1,7 @@
 package com.gaming.platform;
 
-import com.gaming.platform.dto.UserRegistrationDTO;
-import com.gaming.platform.model.User;
+import com.gaming.api.requests.UserRegistrationRequest;
+import com.gaming.api.models.UserModel;
 import com.gaming.platform.repository.UserRepository;
 import com.gaming.platform.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -23,38 +23,40 @@ class PlatformServiceIntegrationTest {
     
     @Test
     void testUserRegistration() {
-        UserRegistrationDTO dto = new UserRegistrationDTO();
-        dto.setUsername("testuser");
-        dto.setEmail("test@example.com");
-        dto.setPassword("password123");
-        dto.setCountry("USA");
-        
-        User user = userService.registerUser(dto);
-        
+        UserRegistrationRequest request = UserRegistrationRequest.newBuilder()
+                .setUsername("testuser")
+                .setEmail("test@example.com")
+                .setPassword("password123")
+                .setCountry("USA")
+                .build();
+
+        UserModel user = userService.registerUser(request);
+
         assertNotNull(user.getUserId());
         assertEquals("testuser", user.getUsername());
         assertEquals("test@example.com", user.getEmail());
-        assertTrue(user.getActive());
-        
+
         assertTrue(userRepository.existsByUsername("testuser"));
     }
     
     @Test
     void testDuplicateUsernameThrowsException() {
-        UserRegistrationDTO dto1 = new UserRegistrationDTO();
-        dto1.setUsername("duplicate");
-        dto1.setEmail("user1@example.com");
-        dto1.setPassword("password123");
-        
-        userService.registerUser(dto1);
-        
-        UserRegistrationDTO dto2 = new UserRegistrationDTO();
-        dto2.setUsername("duplicate");
-        dto2.setEmail("user2@example.com");
-        dto2.setPassword("password123");
-        
+        UserRegistrationRequest request1 = UserRegistrationRequest.newBuilder()
+                .setUsername("duplicate")
+                .setEmail("user1@example.com")
+                .setPassword("password123")
+                .build();
+
+        userService.registerUser(request1);
+
+        UserRegistrationRequest request2 = UserRegistrationRequest.newBuilder()
+                .setUsername("duplicate")
+                .setEmail("user2@example.com")
+                .setPassword("password123")
+                .build();
+
         assertThrows(IllegalArgumentException.class, () -> {
-            userService.registerUser(dto2);
+            userService.registerUser(request2);
         });
     }
 }
