@@ -8,7 +8,8 @@ import javafx.stage.Stage;
 import org.example.models.Game;
 import org.example.services.GameDataService;
 import org.example.services.SessionManager;
-import org.example.views.components.*;
+import org.example.views.components.dialogs.LoginDialog;
+import org.example.views.components.tabs.*;
 
 public class PlayerDashboard extends Application {
 
@@ -23,12 +24,12 @@ public class PlayerDashboard extends Application {
     @Override
     public void start(Stage stage) {
         // Afficher la fenêtre de connexion
-        if (! LoginDialog.show()) {
+        if (!LoginDialog.show()) {
             return; // L'utilisateur a quitté
         }
         
         TabPane tabs = new TabPane();
-        tabs.setTabClosingPolicy(TabPane.TabClosingPolicy. UNAVAILABLE);
+        tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
         // Créer les onglets
         libraryTab = new LibraryTab(this::onGamePurchased);
@@ -40,13 +41,12 @@ public class PlayerDashboard extends Application {
         friendsTab = new FriendsTab();
         notificationsTab = new NotificationsTab();
 
-        Tab libraryTabUI = new Tab("📚 Bibliothèque", libraryTab);
-        Tab myGamesTabUI = new Tab("🎮 Mes Jeux", myGamesTab);
-        Tab publishersTabUI = new Tab("🏢 Éditeurs", publishersTab);
-        Tab friendsTabUI = new Tab("👥 Amis", friendsTab);
-        Tab wishlistTabUI = new Tab("❤ Liste de souhaits", wishlistTab);
-        Tab notificationsTabUI = new Tab("🔔 Notifications", notificationsTab);
-
+        Tab libraryTabUI = new Tab("Bibliothèque", libraryTab);
+        Tab myGamesTabUI = new Tab("Mes Jeux", myGamesTab);
+        Tab publishersTabUI = new Tab("Éditeurs", publishersTab);
+        Tab friendsTabUI = new Tab("Amis", friendsTab);
+        Tab wishlistTabUI = new Tab("Liste de souhaits", wishlistTab);
+        Tab notificationsTabUI = new Tab("Notifications", notificationsTab);
         tabs.getTabs().addAll(libraryTabUI, myGamesTabUI, publishersTabUI, friendsTabUI, wishlistTabUI, notificationsTabUI);
 
         // Barre du haut avec le solde

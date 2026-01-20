@@ -1,12 +1,13 @@
-package org.example.views.components;
+package org.example.views.components.tabs;
 
-import javafx.geometry. Insets;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import org.example.models.Game;
 import org.example.services.GameDataService;
+import org.example.views.components.dialogs.GameDetailsDialog;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -53,7 +54,7 @@ public class LibraryTab extends ScrollPane {
         card.setAlignment(Pos.TOP_CENTER);
         card.setPrefWidth(350);
 
-        ImageView imageView = new ImageView(game. getCoverImage());
+        ImageView imageView = new ImageView(game.getCoverImage());
         imageView.setFitWidth(330);
         imageView.setFitHeight(155);
         imageView.setPreserveRatio(true);
@@ -61,7 +62,7 @@ public class LibraryTab extends ScrollPane {
         Label nameLabel = new Label(game.getName());
         nameLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
 
-        Label genreLabel = new Label(game. getGenre());
+        Label genreLabel = new Label(game.getGenre());
         genreLabel.setStyle("-fx-text-fill: #aaa;");
 
         Label priceLabel = new Label(game.getFormattedPrice());

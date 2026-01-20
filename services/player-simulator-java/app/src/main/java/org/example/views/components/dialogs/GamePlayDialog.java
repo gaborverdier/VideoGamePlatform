@@ -1,11 +1,11 @@
-package org.example.views.components;
+package org.example.views.components.dialogs;
 
-import javafx.geometry. Insets;
-import javafx. geometry.Pos;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.stage. Modality;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.example.models.Game;
 
@@ -14,7 +14,7 @@ public class GamePlayDialog {
     public static void show(Game game, Runnable onUpdate) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.setTitle("En jeu :  " + game.getName());
+        dialog.setTitle("En jeu : " + game.getName());
         
         VBox root = new VBox(20);
         root.setPadding(new Insets(30));
@@ -48,11 +48,11 @@ public class GamePlayDialog {
         timeBox.getChildren().addAll(minusBtn, plusBtn);
         
         // Bouton Crash
-        Button crashBtn = new Button("💥 CRASH LE JEU");
+        Button crashBtn = new Button("CRASH LE JEU");
         crashBtn.setStyle("-fx-background-color: #ff5722; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
         crashBtn.setOnAction(e -> {
             Alert crash = new Alert(Alert.AlertType.ERROR);
-            crash. setTitle("Crash !");
+            crash.setTitle("Crash !");
             crash.setHeaderText("Le jeu a planté !");
             crash.setContentText("Rapport de crash généré.\n(Sera envoyé via Kafka par ton collègue)");
             crash.showAndWait();

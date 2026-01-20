@@ -1,4 +1,4 @@
-package org.example.views.components;
+package org.example.views.components.dialogs;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -23,7 +23,7 @@ public class ReviewsListDialog {
         root.setStyle("-fx-background-color: #2b2b2b;");
         
         Label titleLabel = new Label("Avis des joueurs - " + game.getName());
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill:  white;");
+        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;");
         
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
@@ -53,7 +53,57 @@ public class ReviewsListDialog {
         dialog.showAndWait();
     }
     
-    // Méthode pour afficher les avis d'un DLC
+    private static VBox createReviewCard(Review review) {
+        VBox card = new VBox(5);
+        card.setPadding(new Insets(10));
+        card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5;");
+        
+        HBox header = new HBox(10);
+        header.setAlignment(Pos.CENTER_LEFT);
+        
+        Label authorLabel = new Label(review.getAuthorName());
+        authorLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
+        
+        Label starsLabel = new Label(review.getStars());
+        starsLabel.setStyle("-fx-text-fill: #FFD700; -fx-font-size: 14px;");
+        
+        Label timeLabel = new Label("(" + review.getFormattedPlaytime() + " de jeu)");
+        timeLabel.setStyle("-fx-text-fill: #aaa; -fx-font-size: 12px;");
+        
+        header.getChildren().addAll(authorLabel, starsLabel, timeLabel);
+        
+        Label commentLabel = new Label(review.getComment());
+        commentLabel.setWrapText(true);
+        commentLabel.setStyle("-fx-text-fill: white;");
+        
+        HBox footer = new HBox(15);
+        footer.setAlignment(Pos.CENTER_LEFT);
+        
+        String currentPlayerId = SessionManager.getInstance().getCurrentPlayer().getId();
+        
+        Button helpfulBtn = new Button("👍 Utile (" + review.getHelpfulCount() + ")");
+        helpfulBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #4CAF50;");
+        helpfulBtn.setOnAction(e -> {
+            if (review.markHelpful(currentPlayerId)) {
+                helpfulBtn.setText("👍 Utile (" + review.getHelpfulCount() + ")");
+            }
+        });
+        
+        Button notHelpfulBtn = new Button("👎 Pas utile (" + review.getNotHelpfulCount() + ")");
+        notHelpfulBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #f44336;");
+        notHelpfulBtn.setOnAction(e -> {
+            if (review.markNotHelpful(currentPlayerId)) {
+                notHelpfulBtn.setText("👎 Pas utile (" + review.getNotHelpfulCount() + ")");
+            }
+        });
+        
+        footer.getChildren().addAll(helpfulBtn, notHelpfulBtn);
+        
+        card.getChildren().addAll(header, commentLabel, footer);
+        
+        return card;
+    }
+    
     public static void showForDLC(Game.DLC dlc) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
@@ -65,11 +115,6 @@ public class ReviewsListDialog {
         
         Label titleLabel = new Label("Avis des joueurs - " + dlc.getName());
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;");
-        
-        // Note moyenne
-        double avgRating = dlc.getAverageRating();
-        Label avgLabel = new Label(avgRating > 0 ? String.format("Note moyenne: %.1f/5 ⭐", avgRating) : "Pas encore de note");
-        avgLabel.setStyle("-fx-text-fill: #FFD700;");
         
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
@@ -92,68 +137,10 @@ public class ReviewsListDialog {
         Button closeBtn = new Button("Fermer");
         closeBtn.setOnAction(e -> dialog.close());
         
-        root.getChildren().addAll(titleLabel, avgLabel, new Separator(), scrollPane, closeBtn);
+        root.getChildren().addAll(titleLabel, new Separator(), scrollPane, closeBtn);
         
         Scene scene = new Scene(root, 600, 500);
         dialog.setScene(scene);
         dialog.showAndWait();
-    }
-    
-    private static VBox createReviewCard(Review review) {
-        VBox card = new VBox(5);
-        card.setPadding(new Insets(10));
-        card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5;");
-        
-        HBox header = new HBox(10);
-        header.setAlignment(Pos.CENTER_LEFT);
-        
-        Label authorLabel = new Label(review.getAuthorName());
-        authorLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
-        
-        Label starsLabel = new Label(review.getStars());
-        starsLabel.setStyle("-fx-text-fill: #FFD700; -fx-font-size: 14px;");
-        
-        Label timeLabel = new Label("(" + review.getFormattedPlaytime() + " de jeu)");
-        timeLabel.setStyle("-fx-text-fill:  #aaa; -fx-font-size: 12px;");
-        
-        header.getChildren().addAll(authorLabel, starsLabel, timeLabel);
-        
-        Label commentLabel = new Label(review.getComment());
-        commentLabel.setWrapText(true);
-        commentLabel.setStyle("-fx-text-fill: white;");
-        
-        HBox footer = new HBox(15);
-        footer.setAlignment(Pos.CENTER_LEFT);
-        
-        String currentPlayerId = SessionManager.getInstance().getCurrentPlayer().getId();
-        boolean hasVoted = review.hasVoted(currentPlayerId);
-        
-        Button helpfulBtn = new Button("👍 Utile (" + review.getHelpfulCount() + ")");
-        helpfulBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + (hasVoted ? "#888" : "#4CAF50") + ";");
-        helpfulBtn.setDisable(hasVoted);
-        helpfulBtn.setOnAction(e -> {
-            if (review.markHelpful(currentPlayerId)) {
-                helpfulBtn.setText("👍 Utile (" + review.getHelpfulCount() + ")");
-                helpfulBtn.setDisable(true);
-                helpfulBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888;");
-            }
-        });
-        
-        Button notHelpfulBtn = new Button("👎 Pas utile (" + review.getNotHelpfulCount() + ")");
-        notHelpfulBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + (hasVoted ? "#888" : "#f44336") + ";");
-        notHelpfulBtn.setDisable(hasVoted);
-        notHelpfulBtn.setOnAction(e -> {
-            if (review.markNotHelpful(currentPlayerId)) {
-                notHelpfulBtn.setText("👎 Pas utile (" + review.getNotHelpfulCount() + ")");
-                notHelpfulBtn.setDisable(true);
-                notHelpfulBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888;");
-            }
-        });
-        
-        footer.getChildren().addAll(helpfulBtn, notHelpfulBtn);
-        
-        card.getChildren().addAll(header, commentLabel, footer);
-        
-        return card;
     }
 }

@@ -1,13 +1,13 @@
-package org.example.views.components;
+package org.example.views.components.dialogs;
 
 import javafx.application.Platform;
-import javafx. geometry.Insets;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene. control.*;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx. stage. Modality;
-import javafx. stage.Stage;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.example.models.Game;
 
 public class GameInstallDialog {
@@ -29,7 +29,7 @@ public class GameInstallDialog {
         progressBar.setPrefWidth(300);
         
         Label statusLabel = new Label("Téléchargement en cours...");
-        statusLabel. setStyle("-fx-text-fill: #aaa;");
+        statusLabel.setStyle("-fx-text-fill: #aaa;");
         
         root.getChildren().addAll(titleLabel, progressBar, statusLabel);
         
@@ -37,13 +37,12 @@ public class GameInstallDialog {
         dialog.setScene(scene);
         dialog.show();
         
-        // Simuler l'installation (5 secondes)
         new Thread(() -> {
             for (int i = 0; i <= 100; i++) {
                 final int progress = i;
                 Platform.runLater(() -> {
                     progressBar.setProgress(progress / 100.0);
-                    statusLabel.setText("Installation :  " + progress + "%");
+                    statusLabel.setText("Installation : " + progress + "%");
                 });
                 try {
                     Thread.sleep(50); // 5 secondes au total
@@ -57,7 +56,7 @@ public class GameInstallDialog {
                 dialog.close();
                 
                 Alert success = new Alert(Alert.AlertType.INFORMATION);
-                success. setTitle("Installation terminée");
+                success.setTitle("Installation terminée");
                 success.setContentText(game.getName() + " est maintenant installé !");
                 success.showAndWait();
                 

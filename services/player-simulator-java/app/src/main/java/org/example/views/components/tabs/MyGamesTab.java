@@ -1,11 +1,12 @@
-package org.example.views.components;
+package org.example.views.components.tabs;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene. control.*;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import org.example.models.Game;
+import org.example.views.components.dialogs.OwnedGameDetailsDialog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,7 @@ public class MyGamesTab extends ScrollPane {
     private Runnable onUpdate;
 
     public MyGamesTab(Runnable onUpdate) {
-        this. ownedGames = new ArrayList<>();
+        this.ownedGames = new ArrayList<>();
         this.onUpdate = onUpdate;
 
         gameGrid = new FlowPane();
@@ -38,7 +39,7 @@ public class MyGamesTab extends ScrollPane {
 
         if (ownedGames.isEmpty()) {
             Label emptyLabel = new Label("Aucun jeu acheté pour le moment.\nAllez dans la Bibliothèque pour acheter des jeux !");
-            emptyLabel.setStyle("-fx-font-size:  18px; -fx-text-fill: #aaa; -fx-padding: 50;");
+            emptyLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #aaa; -fx-padding: 50;");
             emptyLabel.setAlignment(Pos.CENTER);
             gameGrid.getChildren().add(emptyLabel);
         } else {
@@ -62,7 +63,7 @@ public class MyGamesTab extends ScrollPane {
         imageView.setPreserveRatio(true);
 
         Label nameLabel = new Label(game.getName());
-        nameLabel. setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
+        nameLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
 
         Label genreLabel = new Label(game.getGenre());
         genreLabel.setStyle("-fx-text-fill: #aaa;");
@@ -72,7 +73,7 @@ public class MyGamesTab extends ScrollPane {
 
         // Status installé ou non
         Label statusLabel = new Label(game.isInstalled() ? "✅ Installé" : "⬇ Pas installé");
-        statusLabel. setStyle("-fx-font-weight: bold; -fx-text-fill: " + (game.isInstalled() ? "#4CAF50" : "#FF9800") + ";");
+        statusLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: " + (game.isInstalled() ? "#4CAF50" : "#FF9800") + ";");
 
         card.getChildren().addAll(imageView, nameLabel, genreLabel, platformLabel, statusLabel);
 
@@ -80,7 +81,7 @@ public class MyGamesTab extends ScrollPane {
         card.setOnMouseExited(e -> card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5; -fx-cursor: hand;"));
 
         card.setOnMouseClicked(e -> {
-            OwnedGameDetailsDialog. show(game, () -> {
+            OwnedGameDetailsDialog.show(game, () -> {
                 updateView();
                 if (onUpdate != null) onUpdate.run();
             });
