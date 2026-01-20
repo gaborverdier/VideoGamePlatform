@@ -1,0 +1,39 @@
+{
+  "type":  "record",
+  "namespace":  "com.gaming.events",
+  "name": "GamePatchReleased",
+  "doc":  "Event published when a new game patch is released",
+  "fields": [
+    {
+      "name": "gameId",
+      "type": "string",
+      "doc": "Unique identifier for the game"
+    },
+    {
+      "name": "gameTitle",
+      "type": "string",
+      "doc": "Game title"
+    },
+    {
+      "name": "previousVersion",
+      "type": "string",
+      "doc": "Previous version number"
+    },
+    {
+      "name": "newVersion",
+      "type": "string",
+      "doc": "New version number"
+    },
+    {
+      "name": "patchNotes",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Patch release notes"
+    },
+    {
+      "name": "releaseTimestamp",
+      "type":  "long",
+      "doc":  "Unix timestamp (milliseconds) when patch was released"
+    }
+  ]
+}

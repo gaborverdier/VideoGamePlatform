@@ -1,0 +1,34 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.events",
+  "name": "GameAvailabilityChanged",
+  "doc": "Event published when a game's availability status changes",
+  "fields": [
+    {
+      "name": "gameId",
+      "type": "string",
+      "doc": "Unique identifier for the game"
+    },
+    {
+      "name":  "gameTitle",
+      "type": "string",
+      "doc": "Game title"
+    },
+    {
+      "name": "available",
+      "type": "boolean",
+      "doc": "Whether the game is available for purchase"
+    },
+    {
+      "name": "reason",
+      "type": ["null", "string"],
+      "default":  null,
+      "doc": "Reason for availability change"
+    },
+    {
+      "name": "changeTimestamp",
+      "type":  "long",
+      "doc":  "Unix timestamp (milliseconds) when availability changed"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.events",
+  "name": "GamePurchased",
+  "doc": "Event published when a user purchases a game",
+  "fields":  [
+    {
+      "name": "purchaseId",
+      "type": "string",
+      "doc": "Unique identifier for the purchase"
+    },
+    {
+      "name": "userId",
+      "type": "string",
+      "doc": "ID of the user making the purchase"
+    },
+    {
+      "name": "username",
+      "type": "string",
+      "doc": "Username of the purchaser"
+    },
+    {
+      "name": "gameId",
+      "type": "string",
+      "doc": "ID of the game being purchased"
+    },
+    {
+      "name": "gameTitle",
+      "type": "string",
+      "doc": "Title of the game"
+    },
+    {
+      "name": "price",
+      "type": "double",
+      "doc": "Purchase price in USD"
+    },
+    {
+      "name": "purchaseTimestamp",
+      "type": "long",
+      "doc": "Unix timestamp (milliseconds) when purchase was made"
+    },
+    {
+      "name":  "paymentMethod",
+      "type":  ["null", "string"],
+      "default": null,
+      "doc": "Payment method used (e.g., credit_card, paypal)"
+    },
+    {
+      "name":  "region",
+      "type":  ["null", "string"],
+      "default": null,
+      "doc": "Region where purchase was made"
+    }
+  ]
+}

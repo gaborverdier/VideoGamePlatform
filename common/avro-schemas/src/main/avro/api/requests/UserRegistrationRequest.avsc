@@ -1,0 +1,29 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.requests",
+  "name":  "UserRegistrationRequest",
+  "doc": "API request to register a new user",
+  "fields": [
+    {
+      "name":  "username",
+      "type":  "string",
+      "doc":  "Desired username"
+    },
+    {
+      "name": "email",
+      "type": "string",
+      "doc": "Email address"
+    },
+    {
+      "name": "password",
+      "type": "string",
+      "doc": "Password"
+    },
+    {
+      "name": "country",
+      "type": ["null", "string"],
+      "default": null,
+      "doc":  "Country"
+    }
+  ]
+}

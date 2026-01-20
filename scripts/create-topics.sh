@@ -26,10 +26,43 @@ create_topic () {
   echo "[kafka-init] ensured topic: ${topic} (partitions=${partitions}, rf=${rf})"
 }
 
-create_topic "game.events"        3 1
-create_topic "users.registered"   1 1
-create_topic "games.published"    1 1
-create_topic "games.purchased"    3 1
-create_topic "games.reviews"      3 1
+# ============================================
+# USER/PLAYER EVENTS (Platform Service)
+# ============================================
+create_topic "user-registered"         3 1
+create_topic "user-login"              3 1
+create_topic "user-profile-updated"    1 1
 
-echo "[kafka-init] Done."
+# ============================================
+# GAME CATALOG EVENTS (Publisher Service)
+# ============================================
+create_topic "game-created"            3 1
+create_topic "game-updated"            5 1
+create_topic "game-deleted"            1 1
+create_topic "game-patch-released"     5 1
+create_topic "game-availability-changed" 3 1
+
+# ============================================
+# PURCHASE/TRANSACTION EVENTS (Platform Service)
+# ============================================
+create_topic "game-purchased"          5 1
+create_topic "purchase-refunded"       1 1
+
+# ============================================
+# GAMEPLAY/SESSION EVENTS (Player Service)
+# ============================================
+create_topic "game-session-started"    5 1
+create_topic "game-session-ended"      5 1
+
+# ============================================
+# QUALITY/CRASH EVENTS (Player Service)
+# ============================================
+create_topic "game-crash-reported"     5 1
+
+# ============================================
+# ANALYTICS/AGGREGATION (Quality Service)
+# ============================================
+create_topic "crash-aggregated"        3 1
+
+echo "[kafka-init] All topics created successfully!"
+echo "[kafka-init] Total topics: 14"

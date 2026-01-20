@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.model",
+  "name": "GameModel",
+  "doc": "Game Data Model",
+  "fields": [
+    {"name": "gameId", "type": "string"},
+    {"name": "title", "type": "string"},
+    {"name": "publisher", "type": "string"},
+    {"name": "platform", "type": "string"},
+    {"name": "genre", "type": "string"},
+    {"name": "releaseYear", "type": ["null", "int"], "default": null},
+    {"name": "price", "type":  "double"},
+    {"name": "version", "type": "string"},
+    {"name": "available", "type": "boolean"},
+    {"name": "description", "type": ["null", "string"], "default":  null}
+  ]
+}

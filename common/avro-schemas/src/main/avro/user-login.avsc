@@ -1,0 +1,35 @@
+{
+  "type": "record",
+  "namespace": "com.gaming. events",
+  "name": "UserLogin",
+  "doc":  "Event published when a user logs into the platform",
+  "fields":  [
+    {
+      "name": "userId",
+      "type": "string",
+      "doc": "Unique identifier for the user"
+    },
+    {
+      "name": "username",
+      "type": "string",
+      "doc": "Username"
+    },
+    {
+      "name": "loginTimestamp",
+      "type":  "long",
+      "doc":  "Unix timestamp (milliseconds) when user logged in"
+    },
+    {
+      "name": "ipAddress",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "IP address of login"
+    },
+    {
+      "name": "country",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Country from which user logged in"
+    }
+  ]
+}
