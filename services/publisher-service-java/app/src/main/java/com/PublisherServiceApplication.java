@@ -27,7 +27,14 @@ public class PublisherServiceApplication {
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(PublisherServiceApplication.class, args);
+        // Lancer Spring Boot dans un thread séparé
+        new Thread(() -> {
+            SpringApplication.run(PublisherServiceApplication.class, args);
+        }).start();
+        
         System.out.println(new PublisherServiceApplication().getGreeting());
+        
+        // Lancer JavaFX dans le thread principal
+        PublisherSimulatorApplication.main(args);
     }
 }

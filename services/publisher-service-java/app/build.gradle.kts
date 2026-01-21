@@ -6,6 +6,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.3.5"
     id("io.spring.dependency-management") version "1.1.6"
+    id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
 group = "com"
@@ -60,4 +61,9 @@ java {
 
 application {
     mainClass = "com.PublisherServiceApplication"
+}
+
+javafx {
+    version = "23"
+    modules = listOf("javafx.controls", "javafx.fxml", "javafx.graphics")
 }
