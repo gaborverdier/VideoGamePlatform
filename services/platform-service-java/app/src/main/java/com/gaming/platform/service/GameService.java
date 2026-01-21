@@ -20,9 +20,11 @@ public class GameService {
     private final GameRepository gameRepository;
 
     public List<GameModel> getAllAvailableGames() {
-        return gameRepository.findByAvailableTrue().stream()
+        List<GameModel> games =  gameRepository.findByAvailableTrue().stream()
                 .map(this::toGameModel)
                 .collect(Collectors.toList());
+        log.info("Retrieved {} available games", games.size());
+        return games;
     }
 
     public Optional<GameModel> getGameById(String gameId) {
@@ -37,7 +39,7 @@ public class GameService {
     }
 
     public List<GameModel> getGamesByGenre(String genre) {
-        return gameRepository.findByTitleContainingIgnoreCase(genre)
+        return gameRepository.findByGenre(genre)
                 .stream()
                 .map(this::toGameModel)
                 .collect(Collectors.toList());

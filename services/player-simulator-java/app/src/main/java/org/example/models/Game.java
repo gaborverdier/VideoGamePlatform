@@ -1,4 +1,5 @@
 package org.example. models;
+import com.gaming.api.models.GameModel;
 import javafx.scene.image.Image;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -236,5 +237,38 @@ public class Game {
         public String getFormattedPrice() {
             return String.format("%.2f€", price);
         }
+    }
+    
+    // Mapping: Local Game -> Avro GameModel
+    public GameModel toAvroModel() {
+        GameModel avro = new GameModel();
+        avro.setGameId(this.id);
+        avro.setTitle(this.name);
+        avro.setPublisher(this.publisherName);
+        avro.setPlatform(this.supportedPlatforms != null && !this.supportedPlatforms.isEmpty() ? this.supportedPlatforms.iterator().next().name() : null);
+        avro.setGenre(this.genre);
+        avro.setReleaseYear(null); // Not present in local model
+        avro.setPrice(this.price);
+        avro.setVersion("1.0"); // Or use a real version if available
+        avro.setAvailable(true); // Or use a real flag if available
+        avro.setDescription(this.description);
+        return avro;
+    }
+
+    // Mapping: Avro GameModel -> Local Game
+    public static Game fromAvroModel(GameModel avro) {
+        return new Game(
+            avro.getGameId(),
+            avro.getTitle(),
+            avro.getPrice(),
+            avro.getGenre(),
+            null, // publisherId not present in Avro
+            avro.getPublisher(),
+            "https://www.boredpanda.com/blog/wp-content/uploads/2025/10/funny-cat-memes-go-hard-cover_675.jpg",
+            avro.getDescription(),
+            0.0, // rating not present in Avro
+            0, // playtime not present in Avro
+            null // supportedPlatforms not present in Avro
+        );
     }
 }
