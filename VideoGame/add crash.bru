@@ -1,0 +1,30 @@
+meta {
+  name: add crash
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8082/api/crash/report
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "gameId": 1,
+    "gameTitle": "Zelda",
+    "errorCode": "999",
+    "errorMessage": "Trop de swag",
+    "stackTrace": null,
+    "platform": "PC",
+    "gameVersion": "1.2.0",
+    "crashTimestamp": 1769034300000,
+    "userId": 1
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

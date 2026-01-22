@@ -14,6 +14,7 @@ public class Crash {
 
     private String description;
     private String crashDate;
+    private String gameVersion;
 
     @ManyToOne
     @JoinColumn(name = "game_id")
