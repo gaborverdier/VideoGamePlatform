@@ -9,14 +9,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/publishers")
+@RequestMapping("api/publishers")
 public class PublisherController {
     @Autowired
     private PublisherService publisherService;
 
     @GetMapping
-    public List<Publisher> getAllPublishers() {
-        return publisherService.getAllPublishers();
+    public ResponseEntity<List<Publisher>> getAllPublishers() {
+        List<Publisher> publishers = publisherService.getAllPublishers();
+        return ResponseEntity.ok(publishers);
     }
 
     @GetMapping("/{id}")
@@ -27,19 +28,20 @@ public class PublisherController {
     }
 
     @PostMapping
-    public Publisher createPublisher(@RequestBody Publisher publisher) {
-        return publisherService.createPublisher(publisher);
+    public ResponseEntity<Publisher> createPublisher(@RequestBody Publisher publisher) {
+        Publisher created = publisherService.createPublisher(publisher);
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Publisher> updatePublisher(@PathVariable Long id, @RequestBody Publisher publisher) {
         Publisher updated = publisherService.updatePublisher(id, publisher);
-        if (updated == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public void deletePublisher(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePublisher(@PathVariable Long id) {
         publisherService.deletePublisher(id);
+        return ResponseEntity.noContent().build();
     }
 }

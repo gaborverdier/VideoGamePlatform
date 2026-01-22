@@ -15,8 +15,9 @@ public class PatchController {
     private PatchService patchService;
 
     @GetMapping
-    public List<Patch> getAllPatches() {
-        return patchService.getAllPatches();
+    public ResponseEntity<List<Patch>> getAllPatches() {
+        List<Patch> patches = patchService.getAllPatches();
+        return ResponseEntity.ok(patches);
     }
 
     @GetMapping("/{id}")
@@ -27,24 +28,26 @@ public class PatchController {
     }
 
     @GetMapping("/game/{gameId}")
-    public List<Patch> getPatchesByGame(@PathVariable Long gameId) {
-        return patchService.getPatchesByGame(gameId);
+    public ResponseEntity<List<Patch>> getPatchesByGame(@PathVariable Long gameId) {
+        List<Patch> patches = patchService.getPatchesByGame(gameId);
+        return ResponseEntity.ok(patches);
     }
 
     @PostMapping("/game/{gameId}")
-    public Patch createPatch(@PathVariable Long gameId, @RequestBody Patch patch) {
-        return patchService.createPatch(gameId, patch);
+    public ResponseEntity<Patch> createPatch(@PathVariable Long gameId, @RequestBody Patch patch) {
+        Patch created = patchService.createPatch(gameId, patch);
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Patch> updatePatch(@PathVariable Long id, @RequestBody Patch patch) {
         Patch updated = patchService.updatePatch(id, patch);
-        if (updated == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public void deletePatch(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePatch(@PathVariable Long id) {
         patchService.deletePatch(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -15,8 +15,9 @@ public class DLCController {
     private DLCService dlcService;
 
     @GetMapping
-    public List<DLC> getAllDLCs() {
-        return dlcService.getAllDLCs();
+    public ResponseEntity<List<DLC>> getAllDLCs() {
+        List<DLC> dlcs = dlcService.getAllDLCs();
+        return ResponseEntity.ok(dlcs);
     }
 
     @GetMapping("/{id}")
@@ -27,24 +28,26 @@ public class DLCController {
     }
 
     @GetMapping("/game/{gameId}")
-    public List<DLC> getDLCsByGame(@PathVariable Long gameId) {
-        return dlcService.getDLCsByGame(gameId);
+    public ResponseEntity<List<DLC>> getDLCsByGame(@PathVariable Long gameId) {
+        List<DLC> dlcs = dlcService.getDLCsByGame(gameId);
+        return ResponseEntity.ok(dlcs);
     }
 
     @PostMapping("/game/{gameId}")
-    public DLC createDLC(@PathVariable Long gameId, @RequestBody DLC dlc) {
-        return dlcService.createDLC(gameId, dlc);
+    public ResponseEntity<DLC> createDLC(@PathVariable Long gameId, @RequestBody DLC dlc) {
+        DLC created = dlcService.createDLC(gameId, dlc);
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<DLC> updateDLC(@PathVariable Long id, @RequestBody DLC dlc) {
         DLC updated = dlcService.updateDLC(id, dlc);
-        if (updated == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteDLC(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDLC(@PathVariable Long id) {
         dlcService.deleteDLC(id);
+        return ResponseEntity.noContent().build();
     }
 }

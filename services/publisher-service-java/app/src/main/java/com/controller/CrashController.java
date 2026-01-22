@@ -15,7 +15,7 @@ import com.model.Crash;
 
 
 @RestController
-@RequestMapping("/crashes")
+@RequestMapping("api/crash")
 public class CrashController {
     @Autowired
     private CrashService crashService;
@@ -24,8 +24,9 @@ public class CrashController {
 
 
     @GetMapping
-    public List<GameCrashReportedEvent> getAllCrashes() {
-        return CrashMapper.toAvroList(crashService.getAllCrashes());
+    public ResponseEntity<List<GameCrashReportedEvent>> getAllCrashes() {
+        List<GameCrashReportedEvent> crashes = CrashMapper.toAvroList(crashService.getAllCrashes());
+        return ResponseEntity.ok(crashes);
     }
 
     @GetMapping("/{id}")
@@ -39,25 +40,26 @@ public class CrashController {
     }
 
     @GetMapping("/game/{gameId}")
-    public List<GameCrashReportedEvent> getCrashesByGame(@PathVariable Long gameId) {
+    public ResponseEntity<List<GameCrashReportedEvent>> getCrashesByGame(@PathVariable Long gameId) {
         List<Crash> crashes = crashService.getCrashesByGame(gameId);
-        return CrashMapper.toAvroList(crashes);
+        return ResponseEntity.ok(CrashMapper.toAvroList(crashes));
     }
 
-    @PostMapping("/game/{gameId}")
-    public GameCrashReportedEvent createCrash(@PathVariable Long gameId, @RequestBody GameCrashReportedEvent event) {
-        return CrashMapper.toAvro(crashService.createCrash(gameId, CrashMapper.fromAvro(event)));
+    @PostMapping("/report")
+    public ResponseEntity<GameCrashReportedEvent> createCrash(@RequestBody GameCrashReportedEvent event) {
+        Crash crash = crashService.createCrash(CrashMapper.fromAvro(event));
+        return ResponseEntity.ok(CrashMapper.toAvro(crash));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<GameCrashReportedEvent> updateCrash(@PathVariable Long id, @RequestBody GameCrashReportedEvent event) {
-        GameCrashReportedEvent updated = CrashMapper.toAvro(crashService.updateCrash(id, CrashMapper.fromAvro(event)));
-        if (updated == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(updated);
+        Crash updated = crashService.updateCrash(id, CrashMapper.fromAvro(event));
+        return ResponseEntity.ok(CrashMapper.toAvro(updated));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteCrash(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCrash(@PathVariable Long id) {
         crashService.deleteCrash(id);
+        return ResponseEntity.noContent().build();
     }
 }

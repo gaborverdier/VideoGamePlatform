@@ -9,14 +9,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/games")
+@RequestMapping("api/games")
 public class GameController {
     @Autowired
     private GameService gameService;
 
     @GetMapping
-    public List<Game> getAllGames() {
-        return gameService.getAllGames();
+    public ResponseEntity<List<Game>> getAllGames() {
+        List<Game> games = gameService.getAllGames();
+        return ResponseEntity.ok(games);
     }
 
     @GetMapping("/{id}")
@@ -27,24 +28,26 @@ public class GameController {
     }
 
     @GetMapping("/publisher/{publisherId}")
-    public List<Game> getGamesByPublisher(@PathVariable Long publisherId) {
-        return gameService.getGamesByPublisher(publisherId);
+    public ResponseEntity<List<Game>> getGamesByPublisher(@PathVariable Long publisherId) {
+        List<Game> games = gameService.getGamesByPublisher(publisherId);
+        return ResponseEntity.ok(games);
     }
 
     @PostMapping("/publisher/{publisherId}")
-    public Game createGame(@PathVariable Long publisherId, @RequestBody Game game) {
-        return gameService.createGame(publisherId, game);
+    public ResponseEntity<Game> createGame(@PathVariable("publisherId") Long publisherId, @RequestBody Game game) {
+        Game created = gameService.createGame(publisherId, game);
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Game> updateGame(@PathVariable Long id, @RequestBody Game game) {
         Game updated = gameService.updateGame(id, game);
-        if (updated == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteGame(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteGame(@PathVariable Long id) {
         gameService.deleteGame(id);
+        return ResponseEntity.noContent().build();
     }
 }

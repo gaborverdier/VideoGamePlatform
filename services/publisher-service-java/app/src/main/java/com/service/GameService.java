@@ -26,28 +26,39 @@ public class GameService {
     }
 
     public List<Game> getGamesByPublisher(Long publisherId) {
-        return publisherRepository.findById(publisherId)
-                .map(Publisher::getGames)
-                .orElse(List.of());
+        Publisher publisher = publisherRepository.findById(publisherId).orElse(null);
+        if (publisher == null) {
+            return List.of();
+        }
+        return publisher.getGames();
     }
 
     public Game createGame(Long publisherId, Game game) {
-        return publisherRepository.findById(publisherId).map(publisher -> {
-            game.setPublisher(publisher);
-            return gameRepository.save(game);
-        }).orElse(null);
+        // Validation métier : le publisher doit exister
+        Publisher publisher = publisherRepository.findById(publisherId)
+            .orElseThrow(() -> new IllegalArgumentException("Publisher introuvable avec l'ID: " + publisherId));
+        
+        game.setPublisher(publisher);
+        return gameRepository.save(game);
     }
 
     public Game updateGame(Long id, Game gameDetails) {
-        return gameRepository.findById(id).map(game -> {
-            game.setTitle(gameDetails.getTitle());
-            game.setGenre(gameDetails.getGenre());
-            game.setPlatform(gameDetails.getPlatform());
-            return gameRepository.save(game);
-        }).orElse(null);
+        // Validation métier : le jeu doit exister
+        Game game = gameRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + id));
+        
+        game.setTitle(gameDetails.getTitle());
+        game.setGenre(gameDetails.getGenre());
+        game.setPlatform(gameDetails.getPlatform());
+        
+        return gameRepository.save(game);
     }
 
     public void deleteGame(Long id) {
+        // Validation métier : le jeu doit exister
+        if (!gameRepository.existsById(id)) {
+            throw new IllegalArgumentException("Jeu introuvable avec l'ID: " + id);
+        }
         gameRepository.deleteById(id);
     }
 }
