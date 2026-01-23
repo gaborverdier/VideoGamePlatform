@@ -55,6 +55,20 @@ public class GameInstallDialog {
                 game.setInstalled(true);
                 dialog.close();
                 
+                // Notify backend that the game was installed for the current user
+                try {
+                    String userId = org.example.services.SessionManager.getInstance().getCurrentPlayer() != null
+                            ? org.example.services.SessionManager.getInstance().getCurrentPlayer().getId()
+                            : null;
+                    System.out.println("Current user ID: " + userId);
+                    if (userId != null) {
+                        org.example.services.GameDataService.getInstance().installGameForUser(userId, game.getId());
+                        System.out.println("Game " + game.getName() + " installed for user " + userId);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
                 Alert success = new Alert(Alert.AlertType.INFORMATION);
                 success.setTitle("Installation terminée");
                 success.setContentText(game.getName() + " est maintenant installé !");

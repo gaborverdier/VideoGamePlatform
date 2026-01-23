@@ -39,4 +39,19 @@ public class PlatformApiClient {
     private static String urlPath(String s) {
         return java.net.URLEncoder.encode(s == null ? "" : s, java.nio.charset.StandardCharsets.UTF_8);
     }
+
+    // GET /api/library/user/{userId}
+    public String getUserLibraryJson(String userId) throws Exception {
+        return ApiClient.get("/api/library/user/" + urlPath(userId));
+    }
+
+    // PUT /api/library/user/{userId}/game/{gameId}/install
+    public void installGame(String userId, String gameId) throws Exception {
+        ApiClient.put("/api/library/user/" + urlPath(userId) + "/game/" + urlPath(gameId) + "/install");
+    }
+
+    // POST /api/library/user/{userId}/game/{gameId}/purchase
+    public void purchaseGame(String userId, String gameId) throws Exception {
+        ApiClient.postJson("/api/library/user/" + urlPath(userId) + "/game/" + urlPath(gameId) + "/purchase", "{}");
+    }
 }

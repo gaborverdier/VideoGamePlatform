@@ -1,17 +1,25 @@
 package org.example.views.components.dialogs;
 
+import org.example.controllers.PlayerDashboardController;
+import org.example.models.Game;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.example.models.Game;
 
 public class GamePlayDialog {
     
-    public static void show(Game game, Runnable onUpdate) {
+    public static void show(Game game, Runnable onUpdate, PlayerDashboardController controller) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("En jeu : " + game.getName());
@@ -47,14 +55,32 @@ public class GamePlayDialog {
         
         timeBox.getChildren().addAll(minusBtn, plusBtn);
         
-        // Bouton Crash
+        // Crash options: choose a code and optional message
+        ChoiceBox<String> crashType = new ChoiceBox<>();
+        crashType.getItems().addAll("1 - Graphics", "2 - Network", "3 - Input", "99 - Unknown");
+        crashType.setValue("99 - Unknown");
+
+        TextField crashMessageField = new TextField();
+        crashMessageField.setPromptText("Détails du crash (optionnel)");
+
         Button crashBtn = new Button("CRASH LE JEU");
         crashBtn.setStyle("-fx-background-color: #ff5722; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
         crashBtn.setOnAction(e -> {
+            String sel = crashType.getValue();
+            int code = 99;
+            try {
+                code = Integer.parseInt(sel.split(" ")[0]);
+            } catch (Exception ex) { }
+
+            String details = crashMessageField.getText();
+            if (controller != null) {
+                controller.reportCrash(game.getId(), "1.0", code, details);
+            }
+
             Alert crash = new Alert(Alert.AlertType.ERROR);
             crash.setTitle("Crash !");
             crash.setHeaderText("Le jeu a planté !");
-            crash.setContentText("Rapport de crash généré.\n(Sera envoyé via Kafka par ton collègue)");
+            crash.setContentText("Rapport de crash généré.\n(Sera envoyé via Kafka)");
             crash.showAndWait();
             dialog.close();
         });
@@ -66,7 +92,10 @@ public class GamePlayDialog {
             dialog.close();
         });
         
-        root.getChildren().addAll(titleLabel, timeLabel, timeBox, new Separator(), crashBtn, quitBtn);
+        HBox crashBox = new HBox(10, crashType, crashMessageField);
+        crashBox.setAlignment(Pos.CENTER);
+
+        root.getChildren().addAll(titleLabel, timeLabel, timeBox, new Separator(), crashBox, crashBtn, quitBtn);
         
         Scene scene = new Scene(root, 400, 350);
         dialog.setScene(scene);

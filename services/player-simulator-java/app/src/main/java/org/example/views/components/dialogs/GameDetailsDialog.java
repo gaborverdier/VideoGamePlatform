@@ -164,6 +164,24 @@ public class GameDetailsDialog {
 
             switch (result) {
                 case SUCCESS -> {
+                    // Persist purchase to backend
+                    org.example.models.Player current = org.example.services.SessionManager.getInstance().getCurrentPlayer();
+                    String userId = current != null ? current.getId() : null;
+                    if (userId != null) {
+                        try {
+                            org.example.services.GameDataService.getInstance().purchaseGameForUser(userId, game.getId());
+                            System.out.println("Persisted purchase for user " + userId + " game " + game.getId());
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                            Alert err = new Alert(Alert.AlertType.ERROR);
+                            err.setTitle("Erreur backend");
+                            err.setContentText("Impossible d'enregistrer l'achat sur le serveur : " + ex.getMessage());
+                            err.showAndWait();
+                        }
+                    } else {
+                        System.out.println("No logged-in user: skipping backend purchase persist.");
+                    }
+
                     purchaseConfirmed = true;
                     Alert success = new Alert(Alert.AlertType.INFORMATION);
                     success.setTitle("Achat réussi");

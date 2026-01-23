@@ -5,6 +5,21 @@
   "doc": "API request to register a new user",
   "fields": [
     {
+      "name":  "firstName",
+      "type":  "string",
+      "doc":  "Fist Name"
+    },
+    {
+      "name":  "lastName",
+      "type":  "string",
+      "doc":  "Last Name"
+    },
+    {
+      "name":  "dateOfBirth",
+      "type":  "string",
+      "doc":  "Date Of Birth"
+    },
+    {
       "name":  "username",
       "type":  "string",
       "doc":  "Desired username"

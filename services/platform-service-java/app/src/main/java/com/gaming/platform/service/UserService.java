@@ -40,6 +40,9 @@ public class UserService {
         }
 
         User user = new User();
+        user.setFirstName(request.getFirstName().toString());
+        user.setLastName(request.getLastName().toString());
+        user.setDateOfBirth(request.getDateOfBirth().toString());
         user.setUsername(request.getUsername().toString());
         user.setEmail(request.getEmail().toString());
         user.setPassword(request.getPassword().toString()); // TODO: Hash password before saving

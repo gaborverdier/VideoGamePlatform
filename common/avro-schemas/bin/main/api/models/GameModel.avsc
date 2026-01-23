@@ -1,6 +1,6 @@
 {
   "type": "record",
-  "namespace": "com.gaming.api.model",
+  "namespace": "com.gaming.api.models",
   "name": "GameModel",
   "doc": "Game Data Model",
   "fields": [

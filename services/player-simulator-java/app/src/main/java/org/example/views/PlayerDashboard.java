@@ -8,6 +8,8 @@ import javafx.stage.Stage;
 import org.example.models.Game;
 import org.example.services.GameDataService;
 import org.example.services.SessionManager;
+import org.example.services.KafkaProducerService;
+import org.example.controllers.PlayerDashboardController;
 import org.example.views.components.dialogs.LoginDialog;
 import org.example.views.components.tabs.*;
 
@@ -27,6 +29,14 @@ public class PlayerDashboard extends Application {
         if (!LoginDialog.show()) {
             return; // L'utilisateur a quitté
         }
+        // Initialize controller and Kafka producer (local defaults)
+        KafkaProducerService kafkaProducer = new KafkaProducerService("localhost:9092", "http://localhost:8081");
+        PlayerDashboardController controller = new PlayerDashboardController(
+            kafkaProducer,
+            SessionManager.getInstance().getCurrentPlayer().getId(),
+            SessionManager.getInstance().getCurrentPlayer().getUsername()
+        );
+        SessionManager.getInstance().setPlayerController(controller);
         
         TabPane tabs = new TabPane();
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
@@ -85,7 +95,14 @@ public class PlayerDashboard extends Application {
     }
     
     private void refreshAll() {
+        try {
+            GameDataService.getInstance();
+        } catch (Exception e) {
+            // reload() handles its own error reporting, but guard here to avoid crashing UI
+            e.printStackTrace();
+        }
         myGamesTab.refresh();
+        libraryTab.refresh();
         wishlistTab.refresh();
         publishersTab.refresh();
         friendsTab.refresh();

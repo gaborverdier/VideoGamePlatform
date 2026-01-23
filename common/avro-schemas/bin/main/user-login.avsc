@@ -1,6 +1,6 @@
 {
   "type": "record",
-  "namespace": "com.gaming. events",
+  "namespace": "com.gaming.events",
   "name": "UserLogin",
   "doc":  "Event published when a user logs into the platform",
   "fields":  [

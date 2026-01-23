@@ -1,6 +1,6 @@
 {
   "type":  "record",
-  "namespace":  "com.gaming.api.model",
+  "namespace":  "com.gaming.api.models",
   "name": "UserModel",
   "doc": "API response for user data",
   "fields": [

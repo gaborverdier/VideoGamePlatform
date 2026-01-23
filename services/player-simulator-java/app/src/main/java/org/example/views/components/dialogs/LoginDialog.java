@@ -154,6 +154,9 @@ public class LoginDialog {
                     try {
                         // Populate Avro-generated UserRegistrationRequest
                         UserRegistrationRequest req = new UserRegistrationRequest();
+                        req.setFirstName(firstNameField.getText());
+                        req.setLastName(lastNameField.getText());
+                        req.setDateOfBirth(birthDateField.getText());
                         req.setUsername(usernameField.getText());
                         req.setEmail(emailField.getText());
                         req.setPassword(passwordField.getText());
@@ -196,7 +199,14 @@ public class LoginDialog {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> resp = mapper.readValue(responseJson, Map.class);
                         if (resp.containsKey("userId")) {
-                            Player player = new Player((String) resp.get("username"), "");
+                            String userId = (String) resp.get("userId");
+                            String username = resp.get("username") != null ? (String) resp.get("username") : loginField.getText();
+                            String email = resp.get("email") != null ? (String) resp.get("email") : "";
+                            double wallet = 100.0;
+                            if (resp.get("wallet") instanceof Number) {
+                                wallet = ((Number) resp.get("wallet")).doubleValue();
+                            }
+                            Player player = new Player(userId, username, email, wallet);
                             SessionManager.getInstance().login(player);
                             Alert success = new Alert(Alert.AlertType.INFORMATION);
                             success.setTitle("Connexion réussie");

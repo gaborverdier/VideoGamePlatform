@@ -1,6 +1,6 @@
 {
   "type": "record",
-  "namespace": "com.gaming. events",
+  "namespace": "com.gaming.events",
   "name": "GameCrashReported",
   "doc": "Event published when a game crash is reported",
   "fields":  [

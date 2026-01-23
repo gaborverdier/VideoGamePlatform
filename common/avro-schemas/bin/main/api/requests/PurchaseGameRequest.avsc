@@ -1,6 +1,6 @@
 {
   "type": "record",
-  "namespace": "com.gaming.api.request",
+  "namespace": "com.gaming.api.requests",
   "name": "PurchaseGameRequest",
   "doc": "API request to purchase a game",
   "fields": [

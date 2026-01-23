@@ -1,6 +1,6 @@
 {
   "type": "record",
-  "namespace": "com.gaming.api.model",
+  "namespace": "com.gaming.api.models",
   "name": "PurchaseModel",
   "doc": "API response after purchase",
   "fields": [
@@ -10,6 +10,8 @@
     {"name": "gameTitle", "type": "string"},
     {"name": "price", "type": "double"},
     {"name": "purchaseTimestamp", "type": "long"},
-    {"name": "status", "type": "string"}
+    {"name": "status", "type": "string"},
+    {"name": "paymentMethod",  "type" : "string"},
+    {"name": "region",  "type" : "string"}
   ]
 }
