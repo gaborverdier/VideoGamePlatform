@@ -1,0 +1,33 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.events",
+  "name": "GameSessionStarted",
+  "doc": "Event published when a user starts playing a game",
+  "fields":  [
+    {
+      "name": "sessionId",
+      "type": "string",
+      "doc": "Unique identifier for the gaming session"
+    },
+    {
+      "name": "userId",
+      "type": "string",
+      "doc": "User ID"
+    },
+    {
+      "name": "gameId",
+      "type": "string",
+      "doc": "Game ID"
+    },
+    {
+      "name": "startTimestamp",
+      "type": "long",
+      "doc": "Unix timestamp (milliseconds) when session started"
+    },
+    {
+      "name": "platform",
+      "type": "string",
+      "doc": "Platform on which game is being played"
+    }
+  ]
+}

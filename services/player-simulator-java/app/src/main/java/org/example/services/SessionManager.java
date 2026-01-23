@@ -1,10 +1,12 @@
 package org.example.services;
 
+import org.example.controllers.PlayerDashboardController;
 import org.example.models.Player;
 
 public class SessionManager {
     private static SessionManager instance;
     private Player currentPlayer;
+    private org.example.controllers.PlayerDashboardController playerController;
     
     private SessionManager() {}
     
@@ -25,6 +27,14 @@ public class SessionManager {
     
     public Player getCurrentPlayer() {
         return currentPlayer;
+    }
+
+    public PlayerDashboardController getPlayerController() {
+        return playerController;
+    }
+
+    public void setPlayerController(PlayerDashboardController controller) {
+        this.playerController = controller;
     }
     
     public boolean isLoggedIn() {

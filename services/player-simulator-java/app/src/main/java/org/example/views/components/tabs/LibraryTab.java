@@ -21,7 +21,7 @@ public class LibraryTab extends ScrollPane {
 
     public LibraryTab(Consumer<Game> onGamePurchased) {
         this.onGamePurchased = onGamePurchased;
-        this.games = GameDataService.getInstance().getAllGames();
+        this.games = org.example.services.GameDataService.getInstance().getAllGames();
         
         gameGrid = new FlowPane();
         gameGrid.setHgap(15);
@@ -89,6 +89,7 @@ public class LibraryTab extends ScrollPane {
     
     public void refresh() {
         gameGrid.getChildren().clear();
+        this.games = org.example.services.GameDataService.getInstance().getAllGames();
         loadGames();
     }
     

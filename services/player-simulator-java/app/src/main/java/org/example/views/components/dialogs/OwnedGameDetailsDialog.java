@@ -1,15 +1,23 @@
 package org.example.views.components.dialogs;
 
+import org.example.models.Game;
+import org.example.services.SessionManager;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Separator;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.example.models.Game;
-import org.example.services.SessionManager;
 
 
 public class OwnedGameDetailsDialog {
@@ -60,7 +68,7 @@ public class OwnedGameDetailsDialog {
         playBtn.setMaxWidth(Double.MAX_VALUE);
         playBtn.setOnAction(e -> {
             if (game.isInstalled()) {
-                GamePlayDialog.show(game, onUpdate);
+                GamePlayDialog.show(game, onUpdate, SessionManager.getInstance().getPlayerController());
             } else {
                 GameInstallDialog.show(game, () -> {
                     statusLabel.setText("✅ Installé");

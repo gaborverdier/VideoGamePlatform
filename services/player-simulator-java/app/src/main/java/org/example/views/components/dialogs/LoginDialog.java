@@ -1,14 +1,35 @@
 package org.example.views.components.dialogs;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.avro.specific.SpecificRecordBase;
+import org.example.models.Player;
+import org.example.services.SessionManager;
+import org.example.util.ApiClient;
+import org.example.util.AvroJacksonConfig;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gaming.api.requests.UserRegistrationRequest;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.example.models.Player;
-import org.example.services.SessionManager;
 
 public class LoginDialog {
     
@@ -130,15 +151,35 @@ public class LoginDialog {
                     alert.setContentText("Veuillez remplir tous les champs !");
                     alert.showAndWait();
                 } else {
-                    Player player = new Player(usernameField.getText(), emailField.getText());
-                    SessionManager.getInstance().login(player);
-                    
-                    Alert success = new Alert(Alert.AlertType.INFORMATION);
-                    success.setTitle("Compte créé");
-                    success.setContentText("Bienvenue " + player.getUsername() + " !\nVous avez 100€ sur votre compte.");
-                    success.showAndWait();
-                    
-                    dialog.close();
+                    try {
+                        // Populate Avro-generated UserRegistrationRequest
+                        UserRegistrationRequest req = new UserRegistrationRequest();
+                        req.setFirstName(firstNameField.getText());
+                        req.setLastName(lastNameField.getText());
+                        req.setDateOfBirth(birthDateField.getText());
+                        req.setUsername(usernameField.getText());
+                        req.setEmail(emailField.getText());
+                        req.setPassword(passwordField.getText());
+                        req.setCountry("N/A"); // TODO add country field
+                        // Use centralized Avro ObjectMapper
+                        String json = AvroJacksonConfig.avroObjectMapper().writeValueAsString(req);
+                        // Use centralized API client
+                        ApiClient.postJson("/api/users/register", json);
+                        // Registration successful
+                        Player player = new Player(usernameField.getText(), emailField.getText());
+                        SessionManager.getInstance().login(player);
+                        Alert success = new Alert(Alert.AlertType.INFORMATION);
+                        success.setTitle("Compte créé");
+                        success.setContentText("Bienvenue " + player.getUsername() + " !\nVous avez 100€ sur votre compte.");
+                        success.showAndWait();
+                        dialog.close();
+                    } catch (Exception ex) {
+                        System.out.println("[REGISTER] Error during account creation:");
+                        ex.printStackTrace();
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setContentText("Erreur lors de la création du compte: " + ex.getMessage());
+                        alert.showAndWait();
+                    }
                 }
             } else {
                 // Connexion - besoin de (username OU email) + password
@@ -147,16 +188,41 @@ public class LoginDialog {
                     alert.setContentText("Veuillez remplir tous les champs !");
                     alert.showAndWait();
                 } else {
-                    // Pour l'instant on simule juste la connexion
-                    Player player = new Player(loginField.getText(), "user@email.com");
-                    SessionManager.getInstance().login(player);
-                    
-                    Alert success = new Alert(Alert.AlertType.INFORMATION);
-                    success.setTitle("Connexion réussie");
-                    success.setContentText("Bon retour " + player.getUsername() + " !");
-                    success.showAndWait();
-                    
-                    dialog.close();
+                    try {
+                        // Prepare login request
+                        Map<String, String> loginReq = new HashMap<>();
+                        loginReq.put("username", loginField.getText());
+                        loginReq.put("password", passwordField.getText());
+                        String json = AvroJacksonConfig.avroObjectMapper().writeValueAsString(loginReq);
+                        String responseJson = ApiClient.postJson("/api/auth/login", json);
+                        ObjectMapper mapper = AvroJacksonConfig.avroObjectMapper();
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> resp = mapper.readValue(responseJson, Map.class);
+                        if (resp.containsKey("userId")) {
+                            String userId = (String) resp.get("userId");
+                            String username = resp.get("username") != null ? (String) resp.get("username") : loginField.getText();
+                            String email = resp.get("email") != null ? (String) resp.get("email") : "";
+                            double wallet = 100.0;
+                            if (resp.get("wallet") instanceof Number) {
+                                wallet = ((Number) resp.get("wallet")).doubleValue();
+                            }
+                            Player player = new Player(userId, username, email, wallet);
+                            SessionManager.getInstance().login(player);
+                            Alert success = new Alert(Alert.AlertType.INFORMATION);
+                            success.setTitle("Connexion réussie");
+                            success.setContentText("Bon retour " + player.getUsername() + " !");
+                            success.showAndWait();
+                            dialog.close();
+                        } else {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setContentText("Erreur de connexion: " + resp.getOrDefault("error", ""));
+                            alert.showAndWait();
+                        }
+                    } catch (Exception ex) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setContentText("Erreur technique: " + ex.getMessage());
+                        alert.showAndWait();
+                    }
                 }
             }
         });
@@ -177,4 +243,16 @@ public class LoginDialog {
         
         return SessionManager.getInstance().isLoggedIn();
     }
+
+    // Jackson config to ignore Avro schema properties (like in platform-service)
+    public static ObjectMapper avroObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.addMixIn(SpecificRecordBase.class, IgnoreAvroProperties.class);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        return mapper;
+    }
+
+    @JsonIgnoreProperties({ "schema", "specificData", "classSchema", "conversion" })
+    public abstract static class IgnoreAvroProperties {}
 }

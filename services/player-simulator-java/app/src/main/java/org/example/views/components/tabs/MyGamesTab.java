@@ -10,6 +10,8 @@ import org.example.views.components.dialogs.OwnedGameDetailsDialog;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.example.services.GameDataService;
+import org.example.services.SessionManager;
 
 public class MyGamesTab extends ScrollPane {
 
@@ -27,6 +29,14 @@ public class MyGamesTab extends ScrollPane {
         gameGrid.setPadding(new Insets(20));
         gameGrid.setStyle("-fx-background-color: #2b2b2b;");
 
+        // load owned games for current user
+        String userId = null;
+        if (SessionManager.getInstance().getCurrentPlayer() != null) {
+            userId = SessionManager.getInstance().getCurrentPlayer().getId();
+        }
+        if (userId != null) {
+            this.ownedGames = GameDataService.getInstance().getUserLibrary(userId);
+        }
         updateView();
 
         this.setContent(gameGrid);
@@ -102,6 +112,13 @@ public class MyGamesTab extends ScrollPane {
     }
     
     public void refresh() {
+        String userId = null;
+        if (SessionManager.getInstance().getCurrentPlayer() != null) {
+            userId = SessionManager.getInstance().getCurrentPlayer().getId();
+        }
+        if (userId != null) {
+            this.ownedGames = GameDataService.getInstance().getUserLibrary(userId);
+        }
         updateView();
     }
 }

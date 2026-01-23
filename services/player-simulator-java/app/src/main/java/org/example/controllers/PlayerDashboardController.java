@@ -1,9 +1,9 @@
 package org.example.controllers;
 
-import org.example.services.KafkaProducerService;
-
 import java.time.Instant;
 import java.util.UUID;
+
+import org.example.services.KafkaProducerService;
 
 public class PlayerDashboardController {
 
@@ -17,8 +17,8 @@ public class PlayerDashboardController {
     private final String username;
 
     public PlayerDashboardController(KafkaProducerService kafkaProducer,
-                                     String userId,
-                                     String username) {
+            String userId,
+            String username) {
         this.kafkaProducer = kafkaProducer;
         this.userId = userId;
         this.username = username;
@@ -31,13 +31,7 @@ public class PlayerDashboardController {
         currentSessionId = UUID.randomUUID().toString();
         sessionStartTime = Instant.now();
 
-        kafkaProducer.publishSessionStarted(
-                userId,
-                username,
-                gameId,
-                gameTitle,
-                gameVersion
-        );
+        // TODO? publish session started event
     }
 
     // ----------------------------
@@ -48,18 +42,9 @@ public class PlayerDashboardController {
             return;
         }
 
-        long durationSeconds =
-                Instant.now().getEpochSecond() - sessionStartTime.getEpochSecond();
+        long durationSeconds = Instant.now().getEpochSecond() - sessionStartTime.getEpochSecond();
 
-        kafkaProducer.publishSessionEnded(
-                currentSessionId,
-                userId,
-                username,
-                gameId,
-                gameTitle,
-                gameVersion,
-                durationSeconds
-        );
+        // TODO? publish session ended event
 
         currentSessionId = null;
         sessionStartTime = null;
@@ -68,22 +53,26 @@ public class PlayerDashboardController {
     // ----------------------------
     // CRASH
     // ----------------------------
-    public void reportCrash(String gameId,
-                            String gameTitle,
-                            String gameVersion,
-                            String message) {
+        public void reportCrash(String gameId,
+            String gameVersion,
+            int crashCode,
+            String message) {
 
-        kafkaProducer.publishCrashReported(
-                userId,
-                username,
-                gameId,
-                gameTitle,
-                gameVersion,
-                message
+        // include crash code in error message
+        String combinedMessage = String.format("code=%d; %s", crashCode, message == null ? "" : message);
+
+        kafkaProducer.publishGameCrashReported(
+            UUID.randomUUID().toString(),
+            userId,
+            gameId,
+            gameVersion,
+            "PC", // TODO change platform accordingly
+            combinedMessage,
+            Instant.now().getEpochSecond()
         );
 
         // reset session
         currentSessionId = null;
         sessionStartTime = null;
-    }
+        }
 }
