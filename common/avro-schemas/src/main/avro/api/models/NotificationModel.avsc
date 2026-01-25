@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.models",
+  "name": "NotificationModel",
+  "doc": "API response for notifications",
+  "fields": [
+    {"name": "notificationId", "type": "string"},
+    {"name": "userId", "type": "string"},
+    {"name": "description",  "type" : "string"},
+    {"name": "date",  "type" : "long"}
+  ]
+}

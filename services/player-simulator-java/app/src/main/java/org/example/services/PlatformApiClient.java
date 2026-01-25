@@ -54,4 +54,9 @@ public class PlatformApiClient {
     public void purchaseGame(String userId, String gameId) throws Exception {
         ApiClient.postJson("/api/library/user/" + urlPath(userId) + "/game/" + urlPath(gameId) + "/purchase", "{}");
     }
+
+    // GET /api/notifications/user/{userId}
+    public String getUserNotificationsJson(String userId) throws Exception {
+        return ApiClient.get("/api/notifications/user/" + urlPath(userId));
+    }
 }

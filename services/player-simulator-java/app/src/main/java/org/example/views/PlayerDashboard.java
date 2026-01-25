@@ -1,17 +1,24 @@
 package org.example.views;
 
+import org.example.controllers.PlayerDashboardController;
+import org.example.models.Game;
+import org.example.services.GameDataService;
+import org.example.services.KafkaConsumerService;
+import org.example.services.KafkaProducerService;
+import org.example.services.SessionManager;
+import org.example.views.components.dialogs.LoginDialog;
+import org.example.views.components.tabs.FriendsTab;
+import org.example.views.components.tabs.LibraryTab;
+import org.example.views.components.tabs.MyGamesTab;
+import org.example.views.components.tabs.NotificationsTab;
+import org.example.views.components.tabs.PublishersTab;
+import org.example.views.components.tabs.WishlistTab;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.stage.Stage;
-import org.example.models.Game;
-import org.example.services.GameDataService;
-import org.example.services.SessionManager;
-import org.example.services.KafkaProducerService;
-import org.example.controllers.PlayerDashboardController;
-import org.example.views.components.dialogs.LoginDialog;
-import org.example.views.components.tabs.*;
 
 public class PlayerDashboard extends Application {
 
@@ -22,6 +29,11 @@ public class PlayerDashboard extends Application {
     private PublishersTab publishersTab;
     private FriendsTab friendsTab;
     private javafx.scene.control.Label walletLabel;
+
+    private void loadUserNotifications() {
+        String userId = SessionManager.getInstance().getCurrentPlayer().getId();
+        notificationsTab.fetchAndDisplayNotifications(userId);
+    }
 
     @Override
     public void start(Stage stage) {
@@ -38,10 +50,7 @@ public class PlayerDashboard extends Application {
         );
         SessionManager.getInstance().setPlayerController(controller);
         
-        TabPane tabs = new TabPane();
-        tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-
-        // Créer les onglets
+        // Initialize tabs before KafkaConsumerService
         libraryTab = new LibraryTab(this::onGamePurchased);
         libraryTab.setOnRefreshAll(this::refreshAll);
         myGamesTab = new MyGamesTab(this::refreshAll);
@@ -50,6 +59,18 @@ public class PlayerDashboard extends Application {
         publishersTab = new PublishersTab(this::onGamePurchased);
         friendsTab = new FriendsTab();
         notificationsTab = new NotificationsTab();
+
+        // Initialize KafkaConsumerService and start listening to topics
+        KafkaConsumerService kafkaConsumerService = new KafkaConsumerService("player-simulator-group", notificationsTab);
+        kafkaConsumerService.startListeningToTopics("new-notification", "game-crash-reported");
+
+        // Ensure Kafka consumer is stopped when the GUI is closed
+        stage.setOnCloseRequest(event -> {
+            kafkaConsumerService.stop();
+        });
+
+        TabPane tabs = new TabPane();
+        tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
         Tab libraryTabUI = new Tab("Bibliothèque", libraryTab);
         Tab myGamesTabUI = new Tab("Mes Jeux", myGamesTab);
@@ -107,6 +128,7 @@ public class PlayerDashboard extends Application {
         publishersTab.refresh();
         friendsTab.refresh();
         notificationsTab.setGames(GameDataService.getInstance().getAllGames());
+            loadUserNotifications();
         updateWalletLabel();
     }
 

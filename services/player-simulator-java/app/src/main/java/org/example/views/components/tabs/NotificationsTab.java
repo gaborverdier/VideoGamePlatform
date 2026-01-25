@@ -1,36 +1,86 @@
 package org.example.views.components.tabs;
 
-import javafx.geometry.Insets;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import org.example.models.Game;
-import org.example.models.Notification;
-
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.example.models.Game;
+import org.example.models.Notification;
+import org.example.services.NotificationService;
+
+import com.gaming.api.models.NotificationModel;
+
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+
 public class NotificationsTab extends ScrollPane {
+
+    public void fetchAndDisplayNotifications(String userId) {
+        new Thread(() -> {
+            List<NotificationModel> models = NotificationService.fetchUserNotifications(userId);
+            List<Notification> notifs = new ArrayList<>();
+            for (NotificationModel model : models) {
+                notifs.add(convertModelToNotification(model));
+            }
+            Platform.runLater(() -> {
+                loadNotifications(notifs);
+            });
+        }).start();
+    }
+
+    private Notification convertModelToNotification(NotificationModel model) {
+        // Map NotificationModel fields to Notification fields
+        // Adjust mapping as needed for your schema
+        return new Notification(
+            model.getNotificationId(),
+            Notification.Type.GAME_UPDATE, // TODO: map type if available
+            model.getDescription(), // or model.getTitle() if available
+            model.getDescription(),
+            model.getDate(),
+            false, // TODO: map favorite if available
+            model.getUserId() // or model.getRelatedGameId() if available
+        );
+    }
     
     private VBox notifList;
     private List<Game> allGames;
     private List<Notification> notifications;
-    
     public NotificationsTab() {
         this.allGames = new ArrayList<>();
         this.notifications = new ArrayList<>();
-        
+
         notifList = new VBox(10);
         notifList.setPadding(new Insets(20));
         notifList.setStyle("-fx-background-color: #2b2b2b;");
-        
+
         updateNotifications();
-        
+
         this.setContent(notifList);
         this.setFitToWidth(true);
         this.setStyle("-fx-background-color: #2b2b2b;");
     }
+
+    /**
+     * Load notifications from a list of Notification objects (e.g., from JSON)
+     */
+    public void loadNotifications(List<Notification> notifs) {
+        this.notifications.clear();
+        if (notifs != null) {
+            this.notifications.addAll(notifs);
+        }
+        updateNotifications();
+    }
+
+    // Example usage:
+    // List<Notification> notifList = new ArrayList<>();
+    // notifList.add(new Notification(Notification.Type.GAME_UPDATE, "Test", "this is a test 2", false, null));
+    // notificationsTab.loadNotifications(notifList);
     
     public void setGames(List<Game> games) {
         this.allGames = games;
@@ -52,6 +102,7 @@ public class NotificationsTab extends ScrollPane {
                     Notification.Type.GAME_UPDATE,
                     game.getName(),
                     "Nouvelle mise à jour disponible : " + update,
+                    Instant.now().toEpochMilli(),
                     isFav,
                     game.getId()
                 ));
@@ -62,6 +113,7 @@ public class NotificationsTab extends ScrollPane {
                     Notification.Type.GAME_DLC,
                     game.getName(),
                     "Nouveau DLC disponible : " + dlc.getName() + " - " + dlc.getFormattedPrice(),
+                    Instant.now().toEpochMilli(),
                     isFav,
                     game.getId()
                 ));
@@ -78,6 +130,7 @@ public class NotificationsTab extends ScrollPane {
                     Notification.Type.PRICE_DROP,
                     game.getName(),
                     "Baisse de prix ! Prix actuel : " + game.getFormattedPrice(),
+                    Instant.now().toEpochMilli(),
                     false,
                     game.getId()
                 ));
@@ -89,6 +142,7 @@ public class NotificationsTab extends ScrollPane {
                     Notification.Type.NEW_REVIEW,
                     game.getName(),
                     game.getReviews().size() + " avis disponible(s)",
+                    Instant.now().toEpochMilli(),
                     false,
                     game.getId()
                 ));
@@ -162,8 +216,39 @@ public class NotificationsTab extends ScrollPane {
         messageLabel.setStyle("-fx-text-fill: #aaa;");
         messageLabel.setWrapText(true);
         
-        card.getChildren().addAll(header, messageLabel);
+        // Date and time label
+        Label dateLabel = new Label();
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        if (notif.getCreatedAt() != null) {
+            dateLabel.setText(formatter.format(notif.getCreatedAt()));
+        } else {
+            dateLabel.setText("");
+        }
+        dateLabel.setStyle("-fx-text-fill: #888; -fx-font-size: 12px;");
+
+        card.getChildren().addAll(header, messageLabel, dateLabel);
         
         return card;
+    }
+
+    public void addNotificationToBeginning(Notification notification) {
+        this.notifications.add(0, notification); // Add to the beginning of the list
+        // Remove duplicates by ID, keeping the first occurrence
+        List<String> seenIds = new ArrayList<>();
+        this.notifications = this.notifications.stream()
+            .filter(n -> {
+                String id = n.getId();
+                if (id == null) return true;
+                if (seenIds.contains(id)) return false;
+                seenIds.add(id);
+                return true;
+            })
+            .collect(Collectors.toList());
+
+        // print notifications
+        for (Notification n : notifications) {
+            System.out.println("Notification ID: " + n.getId() + ", Title: " + n.getTitle());
+        }
+        updateNotifications(); // Refresh the UI
     }
 }

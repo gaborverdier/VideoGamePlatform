@@ -1,6 +1,7 @@
 package org.example.models;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 public class Notification {
     public enum Type {
@@ -22,12 +23,24 @@ public class Notification {
     private boolean isFromFavorite;
     private String relatedGameId;
     
-    public Notification(Type type, String title, String message, boolean isFromFavorite, String relatedGameId) {
+    public Notification(Type type, String title, String message, Long date, boolean isFromFavorite, String relatedGameId) {
         this.id = "NOTIF-" + System.currentTimeMillis();
         this.type = type;
         this. title = title;
         this. message = message;
-        this. createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.ofEpochSecond(date / 1000, 0, ZoneOffset.UTC);
+        this.isRead = false;
+        this.isFromFavorite = isFromFavorite;
+        this.relatedGameId = relatedGameId;
+    }
+
+    // one with specified id
+    public Notification(String id, Type type, String title, String message, Long date, boolean isFromFavorite, String relatedGameId) {
+        this.id = id;
+        this.type = type;
+        this. title = title;
+        this. message = message;
+        this.createdAt = LocalDateTime.ofEpochSecond(date / 1000, 0, ZoneOffset.UTC);
         this.isRead = false;
         this.isFromFavorite = isFromFavorite;
         this.relatedGameId = relatedGameId;
@@ -45,6 +58,7 @@ public class Notification {
     public void markAsRead() {
         this.isRead = true;
     }
+    
     
     public String getIcon() {
         switch (type) {

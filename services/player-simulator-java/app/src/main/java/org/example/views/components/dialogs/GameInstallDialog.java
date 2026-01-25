@@ -1,14 +1,19 @@
 package org.example.views.components.dialogs;
 
+import org.example.models.Game;
+import org.example.services.GameDataService;
+import org.example.services.SessionManager;
+
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.example.models.Game;
 
 public class GameInstallDialog {
     
@@ -45,24 +50,24 @@ public class GameInstallDialog {
                     statusLabel.setText("Installation : " + progress + "%");
                 });
                 try {
-                    Thread.sleep(50); // 5 secondes au total
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
             
             Platform.runLater(() -> {
-                game.setInstalled(true);
                 dialog.close();
                 
                 // Notify backend that the game was installed for the current user
                 try {
-                    String userId = org.example.services.SessionManager.getInstance().getCurrentPlayer() != null
-                            ? org.example.services.SessionManager.getInstance().getCurrentPlayer().getId()
+                    String userId = SessionManager.getInstance().getCurrentPlayer() != null
+                            ? SessionManager.getInstance().getCurrentPlayer().getId()
                             : null;
                     System.out.println("Current user ID: " + userId);
                     if (userId != null) {
-                        org.example.services.GameDataService.getInstance().installGameForUser(userId, game.getId());
+                        GameDataService.getInstance().installGameForUser(userId, game.getId());
+                        game.setInstalled(true);
                         System.out.println("Game " + game.getName() + " installed for user " + userId);
                     }
                 } catch (Exception ex) {

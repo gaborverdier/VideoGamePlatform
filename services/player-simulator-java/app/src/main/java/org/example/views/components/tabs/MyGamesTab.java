@@ -93,6 +93,7 @@ public class MyGamesTab extends ScrollPane {
         card.setOnMouseClicked(e -> {
             OwnedGameDetailsDialog.show(game, () -> {
                 updateView();
+                this.refresh();
                 if (onUpdate != null) onUpdate.run();
             });
         });

@@ -11,7 +11,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -27,8 +26,8 @@ import com.gaming.events.GameAvailabilityChanged;
 import com.gaming.events.GameCrashReported;
 import com.gaming.events.GamePatchReleased;
 import com.gaming.events.GameUpdated;
-import com.gaming.platform.model.Game;
 import com.gaming.platform.model.CrashReport;
+import com.gaming.platform.model.Game;
 import com.gaming.platform.repository.GameRepository;
 import com.gaming.platform.service.CrashReportService;
 
@@ -65,7 +64,7 @@ public class EventConsumer {
     public void startConsuming() {
         running.set(true);
         executorService.submit(this::consumeEvents);
-        log.info("✅ Started Kafka event consumer");
+        log.info("Started Kafka event consumer");
     }
 
     @PreDestroy
@@ -98,7 +97,7 @@ public class EventConsumer {
                     try {
                         processRecord(record);
                     } catch (Exception e) {
-                        log.error("❌ Error processing record at offset {} from topic {}: {}",
+                        log.error("Error processing record at offset {} from topic {}: {}",
                                 record.offset(), record.topic(), e.getMessage(), e);
                         // Seek past the problematic record
                         consumer.seek(new TopicPartition(record.topic(), record.partition()), record.offset() + 1);
@@ -110,13 +109,13 @@ public class EventConsumer {
                 }
 
             } catch (RecordDeserializationException rde) {
-                log.error("❌ Record deserialization error while polling - seeking past problematic record", rde);
+                log.error("Record deserialization error while polling - seeking past problematic record", rde);
                 try {
                     TopicPartition tp = rde.topicPartition();
                     long offset = rde.offset();
                     consumer.seek(tp, offset + 1);
                 } catch (Exception ex) {
-                    log.error("❌ Failed to seek past deserialized record", ex);
+                    log.error("Failed to seek past deserialized record", ex);
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException ie) {
@@ -124,7 +123,7 @@ public class EventConsumer {
                     }
                 }
             } catch (Exception e) {
-                log.error("❌ Error consuming events", e);
+                log.error("Error consuming events", e);
             }
         }
     }
@@ -142,7 +141,7 @@ public class EventConsumer {
                     } else if (val instanceof GenericRecord) {
                         handleGameCrashedReportedGeneric((GenericRecord) val);
                     } else {
-                        log.warn("⚠️ Unexpected record type for topic {}: {}", topic, val == null ? "null" : val.getClass());
+                        log.warn("Unexpected record type for topic {}: {}", topic, val == null ? "null" : val.getClass());
                     }
                     break;
                 case GAME_UPDATED_TOPIC:
@@ -167,10 +166,10 @@ public class EventConsumer {
                     }
                     break;
                 default:
-                    log.warn("⚠️ Unknown topic: {}", topic);
+                    log.warn("Unknown topic: {}", topic);
             }
         } catch (Exception e) {
-            log.error("❌ Error processing record from topic: {}", topic, e);
+            log.error("Error processing record from topic: {}", topic, e);
         }
     }
 
@@ -206,26 +205,26 @@ public class EventConsumer {
             }
 
             crashReportService.save(report);
-            log.info("✅ Saved crash report (generic): {}", report.getCrashId());
+            log.info("Saved crash report (generic): {}", report.getCrashId());
         } catch (Exception e) {
-            log.error("❌ Failed to save generic crash report", e);
+            log.error("Failed to save generic crash report", e);
         }
     }
 
     private void handleGameUpdatedGeneric(GenericRecord event) {
-        log.info("📥 Received GameUpdated (generic) event: {}", event);
+        log.info("Received GameUpdated (generic) event: {}", event);
     }
 
     private void handleGamePatchReleasedGeneric(GenericRecord event) {
-        log.info("📥 Received GamePatchReleased (generic) event: {}", event);
+        log.info("Received GamePatchReleased (generic) event: {}", event);
     }
 
     private void handleGameAvailabilityChangedGeneric(GenericRecord event) {
-        log.info("📥 Received GameAvailabilityChanged (generic) event: {}", event);
+        log.info("Received GameAvailabilityChanged (generic) event: {}", event);
     }
 
     private void handleGameCrashedReported(GameCrashReported event) {
-        log.info("📥 Received GameCrashReported event: {}", event.toString());
+        log.info("Received GameCrashReported event: {}", event.toString());
         CrashReport report = new CrashReport();
         report.setCrashId(event.getCrashId().toString());
         report.setUserId(event.getUserId() != null ? event.getUserId().toString() : null);
@@ -237,14 +236,14 @@ public class EventConsumer {
 
         try {
             crashReportService.save(report);
-            log.info("✅ Saved crash report: {}", report.getCrashId());
+            log.info("Saved crash report: {}", report.getCrashId());
         } catch (Exception e) {
-            log.error("❌ Failed to save crash report: {}", report.getCrashId(), e);
+            log.error("Failed to save crash report: {}", report.getCrashId(), e);
         }
     }
 
     private void handleGameUpdated(GameUpdated event) {
-        log.info("📥 Received GameUpdated event for game: {}", event.getTitle());
+        log.info("Received GameUpdated event for game: {}", event.getTitle());
 
         String gameId = event.getGameId().toString();
         gameRepository.findById(gameId).ifPresentOrElse(
@@ -266,7 +265,7 @@ public class EventConsumer {
                             ZoneOffset.UTC));
 
                     gameRepository.save(game);
-                    log.info("✅ Updated game: {}", game.getTitle());
+                    log.info("Updated game: {}", game.getTitle());
                 },
                 () -> {
                     // Create new game if it doesn't exist
@@ -289,12 +288,12 @@ public class EventConsumer {
                             ZoneOffset.UTC));
 
                     gameRepository.save(newGame);
-                    log.info("✅ Created new game: {}", newGame.getTitle());
+                    log.info("Created new game: {}", newGame.getTitle());
                 });
     }
 
     private void handleGamePatchReleased(GamePatchReleased event) {
-        log.info("📥 Received GamePatchReleased event for game: {} (v{} -> v{})",
+        log.info("Received GamePatchReleased event for game: {} (v{} -> v{})",
                 event.getGameTitle(), event.getPreviousVersion(), event.getNewVersion());
 
         String gameId = event.getGameId().toString();
@@ -305,17 +304,17 @@ public class EventConsumer {
                     ZoneOffset.UTC));
 
             gameRepository.save(game);
-            log.info("✅ Updated game {} to version {}",
+            log.info("Updated game {} to version {}",
                     game.getTitle(), event.getNewVersion());
 
             if (event.getPatchNotes() != null) {
-                log.info("📝 Patch notes: {}", event.getPatchNotes());
+                log.info("Patch notes: {}", event.getPatchNotes());
             }
         });
     }
 
     private void handleGameAvailabilityChanged(GameAvailabilityChanged event) {
-        log.info("📥 Received GameAvailabilityChanged event for game:  {} (available: {})",
+        log.info("Received GameAvailabilityChanged event for game:  {} (available: {})",
                 event.getGameTitle(), event.getAvailable());
 
         String gameId = event.getGameId().toString();
@@ -326,11 +325,11 @@ public class EventConsumer {
                     ZoneOffset.UTC));
 
             gameRepository.save(game);
-            log.info("✅ Updated game {} availability to {}",
+            log.info("Updated game {} availability to {}",
                     game.getTitle(), event.getAvailable());
 
             if (event.getReason() != null) {
-                log.info("📝 Reason: {}", event.getReason());
+                log.info("Reason: {}", event.getReason());
             }
         });
     }

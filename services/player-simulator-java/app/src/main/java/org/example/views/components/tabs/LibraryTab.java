@@ -1,16 +1,18 @@
 package org.example.views.components.tabs;
 
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
-import org.example.models.Game;
-import org.example.services.GameDataService;
-import org.example.views.components.dialogs.GameDetailsDialog;
-
 import java.util.List;
 import java.util.function.Consumer;
+
+import org.example.models.Game;
+import org.example.views.components.dialogs.GameDetailsDialog;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
 
 public class LibraryTab extends ScrollPane {
 

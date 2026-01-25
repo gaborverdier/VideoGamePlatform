@@ -43,7 +43,7 @@ services:
       - ../scripts:/scripts:ro
     environment:
       BOOTSTRAP_SERVER: "kafka:29092"
-    entrypoint: ["/bin/bash", "/scripts/create-topics.sh"]
+    entrypoint: ["/bin/sh", "/scripts/create-topics.sh"]
     restart: "no"
 
   schema-registry:

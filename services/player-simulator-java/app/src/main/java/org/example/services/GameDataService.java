@@ -87,6 +87,16 @@ public class GameDataService {
             for (GameModel avro : avroGames) {
                 result.add(Game.fromAvroModel(avro));
             }
+
+            // get installed flags from local storage
+            try {
+                java.util.Set<String> installed = InstalledGamesStore.getInstance().getInstalledForUser(userId);
+                for (Game g : result) {
+                    if (installed.contains(g.getId())) g.setInstalled(true);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
             return result;
         } catch (Exception e) {
             showError("Failed to load user library", e);
@@ -97,6 +107,12 @@ public class GameDataService {
     public void installGameForUser(String userId, String gameId) throws Exception {
         PlatformApiClient apiClient = new PlatformApiClient();
         apiClient.installGame(userId, gameId);
+        // Also mark as installed in local store
+        try {
+            InstalledGamesStore.getInstance().markInstalled(userId, gameId);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     public void purchaseGameForUser(String userId, String gameId) throws Exception {
