@@ -1,5 +1,7 @@
 package com.model;
 
+import java.security.Timestamp;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,7 +15,7 @@ public class Crash {
     private Long id;
 
     private String description;
-    private String crashDate;
+    private Long crashTime;
     private String gameVersion;
 
     @ManyToOne

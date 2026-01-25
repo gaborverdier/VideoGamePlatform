@@ -1,6 +1,10 @@
 package com.controller;
 
+import com.gaming.api.dto.PatchDTO;
+import com.mapper.PatchMapper;
 import com.model.Patch;
+import com.model.Game;
+import com.repository.GameRepository;
 import com.service.PatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,36 +17,45 @@ import java.util.List;
 public class PatchController {
     @Autowired
     private PatchService patchService;
+    @Autowired
+    private PatchMapper patchMapper;
+    @Autowired
+    private GameRepository gameRepository;
 
     @GetMapping
-    public ResponseEntity<List<Patch>> getAllPatches() {
-        List<Patch> patches = patchService.getAllPatches();
-        return ResponseEntity.ok(patches);
+    public ResponseEntity<List<PatchDTO>> getAllPatches() {
+        return ResponseEntity.ok(patchService.getAllPatches());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Patch> getPatchById(@PathVariable Long id) {
+    public ResponseEntity<PatchDTO> getPatchById(@PathVariable Long id) {
         return patchService.getPatchById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/game/{gameId}")
-    public ResponseEntity<List<Patch>> getPatchesByGame(@PathVariable Long gameId) {
-        List<Patch> patches = patchService.getPatchesByGame(gameId);
-        return ResponseEntity.ok(patches);
+    public ResponseEntity<List<PatchDTO>> getPatchesByGame(@PathVariable Long gameId) {
+        return ResponseEntity.ok(patchService.getPatchesByGame(gameId));
     }
 
     @PostMapping("/game/{gameId}")
-    public ResponseEntity<Patch> createPatch(@PathVariable Long gameId, @RequestBody Patch patch) {
-        Patch created = patchService.createPatch(gameId, patch);
-        return ResponseEntity.ok(created);
+    public ResponseEntity<PatchDTO> createPatch(@PathVariable Long gameId, @RequestBody PatchDTO patchDTO) {
+        Game game = gameRepository.findById(gameId)
+            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + gameId));
+        Patch patch = patchMapper.fromDTO(patchDTO, game);
+        return ResponseEntity.ok(patchService.createPatch(gameId, patch));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Patch> updatePatch(@PathVariable Long id, @RequestBody Patch patch) {
-        Patch updated = patchService.updatePatch(id, patch);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<PatchDTO> updatePatch(@PathVariable Long id, @RequestBody PatchDTO patchDTO) {
+        PatchDTO existingPatch = patchService.getPatchById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Patch introuvable avec l'ID: " + id));
+        Game game = gameRepository.findById(existingPatch.getGameId())
+            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable"));
+        Patch patch = patchMapper.fromDTO(patchDTO, game);
+        patch.setId(id);
+        return ResponseEntity.ok(patchService.updatePatch(id, patch));
     }
 
     @DeleteMapping("/{id}")

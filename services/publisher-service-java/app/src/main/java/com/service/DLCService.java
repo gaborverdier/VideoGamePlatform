@@ -1,16 +1,17 @@
 package com.service;
 
+import com.gaming.api.dto.DLCDTO;
+import com.mapper.DLCMapper;
 import com.model.DLC;
 import com.model.Game;
-
 import com.repository.DLCRepository;
 import com.repository.GameRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class DLCService {
@@ -19,41 +20,48 @@ public class DLCService {
     @Autowired
     private GameRepository gameRepository;
 
-    public List<DLC> getAllDLCs() {
-        return dlcRepository.findAll();
+    public List<DLCDTO> getAllDLCs() {
+        return dlcRepository.findAll().stream()
+            .map(DLCMapper::toDTO)
+            .collect(Collectors.toList());
     }
 
-    public Optional<DLC> getDLCById(Long id) {
-        return dlcRepository.findById(id);
+    public Optional<DLCDTO> getDLCById(Long id) {
+        return dlcRepository.findById(id)
+            .map(DLCMapper::toDTO);
     }
 
-    public List<DLC> getDLCsByGame(Long gameId) {
+    public List<DLCDTO> getDLCsByGame(Long gameId) {
         Game game = gameRepository.findById(gameId).orElse(null);
         if (game == null) {
             return List.of();
         }
-        return game.getDlcs();
+        return game.getDlcs().stream()
+            .map(DLCMapper::toDTO)
+            .collect(Collectors.toList());
     }
 
-    public DLC createDLC(Long gameId, DLC dlc) {
+    public DLCDTO createDLC(Long gameId, DLC dlc) {
         // Validation métier : le jeu doit exister
         Game game = gameRepository.findById(gameId)
             .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + gameId));
         
         dlc.setGame(game);
-        return dlcRepository.save(dlc);
+        DLC saved = dlcRepository.save(dlc);
+        return DLCMapper.toDTO(saved);
     }
 
-    public DLC updateDLC(Long id, DLC dlcDetails) {
+    public DLCDTO updateDLC(Long id, DLC dlcDetails) {
         // Validation métier : le DLC doit exister
         DLC dlc = dlcRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("DLC introuvable avec l'ID: " + id));
         
         dlc.setName(dlcDetails.getName());
-        dlc.setReleaseDate(dlcDetails.getReleaseDate());
+        dlc.setReleaseTime(dlcDetails.getReleaseTime());
         dlc.setDescription(dlcDetails.getDescription());
         
-        return dlcRepository.save(dlc);
+        DLC updated = dlcRepository.save(dlc);
+        return DLCMapper.toDTO(updated);
     }
 
     public void deleteDLC(Long id) {

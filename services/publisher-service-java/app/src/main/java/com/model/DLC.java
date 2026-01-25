@@ -1,5 +1,7 @@
 package com.model;
 
+import java.util.Date;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,7 +15,7 @@ public class DLC {
     private Long id;
 
     private String name;
-    private String releaseDate;
+    private Long releaseTime;
     private String description;
 
     @ManyToOne

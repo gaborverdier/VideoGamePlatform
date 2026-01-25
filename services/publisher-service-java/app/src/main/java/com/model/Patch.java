@@ -13,7 +13,7 @@ public class Patch {
     private Long id;
 
     private String version;
-    private String releaseDate;
+    private Long releaseTime;
     private String description;
 
     @ManyToOne
