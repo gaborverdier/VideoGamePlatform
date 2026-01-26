@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.dto",
+  "name": "DLCDTO",
+  "doc": "DLC Data Transfer Object",
+  "fields": [
+    {"name": "id", "type": "long"},
+    {"name": "gameId", "type": "long"},
+    {"name": "title", "type": "string"},
+    {"name":"releaseTime", "type": "long"},
+    {"name": "description", "type": "string"}
+  ]
+}
