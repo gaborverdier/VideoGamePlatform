@@ -1,6 +1,6 @@
 package com.controller;
 
-import com.gaming.api.dto.DLCDTO;
+import com.gaming.api.models.DLCModel;
 import com.mapper.DLCMapper;
 import com.model.DLC;
 import com.model.Game;
@@ -21,35 +21,35 @@ public class DLCController {
     private GameRepository gameRepository;
 
     @GetMapping
-    public ResponseEntity<List<DLCDTO>> getAllDLCs() {
+    public ResponseEntity<List<DLCModel>> getAllDLCs() {
         return ResponseEntity.ok(dlcService.getAllDLCs());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DLCDTO> getDLCById(@PathVariable Long id) {
+    public ResponseEntity<DLCModel> getDLCById(@PathVariable String id) {
         return dlcService.getDLCById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/game/{gameId}")
-    public ResponseEntity<List<DLCDTO>> getDLCsByGame(@PathVariable Long gameId) {
+    public ResponseEntity<List<DLCModel>> getDLCsByGame(@PathVariable String gameId) {
         return ResponseEntity.ok(dlcService.getDLCsByGame(gameId));
     }
 
     @PostMapping("/game/{gameId}")
-    public ResponseEntity<DLCDTO> createDLC(@PathVariable Long gameId, @RequestBody DLCDTO dlcDTO) {
+    public ResponseEntity<DLCModel> createDLC(@PathVariable String gameId, @RequestBody DLCModel dlcModel) {
         Game game = gameRepository.findById(gameId)
             .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + gameId));
-        DLC dlc = DLCMapper.fromDTO(dlcDTO, game);
+        DLC dlc = DLCMapper.fromDTO(dlcModel, game);
         return ResponseEntity.ok(dlcService.createDLC(gameId, dlc));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DLCDTO> updateDLC(@PathVariable Long id, @RequestBody DLCDTO dlcDTO) {
-        DLCDTO existingDLC = dlcService.getDLCById(id)
+    public ResponseEntity<DLCModel> updateDLC(@PathVariable String id, @RequestBody DLCModel dlcModel) {
+        DLCModel dlcDTO = dlcService.getDLCById(id)
             .orElseThrow(() -> new IllegalArgumentException("DLC introuvable avec l'ID: " + id));
-        Game game = gameRepository.findById(existingDLC.getGameId())
+        Game game = gameRepository.findById(dlcDTO.getGameId())
             .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable"));
         DLC dlc = DLCMapper.fromDTO(dlcDTO, game);
         dlc.setId(id);
@@ -57,7 +57,7 @@ public class DLCController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDLC(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDLC(@PathVariable String id) {
         dlcService.deleteDLC(id);
         return ResponseEntity.noContent().build();
     }

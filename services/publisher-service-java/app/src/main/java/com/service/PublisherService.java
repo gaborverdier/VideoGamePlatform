@@ -1,6 +1,6 @@
 package com.service;
 
-import com.gaming.api.dto.PublisherDTO;
+import com.gaming.api.models.PublisherModel;
 import com.mapper.PublisherMapper;
 import com.model.Publisher;
 import com.repository.PublisherRepository;
@@ -15,34 +15,36 @@ import java.util.stream.Collectors;
 public class PublisherService {
     @Autowired
     private PublisherRepository publisherRepository;
+    @Autowired
+    private PublisherMapper publisherMapper;
 
-    public List<PublisherDTO> getAllPublishers() {
+    public List<PublisherModel> getAllPublishers() {
         return publisherRepository.findAll().stream()
-            .map(PublisherMapper::toDTO)
+            .map(publisherMapper::toDTO)
             .collect(Collectors.toList());
     }
 
-    public Optional<PublisherDTO> getPublisherById(Long id) {
+    public Optional<PublisherModel> getPublisherById(String id) {
         return publisherRepository.findById(id)
-            .map(PublisherMapper::toDTO);
+            .map(publisherMapper::toDTO);
     }
 
-    public PublisherDTO createPublisher(Publisher publisher) {
+    public PublisherModel createPublisher(Publisher publisher) {
         Publisher saved = publisherRepository.save(publisher);
-        return PublisherMapper.toDTO(saved);
+        return publisherMapper.toDTO(saved);
     }
 
-    public PublisherDTO updatePublisher(Long id, Publisher publisherDetails) {
+    public PublisherModel updatePublisher(String id, Publisher publisherDetails) {
         // Validation métier : le publisher doit exister
         Publisher publisher = publisherRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Publisher introuvable avec l'ID: " + id));
         
         publisher.setName(publisherDetails.getName());
         Publisher updated = publisherRepository.save(publisher);
-        return PublisherMapper.toDTO(updated);
+        return publisherMapper.toDTO(updated);
     }
 
-    public void deletePublisher(Long id) {
+    public void deletePublisher(String id) {
         // Validation métier : le publisher doit exister
         if (!publisherRepository.existsById(id)) {
             throw new IllegalArgumentException("Publisher introuvable avec l'ID: " + id);

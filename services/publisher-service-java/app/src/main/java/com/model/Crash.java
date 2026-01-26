@@ -11,8 +11,8 @@ import lombok.*;
 @AllArgsConstructor
 public class Crash {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     private Long crashTime;
     private String gameVersion;

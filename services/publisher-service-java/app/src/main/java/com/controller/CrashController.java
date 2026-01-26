@@ -1,6 +1,6 @@
 package com.controller;
 
-import com.gaming.api.dto.CrashDTO;
+import com.gaming.api.models.CrashModel;
 import com.mapper.CrashMapper;
 import com.service.CrashService;
 
@@ -20,45 +20,45 @@ public class CrashController {
     @Autowired
     private CrashService crashService;
     @Autowired
-    private CrashMapper CrashMapper;
+    private CrashMapper crashMapper;
 
 
     @GetMapping
-    public ResponseEntity<List<CrashDTO>> getAllCrashes() {
-        List<CrashDTO> crashes = CrashMapper.toDTOList(crashService.getAllCrashes());
+    public ResponseEntity<List<CrashModel>> getAllCrashes() {
+        List<CrashModel> crashes = crashMapper.toDTOList(crashService.getAllCrashes());
         return ResponseEntity.ok(crashes);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CrashDTO> getCrashById(@PathVariable Long id) {
+    public ResponseEntity<CrashModel> getCrashById(@PathVariable String id) {
         Optional<Crash> crash = crashService.getCrashById(id);
         if (crash.isPresent()) {
-            return ResponseEntity.ok(CrashMapper.toDTO(crash.get()));
+            return ResponseEntity.ok(crashMapper.toDTO(crash.get()));
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
     @GetMapping("/game/{gameId}")
-    public ResponseEntity<List<CrashDTO>> getCrashesByGame(@PathVariable Long gameId) {
+    public ResponseEntity<List<CrashModel>> getCrashesByGame(@PathVariable String gameId) {
         List<Crash> crashes = crashService.getCrashesByGame(gameId);
-        return ResponseEntity.ok(CrashMapper.toDTOList(crashes));
+        return ResponseEntity.ok(crashMapper.toDTOList(crashes));
     }
 
     @PostMapping("/report")
-    public ResponseEntity<CrashDTO> createCrash(@RequestBody CrashDTO event) {
-        Crash crash = crashService.createCrash(CrashMapper.fromDTO(event));
-        return ResponseEntity.ok(CrashMapper.toDTO(crash));
+    public ResponseEntity<CrashModel> createCrash(@RequestBody CrashModel event) {
+        Crash crash = crashService.createCrash(crashMapper.fromDTO(event));
+        return ResponseEntity.ok(crashMapper.toDTO(crash));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CrashDTO> updateCrash(@PathVariable Long id, @RequestBody CrashDTO event) {
-        Crash updated = crashService.updateCrash(id, CrashMapper.fromDTO(event));
-        return ResponseEntity.ok(CrashMapper.toDTO(updated));
+    public ResponseEntity<CrashModel> updateCrash(@PathVariable String id, @RequestBody CrashModel event) {
+        Crash updated = crashService.updateCrash(id, crashMapper.fromDTO(event));
+        return ResponseEntity.ok(crashMapper.toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCrash(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCrash(@PathVariable String id) {
         crashService.deleteCrash(id);
         return ResponseEntity.noContent().build();
     }

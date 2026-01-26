@@ -1,6 +1,6 @@
 package com.service;
 
-import com.gaming.api.dto.GameDTO;
+import com.gaming.api.models.GameModel;
 import com.mapper.GameMapper;
 import com.model.Game;
 import com.model.Publisher;
@@ -26,18 +26,18 @@ public class GameService {
     private EventProducer eventProducer;
 
 
-    public List<GameDTO> getAllGames() {
+    public List<GameModel> getAllGames() {
         return gameRepository.findAll().stream()
             .map(gameMapper::toDTO)
             .collect(Collectors.toList());
     }
 
-    public Optional<GameDTO> getGameById(Long id) {
+    public Optional<GameModel> getGameById(String id) {
         return gameRepository.findById(id)
             .map(gameMapper::toDTO);
     }
 
-    public List<GameDTO> getGamesByPublisher(Long publisherId) {
+    public List<GameModel> getGamesByPublisher(String publisherId) {
         Publisher publisher = publisherRepository.findById(publisherId).orElse(null);
         if (publisher == null) {
             return List.of();
@@ -47,7 +47,7 @@ public class GameService {
             .collect(Collectors.toList());
     }
 
-    public GameDTO createGame(Long publisherId, Game game) {
+    public GameModel createGame(String publisherId, Game game) {
         // Validation métier : le publisher doit exister
         Publisher publisher = publisherRepository.findById(publisherId)
             .orElseThrow(() -> new IllegalArgumentException("Publisher introuvable avec l'ID: " + publisherId));
@@ -55,7 +55,7 @@ public class GameService {
         game.setPublisher(publisher);
         Game saved = gameRepository.save(game);
 
-        GameDTO dto;
+        GameModel dto;
         try {
             dto = gameMapper.toDTO(saved);
 
@@ -69,7 +69,7 @@ public class GameService {
         return dto;
     }
 
-    public GameDTO updateGame(Long id, Game gameDetails) {
+    public GameModel updateGame(String id, Game gameDetails) {
         // Validation métier : le jeu doit exister
         Game game = gameRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + id));
@@ -82,7 +82,7 @@ public class GameService {
         return gameMapper.toDTO(updated);
     }
 
-    public void deleteGame(Long id) {
+    public void deleteGame(String id) {
         // Validation métier : le jeu doit exister
         if (!gameRepository.existsById(id)) {
             throw new IllegalArgumentException("Jeu introuvable avec l'ID: " + id);

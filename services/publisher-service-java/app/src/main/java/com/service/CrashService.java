@@ -21,11 +21,11 @@ public class CrashService {
         return crashRepository.findAll();
     }
 
-    public Optional<Crash> getCrashById(Long id) {
+    public Optional<Crash> getCrashById(String id) {
         return crashRepository.findById(id);
     }
 
-    public List<Crash> getCrashesByGame(Long gameId) {
+    public List<Crash> getCrashesByGame(String gameId) {
         Game game = gameRepository.findById(gameId).orElse(null);
         if (game == null) {
             return List.of();
@@ -44,7 +44,7 @@ public class CrashService {
         return crashRepository.save(crash);
     }
 
-    public Crash updateCrash(Long id, Crash crashDetails) {
+    public Crash updateCrash(String id, Crash crashDetails) {
         Crash crash = crashRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Crash introuvable avec l'ID: " + id));
         
@@ -54,7 +54,7 @@ public class CrashService {
         return crashRepository.save(crash);
     }
 
-    public void deleteCrash(Long id) {
+    public void deleteCrash(String id) {
         // Validation métier : le crash doit exister
         if (!crashRepository.existsById(id)) {
             throw new IllegalArgumentException("Crash introuvable avec l'ID: " + id);

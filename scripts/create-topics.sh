@@ -34,7 +34,7 @@ create_topic "user-registered" 3 1
 # ============================================
 # GAME CATALOG EVENTS
 # ============================================
-create_topic "game-created" 3 1
+create_topic "game-released" 3 1
 create_topic "game-updated" 5 1
 create_topic "game-deleted" 1 1
 create_topic "game-patch-released" 5 1

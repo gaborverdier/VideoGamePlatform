@@ -1,6 +1,6 @@
 package com.controller;
 
-import com.gaming.api.dto.PatchDTO;
+import com.gaming.api.models.PatchModel;
 import com.mapper.PatchMapper;
 import com.model.Patch;
 import com.model.Game;
@@ -23,43 +23,44 @@ public class PatchController {
     private GameRepository gameRepository;
 
     @GetMapping
-    public ResponseEntity<List<PatchDTO>> getAllPatches() {
+    public ResponseEntity<List<PatchModel>> getAllPatches() {
         return ResponseEntity.ok(patchService.getAllPatches());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PatchDTO> getPatchById(@PathVariable Long id) {
+    public ResponseEntity<PatchModel> getPatchById(@PathVariable String id) {
         return patchService.getPatchById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/game/{gameId}")
-    public ResponseEntity<List<PatchDTO>> getPatchesByGame(@PathVariable Long gameId) {
+    public ResponseEntity<List<PatchModel>> getPatchesByGame(@PathVariable String gameId) {
         return ResponseEntity.ok(patchService.getPatchesByGame(gameId));
     }
 
     @PostMapping("/game/{gameId}")
-    public ResponseEntity<PatchDTO> createPatch(@PathVariable Long gameId, @RequestBody PatchDTO patchDTO) {
+    public ResponseEntity<PatchModel> createPatch(@PathVariable String gameId, @RequestBody PatchModel patchModel) {
         Game game = gameRepository.findById(gameId)
             .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + gameId));
-        Patch patch = patchMapper.fromDTO(patchDTO, game);
+        Patch patch = patchMapper.fromDTO(patchModel, game);
         return ResponseEntity.ok(patchService.createPatch(gameId, patch));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PatchDTO> updatePatch(@PathVariable Long id, @RequestBody PatchDTO patchDTO) {
-        PatchDTO existingPatch = patchService.getPatchById(id)
+    public ResponseEntity<PatchModel> updatePatch(@PathVariable String id, @RequestBody PatchModel patchModel) {
+
+        PatchModel existingPatch = patchService.getPatchById(id)
             .orElseThrow(() -> new IllegalArgumentException("Patch introuvable avec l'ID: " + id));
         Game game = gameRepository.findById(existingPatch.getGameId())
             .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable"));
-        Patch patch = patchMapper.fromDTO(patchDTO, game);
+        Patch patch = patchMapper.fromDTO(existingPatch, game);
         patch.setId(id);
         return ResponseEntity.ok(patchService.updatePatch(id, patch));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePatch(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePatch(@PathVariable String id) {
         patchService.deletePatch(id);
         return ResponseEntity.noContent().build();
     }

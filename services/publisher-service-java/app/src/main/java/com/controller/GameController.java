@@ -1,6 +1,6 @@
 package com.controller;
 
-import com.gaming.api.dto.GameDTO;
+import com.gaming.api.models.GameModel;
 import com.mapper.GameMapper;
 import com.model.Game;
 import com.model.Publisher;
@@ -23,43 +23,43 @@ public class GameController {
     private PublisherRepository publisherRepository;
 
     @GetMapping
-    public ResponseEntity<List<GameDTO>> getAllGames() {
+    public ResponseEntity<List<GameModel>> getAllGames() {
         return ResponseEntity.ok(gameService.getAllGames());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<GameDTO> getGameById(@PathVariable Long id) {
+    public ResponseEntity<GameModel> getGameById(@PathVariable String id) {
         return gameService.getGameById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/publisher/{publisherId}")
-    public ResponseEntity<List<GameDTO>> getGamesByPublisher(@PathVariable Long publisherId) {
+    public ResponseEntity<List<GameModel>> getGamesByPublisher(@PathVariable String publisherId) {
         return ResponseEntity.ok(gameService.getGamesByPublisher(publisherId));
     }
 
     @PostMapping("/publisher/{publisherId}")
-    public ResponseEntity<GameDTO> createGame(@PathVariable("publisherId") Long publisherId, @RequestBody GameDTO gameDTO) {
+    public ResponseEntity<GameModel> createGame(@PathVariable("publisherId") String publisherId, @RequestBody GameModel gameModel) {
         Publisher publisher = publisherRepository.findById(publisherId)
             .orElseThrow(() -> new IllegalArgumentException("Publisher introuvable avec l'ID: " + publisherId));
-        Game game = gameMapper.fromDTO(gameDTO, publisher);
+        Game game = gameMapper.fromDTO(gameModel, publisher);
         return ResponseEntity.ok(gameService.createGame(publisherId, game));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<GameDTO> updateGame(@PathVariable Long id, @RequestBody GameDTO gameDTO) {
-        GameDTO existingGame = gameService.getGameById(id)
+    public ResponseEntity<GameModel> updateGame(@PathVariable String id, @RequestBody GameModel gameModel) {
+        GameModel existingGame = gameService.getGameById(id)
             .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + id));
         Publisher publisher = publisherRepository.findById(existingGame.getPublisherId())
             .orElseThrow(() -> new IllegalArgumentException("Publisher introuvable"));
-        Game game = gameMapper.fromDTO(gameDTO, publisher);
+        Game game = gameMapper.fromDTO(gameModel, publisher);
         game.setId(id);
         return ResponseEntity.ok(gameService.updateGame(id, game));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteGame(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteGame(@PathVariable String id) {
         gameService.deleteGame(id);
         return ResponseEntity.noContent().build();
     }

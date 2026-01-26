@@ -1,6 +1,6 @@
 package com.service;
 
-import com.gaming.api.dto.PatchDTO;
+import com.gaming.api.models.PatchModel;
 import com.mapper.PatchMapper;
 import com.model.Patch;
 import com.model.Game;
@@ -26,18 +26,18 @@ public class PatchService {
     private EventProducer eventProducer;
 
 
-    public List<PatchDTO> getAllPatches() {
+    public List<PatchModel> getAllPatches() {
         return patchRepository.findAll().stream()
             .map(patchMapper::toDTO)
             .collect(Collectors.toList());
     }
 
-    public Optional<PatchDTO> getPatchById(Long id) {
+    public Optional<PatchModel> getPatchById(String id) {
         return patchRepository.findById(id)
             .map(patchMapper::toDTO);
     }
 
-    public List<PatchDTO> getPatchesByGame(Long gameId) {
+    public List<PatchModel> getPatchesByGame(String gameId) {
         Game game = gameRepository.findById(gameId).orElse(null);
         if (game == null) {
             return List.of();
@@ -47,24 +47,24 @@ public class PatchService {
             .collect(Collectors.toList());
     }
 
-    public PatchDTO createPatch(Long gameId, Patch patch) {
+    public PatchModel createPatch(String gameId, Patch patch) {
         // Validation métier : le jeu doit exister
         Game game = gameRepository.findById(gameId)
             .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + gameId));
         
         patch.setGame(game);
         Patch saved = patchRepository.save(patch);
-        PatchDTO patchDTO = patchMapper.toDTO(saved);
+        PatchModel patchModel = patchMapper.toDTO(saved);
 
         String topic = "game-patch-released";
-        String key = String.valueOf(patchDTO.getId());
+        String key = String.valueOf(patchModel.getGameId());
 
-        eventProducer.send(topic, key, patchDTO);
+        eventProducer.send(topic, key, patchModel);
 
-        return patchDTO;
+        return patchModel;
     }
 
-    public PatchDTO updatePatch(Long id, Patch patchDetails) {
+    public PatchModel updatePatch(String id, Patch patchDetails) {
         // Validation métier : le patch doit exister
         Patch patch = patchRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Patch introuvable avec l'ID: " + id));
@@ -77,7 +77,7 @@ public class PatchService {
         return patchMapper.toDTO(updated);
     }
 
-    public void deletePatch(Long id) {
+    public void deletePatch(String id) {
         // Validation métier : le patch doit exister
         if (!patchRepository.existsById(id)) {
             throw new IllegalArgumentException("Patch introuvable avec l'ID: " + id);

@@ -1,6 +1,6 @@
 package com.service;
 
-import com.gaming.api.dto.DLCDTO;
+import com.gaming.api.models.DLCModel;
 import com.mapper.DLCMapper;
 import com.model.DLC;
 import com.model.Game;
@@ -20,18 +20,18 @@ public class DLCService {
     @Autowired
     private GameRepository gameRepository;
 
-    public List<DLCDTO> getAllDLCs() {
+    public List<DLCModel> getAllDLCs() {
         return dlcRepository.findAll().stream()
             .map(DLCMapper::toDTO)
             .collect(Collectors.toList());
     }
 
-    public Optional<DLCDTO> getDLCById(Long id) {
+    public Optional<DLCModel> getDLCById(String id) {
         return dlcRepository.findById(id)
             .map(DLCMapper::toDTO);
     }
 
-    public List<DLCDTO> getDLCsByGame(Long gameId) {
+    public List<DLCModel> getDLCsByGame(String gameId) {
         Game game = gameRepository.findById(gameId).orElse(null);
         if (game == null) {
             return List.of();
@@ -41,7 +41,7 @@ public class DLCService {
             .collect(Collectors.toList());
     }
 
-    public DLCDTO createDLC(Long gameId, DLC dlc) {
+    public DLCModel createDLC(String gameId, DLC dlc) {
         // Validation métier : le jeu doit exister
         Game game = gameRepository.findById(gameId)
             .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + gameId));
@@ -51,7 +51,7 @@ public class DLCService {
         return DLCMapper.toDTO(saved);
     }
 
-    public DLCDTO updateDLC(Long id, DLC dlcDetails) {
+    public DLCModel updateDLC(String id, DLC dlcDetails) {
         // Validation métier : le DLC doit exister
         DLC dlc = dlcRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("DLC introuvable avec l'ID: " + id));
@@ -64,7 +64,7 @@ public class DLCService {
         return DLCMapper.toDTO(updated);
     }
 
-    public void deleteDLC(Long id) {
+    public void deleteDLC(String id) {
         // Validation métier : le DLC doit exister
         if (!dlcRepository.existsById(id)) {
             throw new IllegalArgumentException("DLC introuvable avec l'ID: " + id);
