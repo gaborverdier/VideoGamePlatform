@@ -8,9 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gaming.api.models.UserModel;
 import com.gaming.platform.repository.UserRepository;
-import com.gaming.platform.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +43,7 @@ public class AuthController {
                         return ResponseEntity.ok(Map.of(
                                 "message", "Login successful",
                                 "userId", user.getUserId(),
-                                "username", user.getUsername()
-                        ));
+                                "username", user.getUsername()));
                     } else {
                         return ResponseEntity.status(401)
                                 .body(Map.of("error", "Invalid credentials"));

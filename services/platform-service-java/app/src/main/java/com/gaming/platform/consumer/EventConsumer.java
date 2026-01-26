@@ -22,6 +22,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.gaming.api.models.GameModel;
 import com.gaming.events.GameCrashReported;
 import com.gaming.events.GamePatchReleased;
 import com.gaming.events.GameUpdated;
@@ -48,6 +49,7 @@ public class EventConsumer {
     private static final String GAME_CRASH_REPORTED = "game-crash-reported";
     private static final String GAME_UPDATED_TOPIC = "game-updated";
     private static final String GAME_PATCH_RELEASED_TOPIC = "game-patch-released";
+    private static final String GAME_RELEASED = "game-released";
 
     public EventConsumer(@Qualifier("consumerProperties") Properties consumerProperties,
             GameRepository gameRepository,
@@ -82,7 +84,8 @@ public class EventConsumer {
         consumer.subscribe(Arrays.asList(
                 GAME_CRASH_REPORTED,
                 GAME_UPDATED_TOPIC,
-                GAME_PATCH_RELEASED_TOPIC));
+                GAME_PATCH_RELEASED_TOPIC,
+                GAME_RELEASED));
 
         log.info("📥 Subscribed to topics: {}", consumer.subscription());
 
@@ -155,6 +158,14 @@ public class EventConsumer {
                         handleGamePatchReleasedGeneric((GenericRecord) record.value());
                     }
                     break;
+                case GAME_RELEASED:
+                    if (record.value() instanceof GameModel) {
+                        handleGameReleased((GameModel) record.value());
+                    } else if (record.value() instanceof GenericRecord) {
+                        handleGameReleasedGeneric((GenericRecord) record.value());
+                        
+                    }
+                    break;
                 default:
                     log.warn("Unknown topic: {}", topic);
             }
@@ -207,6 +218,10 @@ public class EventConsumer {
 
     private void handleGamePatchReleasedGeneric(GenericRecord event) {
         log.info("Received GamePatchReleased (generic) event: {}", event);
+    }
+
+    private void handleGameReleasedGeneric(GenericRecord event) {
+        log.info("Received GameReleased (generic) event: {}", event);
     }
 
 
@@ -297,5 +312,29 @@ public class EventConsumer {
                 log.info("Patch notes: {}", event.getPatchNotes());
             }
         });
+    }
+
+    private void handleGameReleased(GameModel event) {
+        log.info("Received GameReleased event for new game: {}", event.getTitle());
+
+        Game newGame = new Game();
+        newGame.setGameId(event.getGameId().toString());
+        newGame.setTitle(event.getTitle().toString());
+        newGame.setPublisher(event.getPublisherName().toString());
+        newGame.setPlatform(event.getPlatform().toString());
+        newGame.setGenre(event.getGenre().toString());
+        newGame.setPrice(BigDecimal.valueOf(event.getPrice()));
+        newGame.setVersion(event.getVersion().toString());
+
+        if (event.getDescription() != null) {
+            newGame.setDescription(event.getDescription().toString());
+        }
+
+        newGame.setLastUpdated(LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(event.getReleaseTimeStamp()),
+                ZoneOffset.UTC));
+
+        gameRepository.save(newGame);
+        log.info("Saved new game: {}", newGame.getTitle());
     }
 }
