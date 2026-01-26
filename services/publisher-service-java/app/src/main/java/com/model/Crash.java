@@ -14,11 +14,15 @@ public class Crash {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String description;
     private Long crashTime;
     private String gameVersion;
+
+    private String platform;
+    private String errorMessage;
 
     @ManyToOne
     @JoinColumn(name = "game_id")
     private Game game;
+
+    
 }

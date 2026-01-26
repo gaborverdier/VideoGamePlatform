@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -18,12 +17,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import com.gaming.events.GameAvailabilityChanged;
 import com.gaming.events.GameCrashReported;
-import com.gaming.events.GamePatchReleased;
-import com.gaming.events.GameUpdated;
-//import com.handler.CrashEventHandler;
-import com.handler.GameEventHandler;
+import com.handler.CrashReportedEventHandler;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +33,7 @@ public class EventConsumer {
 
     private final Properties consumerProperties;
     //private final CrashEventHandler crashEventHandler;
-    private final GameEventHandler gameEventHandler;
+    private final CrashReportedEventHandler crashReportedEventHandler;
     private final ExecutorService executorService;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -51,11 +46,9 @@ public class EventConsumer {
 
     public EventConsumer(
             @Qualifier("consumerProperties") Properties consumerProperties,
-            //CrashEventHandler crashEventHandler,
-            GameEventHandler gameEventHandler) {
+            CrashReportedEventHandler crashReportedEventHandler) {
         this.consumerProperties = consumerProperties;
-        //this.crashEventHandler = crashEventHandler;
-        this.gameEventHandler = gameEventHandler;
+        this.crashReportedEventHandler = crashReportedEventHandler;
         this.executorService = Executors.newSingleThreadExecutor();
     }
 
@@ -130,72 +123,16 @@ public class EventConsumer {
     private void processRecord(ConsumerRecord<String, Object> record) {
         String topic = record.topic();
 
-        try {
-            switch (topic) {
-                case GAME_CRASH_REPORTED:
-                    handleCrashReportedEvent(record.value());
-                    break;
-                case GAME_UPDATED_TOPIC:
-                    handleGameUpdatedEvent(record.value());
-                    break;
-                case GAME_PATCH_RELEASED_TOPIC:
-                    handlePatchReleasedEvent(record.value());
-                    break;
-                case GAME_AVAILABILITY_CHANGED_TOPIC:
-                    handleAvailabilityChangedEvent(record.value());
-                    break;
-                default:
-                    log.warn("⚠️ Unknown topic: {}", topic);
-            }
-        } catch (Exception e) {
-            log.error("❌ Error processing record from topic: {}", topic, e);
-            throw e; // Re-throw pour la gestion d'erreur globale
-        }
-    }
-
-    // ========== Event Routing Methods ==========
-
-    private void handleCrashReportedEvent(Object value) {
-        if (value instanceof GameCrashReported) {
-            //crashEventHandler.handleCrashReported((GameCrashReported) value);
-        } else if (value instanceof GenericRecord) {
-            //crashEventHandler.handleCrashReportedGeneric((GenericRecord) value);
-        } else {
-            log.warn("⚠️ Unexpected record type for GameCrashReported: {}", 
-                value == null ? "null" : value.getClass());
-        }
-    }
-
-    private void handleGameUpdatedEvent(Object value) {
-        if (value instanceof GameUpdated) {
-            gameEventHandler.handleGameUpdated((GameUpdated) value);
-        } else if (value instanceof GenericRecord) {
-            gameEventHandler.handleGameUpdatedGeneric((GenericRecord) value);
-        } else {
-            log.warn("⚠️ Unexpected record type for GameUpdated: {}", 
-                value == null ? "null" : value.getClass());
-        }
-    }
-
-    private void handlePatchReleasedEvent(Object value) {
-        if (value instanceof GamePatchReleased) {
-            gameEventHandler.handlePatchReleased((GamePatchReleased) value);
-        } else if (value instanceof GenericRecord) {
-            gameEventHandler.handlePatchReleasedGeneric((GenericRecord) value);
-        } else {
-            log.warn("⚠️ Unexpected record type for GamePatchReleased: {}", 
-                value == null ? "null" : value.getClass());
-        }
-    }
-
-    private void handleAvailabilityChangedEvent(Object value) {
-        if (value instanceof GameAvailabilityChanged) {
-            gameEventHandler.handleAvailabilityChanged((GameAvailabilityChanged) value);
-        } else if (value instanceof GenericRecord) {
-            gameEventHandler.handleAvailabilityChangedGeneric((GenericRecord) value);
-        } else {
-            log.warn("⚠️ Unexpected record type for GameAvailabilityChanged: {}", 
-                value == null ? "null" : value.getClass());
+        switch (topic) {
+            case GAME_CRASH_REPORTED:
+                GameCrashReported crashEvent = (GameCrashReported) record.value();
+                log.info("🚨 Processing GameCrashReported event: {}", crashEvent);
+                crashReportedEventHandler.handle(crashEvent);
+                
+                break;
+        
+            default:
+                break;
         }
     }
 }

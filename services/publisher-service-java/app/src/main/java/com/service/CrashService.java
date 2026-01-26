@@ -48,7 +48,6 @@ public class CrashService {
         Crash crash = crashRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Crash introuvable avec l'ID: " + id));
         
-        crash.setDescription(crashDetails.getDescription());
         crash.setCrashTime(crashDetails.getCrashTime());
         crash.setGameVersion(crashDetails.getGameVersion());
         

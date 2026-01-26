@@ -20,12 +20,10 @@ public class CrashMapper {
         if (crash == null) throw new IllegalArgumentException("Crash ne peut pas être null");
         if (crash.getGame() == null || crash.getGame().getId() == null)
             throw new IllegalArgumentException("Le jeu associé au crash est obligatoire");
-        if (crash.getDescription() == null || crash.getDescription().isEmpty())
-            throw new IllegalArgumentException("La description du crash est obligatoire");
+
         CrashDTO dto = new CrashDTO();
         dto.setId(crash.getId());
         dto.setGameId(crash.getGame().getId());
-        dto.setDescription(crash.getDescription());
         dto.setCrashTime(crash.getCrashTime());
         dto.setGameVersion(crash.getGameVersion());
         return dto;
@@ -39,7 +37,6 @@ public class CrashMapper {
             throw new IllegalArgumentException("La description du crash est obligatoire");
         Crash crash = new Crash();
         crash.setId(dto.getId());
-        crash.setDescription(dto.getDescription());
         crash.setCrashTime(dto.getCrashTime());
         crash.setGame(gameRepository.findById(dto.getGameId()).orElseThrow(() -> new IllegalArgumentException("Jeu introuvable pour l'id fourni")));
         crash.setGameVersion(dto.getGameVersion());
