@@ -1,5 +1,7 @@
 package com.controller;
 
+import com.gaming.api.dto.PublisherDTO;
+import com.mapper.PublisherMapper;
 import com.model.Publisher;
 import com.service.PublisherService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,28 +17,28 @@ public class PublisherController {
     private PublisherService publisherService;
 
     @GetMapping
-    public ResponseEntity<List<Publisher>> getAllPublishers() {
-        List<Publisher> publishers = publisherService.getAllPublishers();
-        return ResponseEntity.ok(publishers);
+    public ResponseEntity<List<PublisherDTO>> getAllPublishers() {
+        return ResponseEntity.ok(publisherService.getAllPublishers());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Publisher> getPublisherById(@PathVariable Long id) {
+    public ResponseEntity<PublisherDTO> getPublisherById(@PathVariable Long id) {
         return publisherService.getPublisherById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Publisher> createPublisher(@RequestBody Publisher publisher) {
-        Publisher created = publisherService.createPublisher(publisher);
-        return ResponseEntity.ok(created);
+    public ResponseEntity<PublisherDTO> createPublisher(@RequestBody PublisherDTO publisherDTO) {
+        Publisher publisher = PublisherMapper.fromDTO(publisherDTO);
+        return ResponseEntity.ok(publisherService.createPublisher(publisher));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Publisher> updatePublisher(@PathVariable Long id, @RequestBody Publisher publisher) {
-        Publisher updated = publisherService.updatePublisher(id, publisher);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<PublisherDTO> updatePublisher(@PathVariable Long id, @RequestBody PublisherDTO publisherDTO) {
+        Publisher publisher = PublisherMapper.fromDTO(publisherDTO);
+        publisher.setId(id);
+        return ResponseEntity.ok(publisherService.updatePublisher(id, publisher));
     }
 
     @DeleteMapping("/{id}")

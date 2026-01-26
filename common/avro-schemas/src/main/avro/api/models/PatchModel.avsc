@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.dto",
+  "name": "PatchDTO",
+  "doc": "Patch Data Transfer Object",
+  "fields": [
+    {"name": "id", "type": "long"},
+    {"name": "gameId", "type": "long"},
+    {"name": "version", "type": "string"},
+    {"name":"releaseTime", "type": "long"},
+    {"name": "description", "type": "string"}
+  ]
+}

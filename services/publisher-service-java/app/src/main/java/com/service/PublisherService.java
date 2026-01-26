@@ -1,5 +1,7 @@
 package com.service;
 
+import com.gaming.api.dto.PublisherDTO;
+import com.mapper.PublisherMapper;
 import com.model.Publisher;
 import com.repository.PublisherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,31 +9,37 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PublisherService {
     @Autowired
     private PublisherRepository publisherRepository;
 
-    public List<Publisher> getAllPublishers() {
-        return publisherRepository.findAll();
+    public List<PublisherDTO> getAllPublishers() {
+        return publisherRepository.findAll().stream()
+            .map(PublisherMapper::toDTO)
+            .collect(Collectors.toList());
     }
 
-    public Optional<Publisher> getPublisherById(Long id) {
-        return publisherRepository.findById(id);
+    public Optional<PublisherDTO> getPublisherById(Long id) {
+        return publisherRepository.findById(id)
+            .map(PublisherMapper::toDTO);
     }
 
-    public Publisher createPublisher(Publisher publisher) {
-        return publisherRepository.save(publisher);
+    public PublisherDTO createPublisher(Publisher publisher) {
+        Publisher saved = publisherRepository.save(publisher);
+        return PublisherMapper.toDTO(saved);
     }
 
-    public Publisher updatePublisher(Long id, Publisher publisherDetails) {
+    public PublisherDTO updatePublisher(Long id, Publisher publisherDetails) {
         // Validation métier : le publisher doit exister
         Publisher publisher = publisherRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Publisher introuvable avec l'ID: " + id));
         
         publisher.setName(publisherDetails.getName());
-        return publisherRepository.save(publisher);
+        Publisher updated = publisherRepository.save(publisher);
+        return PublisherMapper.toDTO(updated);
     }
 
     public void deletePublisher(Long id) {
