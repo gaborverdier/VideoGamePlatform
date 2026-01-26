@@ -33,8 +33,6 @@ public class CrashMapper {
         if (dto == null) throw new IllegalArgumentException("Le DTO ne peut pas être null");
         if ( dto.getGameId() == null)
             throw new IllegalArgumentException("L'identifiant du jeu est obligatoire et doit être positif");
-        if (dto.getDescription() == null)
-            throw new IllegalArgumentException("La description du crash est obligatoire");
         Crash crash = new Crash();
         crash.setId(dto.getId());
         crash.setCrashTime(dto.getCrashTimeStamp());
