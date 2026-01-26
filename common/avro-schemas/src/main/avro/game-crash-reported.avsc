@@ -6,7 +6,7 @@
   "fields":  [
     {
       "name": "crashId",
-      "type": "long",
+      "type": "string",
       "doc": "Unique identifier for the crash report"
     },
     {
@@ -16,7 +16,7 @@
     },
     {
       "name": "gameId",
-      "type": "long",
+      "type": "string",
       "doc": "Game that crashed"
     },
     {

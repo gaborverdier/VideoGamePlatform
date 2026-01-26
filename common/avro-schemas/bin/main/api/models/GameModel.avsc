@@ -1,19 +1,18 @@
 {
   "type": "record",
-  "namespace": "com.gaming.api.dto",
-  "name": "GameDTO",
-  "doc": "Game Data Transfer Object",
+  "namespace": "com.gaming.api.models",
+  "name": "GameModel",
+  "doc": "Game Data Model",
   "fields": [
-    {"name": "gameId", "type": "long"},
+    {"name": "gameId", "type": "string"},
     {"name": "title", "type": "string"},
     {"name": "publisherName", "type": "string"},
-    {"name": "publisherId", "type": "long"},
+    {"name": "publisherId", "type": "String"},
     {"name": "platform", "type": "string"},
     {"name": "genre", "type": "string"},
-    {"name": "releaseTime", "type": "long"},
+    {"name": "releaseTimeStamp", "type": "long"},
     {"name": "price", "type":  "double"},
     {"name": "version", "type": "string"},
-    {"name": "available", "type": "boolean"},
     {"name": "description", "type": ["null", "string"], "default":  null}
   ]
 }
