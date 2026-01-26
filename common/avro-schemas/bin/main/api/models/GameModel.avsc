@@ -7,7 +7,7 @@
     {"name": "gameId", "type": "string"},
     {"name": "title", "type": "string"},
     {"name": "publisherName", "type": "string"},
-    {"name": "publisherId", "type": "String"},
+    {"name": "publisherId", "type": "string"},
     {"name": "platform", "type": "string"},
     {"name": "genre", "type": "string"},
     {"name": "releaseTimeStamp", "type": "long"},

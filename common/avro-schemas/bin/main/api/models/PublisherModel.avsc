@@ -1,10 +1,10 @@
 {
   "type": "record",
-  "namespace": "com.gaming.api.dto",
-  "name": "PublisherDTO",
+  "namespace": "com.gaming.api.models",
+  "name": "PublisherModel",
   "doc": "Publisher Data Transfer Object",
   "fields": [
-    {"name": "id", "type": "long"},
+    {"name": "id", "type": "string"},
     {"name": "name", "type": "string"}
   ]
 }

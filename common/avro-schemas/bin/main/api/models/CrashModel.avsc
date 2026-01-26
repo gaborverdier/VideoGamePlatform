@@ -1,13 +1,13 @@
 {
   "type": "record",
-  "namespace": "com.gaming.api.dto",
-  "name": "CrashDTO",
+  "namespace": "com.gaming.api.models",
+  "name": "CrashModel",
   "doc": "Crash Data Transfer Object",
   "fields": [
-    {"name": "id", "type": "long"},
-    {"name": "gameId", "type": "long"},
+    {"name": "id", "type": "string"},
+    {"name": "gameId", "type": "string"},
     {"name": "description", "type": "string"},
-    {"name": "crashTime", "type": "long"},
+    {"name": "crashTimeStamp", "type": "long"},
     {"name": "gameVersion", "type": "string"}
   ]
 }
