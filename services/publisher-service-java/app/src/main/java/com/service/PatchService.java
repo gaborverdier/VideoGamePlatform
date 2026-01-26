@@ -6,6 +6,7 @@ import com.model.Patch;
 import com.model.Game;
 import com.repository.PatchRepository;
 import com.repository.GameRepository;
+import com.producer.EventProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,9 @@ public class PatchService {
     private GameRepository gameRepository;
     @Autowired
     private PatchMapper patchMapper;
+    @Autowired
+    private EventProducer eventProducer;
+
 
     public List<PatchDTO> getAllPatches() {
         return patchRepository.findAll().stream()
@@ -50,7 +54,14 @@ public class PatchService {
         
         patch.setGame(game);
         Patch saved = patchRepository.save(patch);
-        return patchMapper.toDTO(saved);
+        PatchDTO patchDTO = patchMapper.toDTO(saved);
+
+        String topic = "game-patch-released";
+        String key = String.valueOf(patchDTO.getId());
+
+        eventProducer.send(topic, key, patchDTO);
+
+        return patchDTO;
     }
 
     public PatchDTO updatePatch(Long id, Patch patchDetails) {
