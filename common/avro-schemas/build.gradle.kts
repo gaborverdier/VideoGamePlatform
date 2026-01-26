@@ -3,6 +3,12 @@ plugins {
     id("com.github.davidmc24.gradle.plugin.avro") version "1.9.0"
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 group = "com.gaming.common"
 version = "1.0.0"
 
