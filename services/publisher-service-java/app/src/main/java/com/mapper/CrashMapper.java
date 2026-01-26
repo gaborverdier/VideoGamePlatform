@@ -24,7 +24,7 @@ public class CrashMapper {
         CrashModel dto = new CrashModel();
         dto.setId(crash.getId());
         dto.setGameId(crash.getGame().getId());
-        dto.setCrashTimeStamp(crash.getCrashTime());
+        dto.setCrashTimeStamp(crash.getCrashTimeStamp());
         dto.setGameVersion(crash.getGameVersion());
         return dto;
     }
@@ -35,7 +35,7 @@ public class CrashMapper {
             throw new IllegalArgumentException("L'identifiant du jeu est obligatoire et doit être positif");
         Crash crash = new Crash();
         crash.setId(dto.getId());
-        crash.setCrashTime(dto.getCrashTimeStamp());
+        crash.setCrashTimeStamp(dto.getCrashTimeStamp());
         crash.setGame(gameRepository.findById(dto.getGameId()).orElseThrow(() -> new IllegalArgumentException("Jeu introuvable pour l'id fourni")));
         crash.setGameVersion(dto.getGameVersion());
         return crash;

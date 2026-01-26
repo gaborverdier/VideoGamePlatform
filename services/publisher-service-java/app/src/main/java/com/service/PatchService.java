@@ -70,7 +70,7 @@ public class PatchService {
             .orElseThrow(() -> new IllegalArgumentException("Patch introuvable avec l'ID: " + id));
         
         patch.setVersion(patchDetails.getVersion());
-        patch.setReleaseTime(patchDetails.getReleaseTime());
+        patch.setReleaseTimeStamp(patchDetails.getReleaseTimeStamp());
         patch.setDescription(patchDetails.getDescription());
         
         Patch updated = patchRepository.save(patch);

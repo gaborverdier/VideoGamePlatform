@@ -17,7 +17,7 @@ public class PatchMapper {
         dto.setId(patch.getId());
         dto.setGameId(patch.getGame().getId());
         dto.setVersion(patch.getVersion());
-        dto.setReleaseTimeStamp(patch.getReleaseTime());
+        dto.setReleaseTimeStamp(patch.getReleaseTimeStamp());
         dto.setDescription(patch.getDescription());
         return dto;
     }
@@ -30,7 +30,7 @@ public class PatchMapper {
         Patch patch = new Patch();
         patch.setId(dto.getId());
         patch.setVersion(dto.getVersion());
-        patch.setReleaseTime(dto.getReleaseTimeStamp());
+        patch.setReleaseTimeStamp(dto.getReleaseTimeStamp());
         patch.setDescription(dto.getDescription());
         patch.setGame(game);
         return patch;

@@ -15,7 +15,7 @@ public class DLC {
     private String id;
 
     private String name;
-    private Long releaseTime;
+    private Long releaseTimeStamp;
     private String description;
 
     @ManyToOne

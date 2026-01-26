@@ -15,7 +15,7 @@ public class DLCMapper {
         dto.setId(dlc.getId());
         dto.setGameId(dlc.getGame() != null ? dlc.getGame().getId() : null);
         dto.setTitle(dlc.getName());
-        dto.setReleaseTimeStamp(dlc.getReleaseTime());
+        dto.setReleaseTimeStamp(dlc.getReleaseTimeStamp());
         dto.setDescription(dlc.getDescription());
         return dto;
     }
@@ -26,7 +26,7 @@ public class DLCMapper {
         DLC dlc = new DLC();
         dlc.setId(dto.getId());
         dlc.setName(dto.getTitle());
-        dlc.setReleaseTime(dto.getReleaseTimeStamp());
+        dlc.setReleaseTimeStamp(dto.getReleaseTimeStamp());
         dlc.setDescription(dto.getDescription());
         dlc.setGame(game);
         return dlc;

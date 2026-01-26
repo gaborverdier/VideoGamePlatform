@@ -21,7 +21,7 @@ public class GameCrashReportedMapper {
         }
 
         Crash event = new Crash();
-        event.setCrashTime(avroEvent.getCrashTimestamp());
+        event.setCrashTimeStamp(avroEvent.getCrashTimestamp());
         event.setGameVersion(avroEvent.getGameVersion());
         event.setErrorMessage(avroEvent.getErrorMessage());
         event.setGameVersion(avroEvent.getGameVersion());
@@ -39,7 +39,7 @@ public class GameCrashReportedMapper {
 
         GameCrashReported avroEvent = GameCrashReported.newBuilder()
                 .setGameId(event.getGame().getId())
-                .setCrashTimestamp(event.getCrashTime())
+                .setCrashTimestamp(event.getCrashTimeStamp())
                 .setGameVersion(event.getGameVersion())
                 .setErrorMessage(event.getErrorMessage())
                 .build();
