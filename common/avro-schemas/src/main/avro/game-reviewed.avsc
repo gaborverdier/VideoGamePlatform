@@ -1,0 +1,43 @@
+{
+	"type": "record",
+	"namespace": "com.gaming.events",
+	"name": "GameReviewed",
+	"doc": "Event published when a new review is made",
+	"fields": [
+		{
+			"name": "reviewId",
+			"type": "string",
+			"doc": "Unique identifier for the review"
+		},
+		{
+			"name": "userId",
+			"type": "string",
+			"doc": "Unique identifier for the user"
+		},
+		{
+			"name": "gameId",
+			"type": "string",
+			"doc": "Unique identifier for the reviewed game"
+		},
+		{
+			"name": "username",
+			"type": "string",
+			"doc": "Username of the reviewer"
+		},
+		{
+			"name": "rating",
+			"type": "int",
+			"doc": "Rating given"
+		},
+        {
+			"name": "reviewText",
+			"type": "string",
+			"doc": "Text review"
+		},
+		{
+			"name": "registrationTimestamp",
+			"type": "long",
+			"doc": "Unix timestamp (milliseconds) when reviewed"
+		}
+	]
+}

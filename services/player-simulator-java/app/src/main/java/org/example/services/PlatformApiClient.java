@@ -59,4 +59,9 @@ public class PlatformApiClient {
     public String getUserNotificationsJson(String userId) throws Exception {
         return ApiClient.get("/api/notifications/user/" + urlPath(userId));
     }
+
+    // GET /api/reviews/game/{gameId}
+    public String getReviewsForGameJson(String gameId) throws Exception {
+        return ApiClient.get("/api/reviews/game/" + urlPath(gameId));
+    }
 }

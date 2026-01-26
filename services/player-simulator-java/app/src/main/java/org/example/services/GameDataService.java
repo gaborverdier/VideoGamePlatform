@@ -2,10 +2,15 @@ package org.example.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import org.example.models.Game;
-import com.gaming.api.models.GameModel;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.models.Review;
+
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gaming.api.models.GameModel;
+
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 
@@ -33,7 +38,27 @@ public class GameDataService {
             List<GameModel> avroGames = objectMapper.readValue(gamesJson, new TypeReference<List<GameModel>>() {});
             List<Game> loaded = new ArrayList<>();
             for (GameModel avro : avroGames) {
-                loaded.add(Game.fromAvroModel(avro));
+                Game g = Game.fromAvroModel(avro);
+                // fetch reviews for this game and map into local Review model
+                try {
+                    String reviewsJson = apiClient.getReviewsForGameJson(g.getId());
+                    if (reviewsJson != null && !reviewsJson.isEmpty()) {
+                        List<Map<String, Object>> remoteReviews = objectMapper.readValue(reviewsJson, new TypeReference<List<Map<String, Object>>>(){});
+                        for (Map<String, Object> r : remoteReviews) {
+                            String authorId = r.containsKey("userId") ? String.valueOf(r.get("userId")) : "";
+                            String authorName = r.containsKey("username") ? String.valueOf(r.get("username")) : (r.containsKey("authorName") ? String.valueOf(r.get("authorName")) : "");
+                            int rating = 0;
+                            try { rating = r.get("rating") != null ? Integer.parseInt(String.valueOf(r.get("rating"))) : 0; } catch (Exception ex) {}
+                            String comment = r.containsKey("comment") ? String.valueOf(r.get("comment")) : (r.containsKey("reviewText") ? String.valueOf(r.get("reviewText")) : "");
+                            Review local = new Review(g.getId(), authorId, authorName, rating, comment, 0);
+                            g.getReviews().add(local);
+                        }
+                    }
+                } catch (Exception ex) {
+                    // non-fatal: log and continue
+                    System.err.println("Failed to load reviews for game " + g.getId() + ": " + ex.getMessage());
+                }
+                loaded.add(g);
             }
             this.allGames = loaded;
             // debug print loaded games
