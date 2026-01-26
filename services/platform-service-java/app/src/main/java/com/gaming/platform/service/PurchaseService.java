@@ -1,8 +1,14 @@
 package com.gaming.platform.service;
 
-import com.gaming.api.requests.PurchaseGameRequest;  // ✅ Avro API request
-import com.gaming.api.models.PurchaseModel;    // ✅ Avro API response
-import com.gaming. events.GamePurchased;              // ✅ Avro Kafka event
+import java.time. LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.gaming.api.models.PurchaseModel; 
+import com.gaming.api.requests.PurchaseGameRequest;
 import com.gaming. platform.model.Game;
 import com.gaming.platform.model.Purchase;
 import com.gaming.platform.model.User;
@@ -10,14 +16,9 @@ import com.gaming.platform.producer.EventProducer;
 import com.gaming.platform.repository. GameRepository;
 import com.gaming.platform.repository.PurchaseRepository;
 import com.gaming. platform.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern. slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time. LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,10 +40,6 @@ public class PurchaseService {
         // Validate game exists and is available
         Game game = gameRepository.findById(request.getGameId().toString())
                 .orElseThrow(() -> new IllegalArgumentException("Game not found: " + request.getGameId()));
-
-        if (!game.getAvailable()) {
-            throw new IllegalStateException("Game is not available for purchase:  " + game.getTitle());
-        }
 
         // Check if user already owns the game
         if (purchaseRepository.existsByUserIdAndGameId(

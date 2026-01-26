@@ -22,7 +22,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import com.gaming.events.GameAvailabilityChanged;
 import com.gaming.events.GameCrashReported;
 import com.gaming.events.GamePatchReleased;
 import com.gaming.events.GameUpdated;
@@ -49,7 +48,6 @@ public class EventConsumer {
     private static final String GAME_CRASH_REPORTED = "game-crash-reported";
     private static final String GAME_UPDATED_TOPIC = "game-updated";
     private static final String GAME_PATCH_RELEASED_TOPIC = "game-patch-released";
-    private static final String GAME_AVAILABILITY_CHANGED_TOPIC = "game-availability-changed";
 
     public EventConsumer(@Qualifier("consumerProperties") Properties consumerProperties,
             GameRepository gameRepository,
@@ -84,8 +82,7 @@ public class EventConsumer {
         consumer.subscribe(Arrays.asList(
                 GAME_CRASH_REPORTED,
                 GAME_UPDATED_TOPIC,
-                GAME_PATCH_RELEASED_TOPIC,
-                GAME_AVAILABILITY_CHANGED_TOPIC));
+                GAME_PATCH_RELEASED_TOPIC));
 
         log.info("📥 Subscribed to topics: {}", consumer.subscription());
 
@@ -158,13 +155,6 @@ public class EventConsumer {
                         handleGamePatchReleasedGeneric((GenericRecord) record.value());
                     }
                     break;
-                case GAME_AVAILABILITY_CHANGED_TOPIC:
-                    if (record.value() instanceof GameAvailabilityChanged) {
-                        handleGameAvailabilityChanged((GameAvailabilityChanged) record.value());
-                    } else if (record.value() instanceof GenericRecord) {
-                        handleGameAvailabilityChangedGeneric((GenericRecord) record.value());
-                    }
-                    break;
                 default:
                     log.warn("Unknown topic: {}", topic);
             }
@@ -219,9 +209,6 @@ public class EventConsumer {
         log.info("Received GamePatchReleased (generic) event: {}", event);
     }
 
-    private void handleGameAvailabilityChangedGeneric(GenericRecord event) {
-        log.info("Received GameAvailabilityChanged (generic) event: {}", event);
-    }
 
     private void handleGameCrashedReported(GameCrashReported event) {
         log.info("Received GameCrashReported event: {}", event.toString());
@@ -277,7 +264,6 @@ public class EventConsumer {
                     newGame.setGenre(event.getGenre().toString());
                     newGame.setPrice(BigDecimal.valueOf(event.getPrice()));
                     newGame.setVersion(event.getVersion().toString());
-                    newGame.setAvailable(true);
 
                     if (event.getDescription() != null) {
                         newGame.setDescription(event.getDescription().toString());
@@ -309,27 +295,6 @@ public class EventConsumer {
 
             if (event.getPatchNotes() != null) {
                 log.info("Patch notes: {}", event.getPatchNotes());
-            }
-        });
-    }
-
-    private void handleGameAvailabilityChanged(GameAvailabilityChanged event) {
-        log.info("Received GameAvailabilityChanged event for game:  {} (available: {})",
-                event.getGameTitle(), event.getAvailable());
-
-        String gameId = event.getGameId().toString();
-        gameRepository.findById(gameId).ifPresent(game -> {
-            game.setAvailable(event.getAvailable());
-            game.setLastUpdated(LocalDateTime.ofInstant(
-                    Instant.ofEpochMilli(event.getChangeTimestamp()),
-                    ZoneOffset.UTC));
-
-            gameRepository.save(game);
-            log.info("Updated game {} availability to {}",
-                    game.getTitle(), event.getAvailable());
-
-            if (event.getReason() != null) {
-                log.info("Reason: {}", event.getReason());
             }
         });
     }

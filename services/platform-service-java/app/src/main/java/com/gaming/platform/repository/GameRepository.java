@@ -8,7 +8,6 @@ import java.util.List;
 
 @Repository
 public interface GameRepository extends JpaRepository<Game, String> {
-    List<Game> findByAvailableTrue();
     List<Game> findByGenre(String genre);
     List<Game> findByPlatform(String platform);
     List<Game> findByTitleContainingIgnoreCase(String title);

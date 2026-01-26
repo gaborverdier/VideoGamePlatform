@@ -20,7 +20,7 @@ public class GameService {
     private final GameRepository gameRepository;
 
     public List<GameModel> getAllAvailableGames() {
-        List<GameModel> games =  gameRepository.findByAvailableTrue().stream()
+        List<GameModel> games =  gameRepository.findAll().stream()
                 .map(this::toGameModel)
                 .collect(Collectors.toList());
         log.info("Retrieved {} available games", games.size());
@@ -56,13 +56,12 @@ public class GameService {
         return GameModel.newBuilder()
                 .setGameId(game.getGameId())
                 .setTitle(game.getTitle())
-                .setPublisher(game.getPublisher())
+                .setPublisherName(game.getPublisher())
                 .setPlatform(game.getPlatform())
                 .setGenre(game.getGenre())
-                .setReleaseYear(game.getReleaseYear())
+                .setReleaseTimeStamp(game.getReleaseTimeStamp())
                 .setPrice(game.getPrice().doubleValue())
                 .setVersion(game.getVersion())
-                .setAvailable(game.getAvailable())
                 .setDescription(game.getDescription())
                 .build();
     }

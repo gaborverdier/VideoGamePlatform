@@ -32,16 +32,13 @@ public class Game {
     private String genre;
 
     @Column
-    private Integer releaseYear;
+    private Long releaseTimeStamp;
 
     @Column(nullable = false)
     private BigDecimal price;
 
     @Column
     private String version;
-
-    @Column(nullable = false)
-    private Boolean available = true;
 
     @Column
     private LocalDateTime lastUpdated;
