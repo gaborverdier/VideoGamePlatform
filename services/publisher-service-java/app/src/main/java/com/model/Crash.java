@@ -1,5 +1,7 @@
 package com.model;
 
+import java.security.Timestamp;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,11 +14,15 @@ public class Crash {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String description;
-    private String crashDate;
+    private Long crashTime;
     private String gameVersion;
+
+    private String platform;
+    private String errorMessage;
 
     @ManyToOne
     @JoinColumn(name = "game_id")
     private Game game;
+
+    
 }
