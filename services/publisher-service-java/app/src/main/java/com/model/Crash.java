@@ -14,7 +14,7 @@ public class Crash {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private Long crashTime;
+    private Long crashTimeStamp;
     private String gameVersion;
 
     private String platform;

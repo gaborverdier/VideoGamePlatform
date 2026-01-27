@@ -57,7 +57,7 @@ public class DLCService {
             .orElseThrow(() -> new IllegalArgumentException("DLC introuvable avec l'ID: " + id));
         
         dlc.setName(dlcDetails.getName());
-        dlc.setReleaseTime(dlcDetails.getReleaseTime());
+        dlc.setReleaseTimeStamp(dlcDetails.getReleaseTimeStamp());
         dlc.setDescription(dlcDetails.getDescription());
         
         DLC updated = dlcRepository.save(dlc);
