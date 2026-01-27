@@ -23,17 +23,12 @@ public class ReviewController {
     }
 
     @GetMapping("/game/{gameId}")
-    public ResponseEntity<List<Review>> getReviewsByGame(@PathVariable String gameId) {
-        return ResponseEntity.ok(reviewService.getReviewsByGameId(gameId));
+    public List<GameReviewed> getReviewsByGame(@PathVariable String gameId) {
+        return reviewService.getReviewsByGameId(gameId);
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Review>> getReviewsByUser(@PathVariable String userId) {
-        return ResponseEntity.ok(reviewService.getReviewsByUserId(userId));
-    }
-
-    @GetMapping("/game/{gameId}/events")
-    public ResponseEntity<List<GameReviewed>> getGameReviewedEvents(@PathVariable String gameId) {
-        return ResponseEntity.ok(reviewService.getGameReviewedEventsByGameId(gameId));
+    public List<GameReviewed> getReviewsByUser(@PathVariable String userId) {
+        return reviewService.getReviewsByUserId(userId);
     }
 }

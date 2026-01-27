@@ -30,27 +30,29 @@ public class ReviewService {
         return reviewRepository.save(review);
     }
 
-    public List<Review> getReviewsByGameId(String gameId) {
-        return reviewRepository.findByGameId(gameId);
+    public List<GameReviewed> getReviewsByGameId(String gameId) {
+        return reviewRepository.findByGameId(gameId).stream()
+                .map(this::toGameReviewed)
+                .collect(Collectors.toList());
+
     }
 
-    public List<Review> getReviewsByUserId(String userId) {
-        return reviewRepository.findByUserId(userId);
-    }
-
-    public List<GameReviewed> getGameReviewedEventsByGameId(String gameId) {
-        return getReviewsByGameId(gameId).stream()
+    public List<GameReviewed> getReviewsByUserId(String userId) {
+        return reviewRepository.findByUserId(userId).stream()
                 .map(this::toGameReviewed)
                 .collect(Collectors.toList());
     }
 
+
     private GameReviewed toGameReviewed(Review review) {
         return GameReviewed.newBuilder()
+                .setReviewId(review.getReviewId())
                 .setGameId(review.getGameId())
                 .setUserId(review.getUserId())
                 .setUsername(review.getUsername())
                 .setRating(review.getRating())
                 .setReviewText(review.getComment())
+                .setRegistrationTimestamp(review.getReviewedAt() != null ? review.getReviewedAt().toEpochMilli() : System.currentTimeMillis())
                 .build();
     }
 }

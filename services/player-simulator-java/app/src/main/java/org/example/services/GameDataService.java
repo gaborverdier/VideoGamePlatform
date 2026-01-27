@@ -2,7 +2,6 @@ package org.example.services;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.example.models.Game;
 import org.example.models.Review;
@@ -10,6 +9,8 @@ import org.example.models.Review;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gaming.api.models.GameModel;
+
+import com.gaming.events.GameReviewed;
 
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -35,28 +36,57 @@ public class GameDataService {
         PlatformApiClient apiClient = new PlatformApiClient();
         try {
             String gamesJson = apiClient.getAllGamesJson();
-            List<GameModel> avroGames = objectMapper.readValue(gamesJson, new TypeReference<List<GameModel>>() {});
+            List<GameModel> avroGames = objectMapper.readValue(gamesJson, new TypeReference<List<GameModel>>() {
+            });
             List<Game> loaded = new ArrayList<>();
             for (GameModel avro : avroGames) {
                 Game g = Game.fromAvroModel(avro);
                 // fetch reviews for this game and map into local Review model
                 try {
                     String reviewsJson = apiClient.getReviewsForGameJson(g.getId());
+                    System.out.println("\n\n\n\n\n\nFetched reviews JSON for game " + g.getId() + ": " + reviewsJson + "\n\n\n\n\n\n");
                     if (reviewsJson != null && !reviewsJson.isEmpty()) {
-                        List<Map<String, Object>> remoteReviews = objectMapper.readValue(reviewsJson, new TypeReference<List<Map<String, Object>>>(){});
-                        for (Map<String, Object> r : remoteReviews) {
-                            String authorId = r.containsKey("userId") ? String.valueOf(r.get("userId")) : "";
-                            String authorName = r.containsKey("username") ? String.valueOf(r.get("username")) : (r.containsKey("authorName") ? String.valueOf(r.get("authorName")) : "");
-                            int rating = 0;
-                            try { rating = r.get("rating") != null ? Integer.parseInt(String.valueOf(r.get("rating"))) : 0; } catch (Exception ex) {}
-                            String comment = r.containsKey("comment") ? String.valueOf(r.get("comment")) : (r.containsKey("reviewText") ? String.valueOf(r.get("reviewText")) : "");
+                        List<GameReviewed> remoteReviews = objectMapper.readValue(reviewsJson,
+                                new TypeReference<List<GameReviewed>>() {
+                                });
+                        for (GameReviewed rm : remoteReviews) {
+                            String authorId = rm.getUserId() != null ? rm.getUserId() : "";
+                            String authorName = rm.getUsername() != null ? rm.getUsername() : "";
+                            int rating = rm.getRating();
+                            String comment = rm.getReviewText() != null ? rm.getReviewText() : "";
                             Review local = new Review(g.getId(), authorId, authorName, rating, comment, 0);
+                            // set id and createdAt if available
+                            try {
+                                java.lang.reflect.Field idField = Review.class.getDeclaredField("id");
+                                idField.setAccessible(true);
+                                idField.set(local, rm.getReviewId() != null ? rm.getReviewId() : local.getId());
+                            } catch (Exception ignore) {
+                            }
+                            try {
+                                java.lang.reflect.Field createdAtField = Review.class.getDeclaredField("createdAt");
+                                createdAtField.setAccessible(true);
+                                long regTs = rm.getRegistrationTimestamp();
+                                if (regTs > 0L)
+                                    createdAtField.set(local, java.time.LocalDateTime.ofInstant(
+                                            java.time.Instant.ofEpochMilli(regTs), java.time.ZoneId.systemDefault()));
+                            } catch (Exception ignore) {
+                            }
                             g.getReviews().add(local);
                         }
                     }
                 } catch (Exception ex) {
                     // non-fatal: log and continue
                     System.err.println("Failed to load reviews for game " + g.getId() + ": " + ex.getMessage());
+                }
+                // print number of retrieved comments for this game
+                try {
+                    long commentCount = g.getReviews().stream()
+                            .filter(r -> r.getComment() != null && !r.getComment().isEmpty()).count();
+                    System.out.println(
+                            "Game '" + g.getName() + "' (" + g.getId() + ") - retrieved comments: " + commentCount);
+                } catch (Exception ex) {
+                    // defensive: don't let logging break loading
+                    System.err.println("Failed to count comments for game " + g.getId() + ": " + ex.getMessage());
                 }
                 loaded.add(g);
             }
@@ -98,16 +128,17 @@ public class GameDataService {
 
     public Game findGameById(String id) {
         return allGames.stream()
-            .filter(g -> g.getId().equals(id))
-            .findFirst()
-            .orElse(null);
+                .filter(g -> g.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     public List<Game> getUserLibrary(String userId) {
         try {
             PlatformApiClient apiClient = new PlatformApiClient();
             String json = apiClient.getUserLibraryJson(userId);
-            List<GameModel> avroGames = objectMapper.readValue(json, new TypeReference<List<GameModel>>() {});
+            List<GameModel> avroGames = objectMapper.readValue(json, new TypeReference<List<GameModel>>() {
+            });
             List<Game> result = new ArrayList<>();
             for (GameModel avro : avroGames) {
                 result.add(Game.fromAvroModel(avro));
@@ -117,7 +148,8 @@ public class GameDataService {
             try {
                 java.util.Set<String> installed = InstalledGamesStore.getInstance().getInstalledForUser(userId);
                 for (Game g : result) {
-                    if (installed.contains(g.getId())) g.setInstalled(true);
+                    if (installed.contains(g.getId()))
+                        g.setInstalled(true);
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();

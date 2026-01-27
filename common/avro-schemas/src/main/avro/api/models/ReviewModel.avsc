@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.models",
+  "name": "ReviewModel",
+  "doc": "Review Data Transfer Object used by API",
+  "fields": [
+    { "name": "reviewId", "type": "string" },
+    { "name": "gameId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "username", "type": "string" },
+    { "name": "rating", "type": "int" },
+    { "name": "comment", "type": ["null", "string"], "default": null },
+    { "name": "reviewedAt", "type": ["null", "long"], "default": null }
+  ]
+}
