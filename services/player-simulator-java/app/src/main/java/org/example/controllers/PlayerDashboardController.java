@@ -15,6 +15,7 @@ public class PlayerDashboardController {
     // infos du joueur courant (à injecter depuis login)
     private final String userId;
     private final String username;
+    private String platform;
 
     public PlayerDashboardController(KafkaProducerService kafkaProducer,
             String userId,
@@ -27,9 +28,10 @@ public class PlayerDashboardController {
     // ----------------------------
     // PLAY
     // ----------------------------
-    public void startGame(String gameId, String gameTitle, String gameVersion) {
+    public void startGame(String gameId, String gameTitle, String gameVersion, String currentPlatform) {
         currentSessionId = UUID.randomUUID().toString();
         sessionStartTime = Instant.now();
+        platform = currentPlatform;
 
         // TODO? publish session started event
     }
@@ -42,8 +44,6 @@ public class PlayerDashboardController {
             return;
         }
 
-        long durationSeconds = Instant.now().getEpochSecond() - sessionStartTime.getEpochSecond();
-
         // TODO? publish session ended event
 
         currentSessionId = null;
@@ -53,10 +53,10 @@ public class PlayerDashboardController {
     // ----------------------------
     // CRASH
     // ----------------------------
-        public void reportCrash(String gameId,
-            String gameVersion,
-            int crashCode,
-            String message) {
+    public void reportCrash(String gameId,
+        String gameVersion,
+        int crashCode,
+        String message) {
 
         // include crash code in error message
         String combinedMessage = String.format("code=%d; %s", crashCode, message == null ? "" : message);
@@ -66,7 +66,7 @@ public class PlayerDashboardController {
             userId,
             gameId,
             gameVersion,
-            "PC", // TODO change platform accordingly
+            platform,
             combinedMessage,
             Instant.now().getEpochSecond()
         );
@@ -74,5 +74,5 @@ public class PlayerDashboardController {
         // reset session
         currentSessionId = null;
         sessionStartTime = null;
-        }
+    }
 }

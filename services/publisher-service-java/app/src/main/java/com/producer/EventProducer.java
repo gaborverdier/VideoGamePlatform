@@ -33,7 +33,7 @@ public class EventProducer {
     @PostConstruct
     public void init() {
         this.producer = new KafkaProducer<>(producerProperties);
-        log.info("✅ Kafka Producer initialized successfully");
+        log.info("Kafka Producer initialized successfully");
     }
     
     @PreDestroy

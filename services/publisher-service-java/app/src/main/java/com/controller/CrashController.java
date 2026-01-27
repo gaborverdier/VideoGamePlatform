@@ -50,16 +50,4 @@ public class CrashController {
         Crash crash = crashService.createCrash(crashMapper.fromDTO(event));
         return ResponseEntity.ok(crashMapper.toDTO(crash));
     }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<CrashModel> updateCrash(@PathVariable String id, @RequestBody CrashModel event) {
-        Crash updated = crashService.updateCrash(id, crashMapper.fromDTO(event));
-        return ResponseEntity.ok(crashMapper.toDTO(updated));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCrash(@PathVariable String id) {
-        crashService.deleteCrash(id);
-        return ResponseEntity.noContent().build();
-    }
 }

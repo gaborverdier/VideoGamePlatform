@@ -47,21 +47,4 @@ public class PatchController {
         return ResponseEntity.ok(patchService.createPatch(gameId, patch));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<PatchModel> updatePatch(@PathVariable String id, @RequestBody PatchModel patchModel) {
-
-        PatchModel existingPatch = patchService.getPatchById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Patch introuvable avec l'ID: " + id));
-        Game game = gameRepository.findById(existingPatch.getGameId())
-            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable"));
-        Patch patch = patchMapper.fromDTO(existingPatch, game);
-        patch.setId(id);
-        return ResponseEntity.ok(patchService.updatePatch(id, patch));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePatch(@PathVariable String id) {
-        patchService.deletePatch(id);
-        return ResponseEntity.noContent().build();
-    }
 }

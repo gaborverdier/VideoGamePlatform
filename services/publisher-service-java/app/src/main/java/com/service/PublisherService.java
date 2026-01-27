@@ -43,12 +43,4 @@ public class PublisherService {
         Publisher updated = publisherRepository.save(publisher);
         return publisherMapper.toDTO(updated);
     }
-
-    public void deletePublisher(String id) {
-        // Validation métier : le publisher doit exister
-        if (!publisherRepository.existsById(id)) {
-            throw new IllegalArgumentException("Publisher introuvable avec l'ID: " + id);
-        }
-        publisherRepository.deleteById(id);
-    }
 }

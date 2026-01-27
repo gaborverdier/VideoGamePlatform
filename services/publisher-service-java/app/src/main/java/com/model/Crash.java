@@ -1,7 +1,5 @@
 package com.model;
 
-import java.security.Timestamp;
-
 import jakarta.persistence.*;
 import lombok.*;
 
