@@ -141,7 +141,43 @@ public class GameDataService {
             });
             List<Game> result = new ArrayList<>();
             for (GameModel avro : avroGames) {
-                result.add(Game.fromAvroModel(avro));
+                Game g = Game.fromAvroModel(avro);
+                // try to fetch reviews for each game in the user's library
+                try {
+                    String reviewsJson = apiClient.getReviewsForGameJson(g.getId());
+                    if (reviewsJson != null && !reviewsJson.isEmpty()) {
+                        List<GameReviewed> remoteReviews = objectMapper.readValue(reviewsJson,
+                                new TypeReference<List<GameReviewed>>() {
+                                });
+                        for (GameReviewed rm : remoteReviews) {
+                            String authorId = rm.getUserId() != null ? rm.getUserId() : "";
+                            String authorName = rm.getUsername() != null ? rm.getUsername() : "";
+                            int rating = rm.getRating();
+                            String comment = rm.getReviewText() != null ? rm.getReviewText() : "";
+                            Review local = new Review(g.getId(), authorId, authorName, rating, comment, 0);
+                            try {
+                                java.lang.reflect.Field idField = Review.class.getDeclaredField("id");
+                                idField.setAccessible(true);
+                                idField.set(local, rm.getReviewId() != null ? rm.getReviewId() : local.getId());
+                            } catch (Exception ignore) {
+                            }
+                            try {
+                                java.lang.reflect.Field createdAtField = Review.class.getDeclaredField("createdAt");
+                                createdAtField.setAccessible(true);
+                                long regTs = rm.getRegistrationTimestamp();
+                                if (regTs > 0L)
+                                    createdAtField.set(local, java.time.LocalDateTime.ofInstant(
+                                            java.time.Instant.ofEpochMilli(regTs), java.time.ZoneId.systemDefault()));
+                            } catch (Exception ignore) {
+                            }
+                            g.getReviews().add(local);
+                        }
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Failed to load reviews for game " + g.getId() + ": " + ex.getMessage());
+                }
+
+                result.add(g);
             }
 
             // get installed flags from local storage
