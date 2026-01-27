@@ -4,10 +4,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.gaming.api.models.GameModel;
+import com.gaming.platform.model.Game;
 import com.gaming.platform.model.Library;
+import com.gaming.platform.model.User;
+import com.gaming.platform.repository.GameRepository;
 import com.gaming.platform.repository.LibraryRepository;
+import com.gaming.platform.repository.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,10 +22,14 @@ public class LibraryService {
 
     private final LibraryRepository libraryRepository;
     private final GameService gameService;
+    private final GameRepository gameRepository;
+    private final UserRepository userRepository;
 
-    public LibraryService(LibraryRepository libraryRepository, GameService gameService) {
+    public LibraryService(LibraryRepository libraryRepository, GameService gameService, GameRepository gameRepository, UserRepository userRepository) {
         this.libraryRepository = libraryRepository;
         this.gameService = gameService;
+        this.gameRepository = gameRepository;
+        this.userRepository = userRepository;
     }
 
     public List<Library> listByUser(String userId) {
@@ -35,11 +44,27 @@ public class LibraryService {
                 .collect(java.util.stream.Collectors.toList());
     }
 
+    @Transactional
     public Library addToLibrary(String userId, String gameId) {
         Library lib = new Library();
         lib.setUserId(userId);
         lib.setGameId(gameId);
         lib.setAddedAt(LocalDateTime.now());
+        Game game = gameRepository.findById(gameId.toString())
+                .orElseThrow(() -> new IllegalArgumentException("Game not found: " + gameId));
+
+        // Load user and check balance
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        double price = game.getPrice() != null ? game.getPrice().doubleValue() : 0.0;
+        Double balance = user.getBalance();
+        if (balance == null || balance < price) {
+            throw new IllegalStateException("Insufficient balance: required=" + price + " available=" + balance);
+        }
+        user.setBalance(balance - price);
+        userRepository.save(user);
+
         return libraryRepository.save(lib);
     }
 

@@ -42,6 +42,9 @@ public class User {
     @Column
     private String country;
 
+    @Column(nullable = false)
+    private Double balance;
+
     @Column
     private LocalDateTime lastLogin;
 

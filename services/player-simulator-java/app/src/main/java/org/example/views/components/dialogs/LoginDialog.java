@@ -11,8 +11,10 @@ import org.example.util.AvroJacksonConfig;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gaming.api.models.UserModel;
 import com.gaming.api.requests.UserRegistrationRequest;
 
 import javafx.geometry.Insets;
@@ -32,7 +34,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class LoginDialog {
-    
+
     public static boolean show() {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
@@ -166,7 +168,7 @@ public class LoginDialog {
                         // Use centralized API client
                         ApiClient.postJson("/api/users/register", json);
                         // Registration successful
-                        Player player = new Player(usernameField.getText(), emailField.getText());
+                        Player player = new Player(usernameField.getText(), emailField.getText(), 100.0);
                         SessionManager.getInstance().login(player);
                         Alert success = new Alert(Alert.AlertType.INFORMATION);
                         success.setTitle("Compte créé");
@@ -195,18 +197,30 @@ public class LoginDialog {
                         loginReq.put("password", passwordField.getText());
                         String json = AvroJacksonConfig.avroObjectMapper().writeValueAsString(loginReq);
                         String responseJson = ApiClient.postJson("/api/auth/login", json);
+                        System.out.println("\n\n\n\n\n\n[LOGIN] Response JSON: " + responseJson);
                         ObjectMapper mapper = AvroJacksonConfig.avroObjectMapper();
+                        UserModel userModel = new UserModel();
+                        try{
+                            userModel = mapper.readValue(responseJson,
+                                new TypeReference<UserModel>() {
+                                });
+                        } catch (Exception ex) {
+                            System.out.println("[LOGIN] Error parsing response to UserModel:");
+                            ex.printStackTrace();
+                        }
+
+                        System.out.println("[LOGIN] Parsed UserModel: " + userModel.toString());
+                        
                         @SuppressWarnings("unchecked")
                         Map<String, Object> resp = mapper.readValue(responseJson, Map.class);
                         if (resp.containsKey("userId")) {
-                            String userId = (String) resp.get("userId");
-                            String username = resp.get("username") != null ? (String) resp.get("username") : loginField.getText();
-                            String email = resp.get("email") != null ? (String) resp.get("email") : "";
-                            double wallet = 100.0;
-                            if (resp.get("wallet") instanceof Number) {
-                                wallet = ((Number) resp.get("wallet")).doubleValue();
-                            }
+                            String userId = userModel.getUserId();
+                            String username = userModel.getUsername();
+                            String email = userModel.getEmail();
+                            double wallet = userModel.getBalance();
+
                             Player player = new Player(userId, username, email, wallet);
+
                             SessionManager.getInstance().login(player);
                             Alert success = new Alert(Alert.AlertType.INFORMATION);
                             success.setTitle("Connexion réussie");
@@ -254,5 +268,6 @@ public class LoginDialog {
     }
 
     @JsonIgnoreProperties({ "schema", "specificData", "classSchema", "conversion" })
-    public abstract static class IgnoreAvroProperties {}
+    public abstract static class IgnoreAvroProperties {
+    }
 }

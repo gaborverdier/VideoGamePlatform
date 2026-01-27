@@ -30,8 +30,8 @@ public class Player {
         this.followedPublisherIds = new ArrayList<>();
     }
     
-    public Player(String username, String email) {
-        this(generateId(), username, email, 100.0);
+    public Player(String username, String email, Double wallet) {
+        this(generateId(), username, email, wallet);
     }
     
     private static String generateId() {

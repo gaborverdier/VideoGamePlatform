@@ -2,6 +2,7 @@ package org.example.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.example.models.Game;
 import org.example.models.Review;
@@ -32,6 +33,7 @@ public class GameDataService {
         return instance;
     }
 
+
     private void loadFromBackend() {
         PlatformApiClient apiClient = new PlatformApiClient();
         try {
@@ -44,7 +46,7 @@ public class GameDataService {
                 // fetch reviews for this game and map into local Review model
                 try {
                     String reviewsJson = apiClient.getReviewsForGameJson(g.getId());
-                    System.out.println("\n\n\n\n\n\nFetched reviews JSON for game " + g.getId() + ": " + reviewsJson + "\n\n\n\n\n\n");
+                    // System.out.println("\n\n\n\n\n\nFetched reviews JSON for game " + g.getId() + ": " + reviewsJson + "\n\n\n\n\n\n");
                     if (reviewsJson != null && !reviewsJson.isEmpty()) {
                         List<GameReviewed> remoteReviews = objectMapper.readValue(reviewsJson,
                                 new TypeReference<List<GameReviewed>>() {

@@ -45,6 +45,7 @@ public class UserService {
         user.setDateOfBirth(request.getDateOfBirth().toString());
         user.setUsername(request.getUsername().toString());
         user.setEmail(request.getEmail().toString());
+        user.setBalance(100.0);
         user.setPassword(request.getPassword().toString()); // TODO: Hash password before saving
         user.setCountry(request.getCountry() != null ? request.getCountry().toString() : null);
         user.setRegistrationDate(LocalDateTime.now());
@@ -99,6 +100,7 @@ public class UserService {
                 .setUserId(user.getUserId() != null ? user.getUserId() : "")
                 .setUsername(user.getUsername() != null ? user.getUsername() : "")
                 .setEmail(user.getEmail() != null ? user.getEmail() : "")
+                .setBalance(user.getBalance() != null ? user.getBalance() : 0.0)
                 .setRegisteredAt(
                         user.getRegistrationDate() != null
                                 ? user.getRegistrationDate().toInstant(ZoneOffset.UTC).toEpochMilli()

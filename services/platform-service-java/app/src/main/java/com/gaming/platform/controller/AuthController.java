@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gaming.api.models.UserModel;
 import com.gaming.platform.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +22,7 @@ public class AuthController {
     private final UserRepository userRepository;
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(
+    public ResponseEntity<?> login(
             @RequestBody Map<String, String> loginRequest,
             HttpServletRequest request) {
 
@@ -40,16 +41,39 @@ public class AuthController {
                         user.setLastLogin(java.time.LocalDateTime.now());
                         userRepository.save(user);
                         System.out.println("User " + username + " logged in from IP: " + ipAddress);
-                        return ResponseEntity.ok(Map.of(
-                                "message", "Login successful",
-                                "userId", user.getUserId(),
-                                "username", user.getUsername()));
+                        // create UserModel to return
+                        UserModel userModel = new UserModel();
+                        // populate userModel fields
+                        userModel.setUserId(user.getUserId());
+                        userModel.setUsername(user.getUsername());
+                        userModel.setEmail(user.getEmail());
+                        userModel.setBalance(user.getBalance());
+                        // Convert LocalDateTime to epoch millis safely
+                        Long registeredAt = null;
+                        if (user.getRegistrationDate() != null) {
+                            registeredAt = user.getRegistrationDate()
+                                    .atZone(java.time.ZoneOffset.UTC)
+                                    .toInstant()
+                                    .toEpochMilli();
+                        }
+                        Long lastLoginAt = null;
+                        if (user.getLastLogin() != null) {
+                            lastLoginAt = user.getLastLogin()
+                                    .atZone(java.time.ZoneOffset.UTC)
+                                    .toInstant()
+                                    .toEpochMilli();
+                        }
+                        userModel.setRegisteredAt(registeredAt);
+                        userModel.setLastLogin(lastLoginAt);
+                        userModel.setCountry(user.getCountry());
+                        // add other fields as necessary
+                        return ResponseEntity.ok(userModel);
                     } else {
                         return ResponseEntity.status(401)
                                 .body(Map.of("error", "Invalid credentials"));
                     }
                 })
-                .orElse(ResponseEntity.status(401)
+                .orElseGet(() -> ResponseEntity.status(401)
                         .body(Map.of("error", "Invalid credentials")));
     }
 }

@@ -41,14 +41,22 @@ public class PurchaseService {
         Game game = gameRepository.findById(request.getGameId().toString())
                 .orElseThrow(() -> new IllegalArgumentException("Game not found: " + request.getGameId()));
 
-        // Check if user already owns the game
+                // Check if user already owns the game
         if (purchaseRepository.existsByUserIdAndGameId(
                 request.getUserId().toString(), 
                 request.getGameId().toString())) {
             throw new IllegalStateException("User already owns this game:  " + game.getTitle());
         }
+                // Check user has sufficient balance and deduct it
+                double price = game.getPrice() != null ? game.getPrice().doubleValue() : 0.0;
+                Double balance = user.getBalance();
+                if (balance == null || balance < price) {
+                        throw new IllegalStateException("Insufficient balance: required=" + price + " available=" + balance);
+                }
+                user.setBalance(balance - price);
+                userRepository.save(user);
 
-        // Create purchase entity (JPA)
+                // Create purchase entity (JPA)
         Purchase purchase = new Purchase();
         purchase.setUserId(request.getUserId().toString());
         purchase.setGameId(request.getGameId().toString());
