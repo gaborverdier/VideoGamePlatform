@@ -58,4 +58,18 @@ public class ApiClient {
             throw new RuntimeException("API error: " + response.statusCode() + " - " + response.body());
         }
     }
+
+    public static String delete(String path) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + path))
+                .header("Content-Type", "application/json")
+                .method("DELETE", HttpRequest.BodyPublishers.noBody())
+                .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 200 && response.statusCode() < 300) {
+            return response.body();
+        } else {
+            throw new RuntimeException("API error: " + response.statusCode() + " - " + response.body());
+        }
+    }
 }

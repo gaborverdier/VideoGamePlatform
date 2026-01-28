@@ -30,8 +30,9 @@ public class LibraryController {
 
     @PutMapping("/user/{userId}/game/{gameId}/install")
     public ResponseEntity<Void> markInstalled(@PathVariable String userId, @PathVariable String gameId) {
-        if (libraryService.markInstalledByUserAndGame(userId, gameId) == null)
+        if (libraryService.markInstalledByUserAndGame(userId, gameId) == null) {
             return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok().build();
     }
 

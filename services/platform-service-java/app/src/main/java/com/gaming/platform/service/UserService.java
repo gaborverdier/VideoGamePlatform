@@ -29,27 +29,37 @@ public class UserService {
     @Transactional
     public UserModel registerUser(UserRegistrationRequest request) {
 
-        if (userRepository.existsByUsername(request.getUsername().toString())) {
-            log.warn("Attempt to register with existing username: {}", request.getUsername());
-            throw new IllegalArgumentException("Username already exists:  " + request.getUsername());
+        if (request.getUsername() == null || request.getUsername().isBlank()) {
+            throw new IllegalArgumentException("Username is required");
+        }
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new IllegalArgumentException("Password is required");
         }
 
-        if (userRepository.existsByEmail(request.getEmail().toString())) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            log.warn("Attempt to register with existing username: {}", request.getUsername());
+            throw new IllegalArgumentException("Username already exists: " + request.getUsername());
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
             log.warn("Attempt to register with existing email: {}", request.getEmail());
-            throw new IllegalArgumentException("Email already exists:  " + request.getEmail());
+            throw new IllegalArgumentException("Email already exists: " + request.getEmail());
         }
 
         User user = new User();
-        user.setFirstName(request.getFirstName().toString());
-        user.setLastName(request.getLastName().toString());
-        user.setDateOfBirth(request.getDateOfBirth().toString());
-        user.setUsername(request.getUsername().toString());
-        user.setEmail(request.getEmail().toString());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setDateOfBirth(request.getDateOfBirth());
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
         user.setBalance(100.0);
-        user.setPassword(request.getPassword().toString()); // TODO: Hash password before saving
-        user.setCountry(request.getCountry() != null ? request.getCountry().toString() : null);
+        user.setPassword(request.getPassword()); // TODO: Hash password before saving
+        user.setCountry(request.getCountry() != null ? request.getCountry() : null);
         user.setRegistrationDate(LocalDateTime.now());
-        user.setLastLogin(java.time.LocalDateTime.now());
+        user.setLastLogin(LocalDateTime.now());
         user.setActive(true);
 
         User savedUser = userRepository.save(user);

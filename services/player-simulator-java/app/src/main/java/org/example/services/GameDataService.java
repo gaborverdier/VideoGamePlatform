@@ -2,15 +2,15 @@ package org.example.services;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.example.models.Game;
 import org.example.models.Review;
+import org.example.util.AvroJacksonConfig;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gaming.api.models.GameModel;
-
+import com.gaming.api.models.WishlistModel;
 import com.gaming.events.GameReviewed;
 
 import javafx.application.Platform;
@@ -197,6 +197,73 @@ public class GameDataService {
             showError("Failed to load user library", e);
             return new ArrayList<>();
         }
+    }
+
+    public List<Game> getUserWishlist(String userId) {
+        try {
+            PlatformApiClient apiClient = new PlatformApiClient();
+            String json = apiClient.getUserWishlistJson(userId);
+            List<GameModel> avroGames = objectMapper.readValue(json, new TypeReference<List<GameModel>>() {});
+            List<Game> result = new ArrayList<>();
+            for (GameModel avro : avroGames) {
+                Game g = Game.fromAvroModel(avro);
+                g.setWishlisted(true);
+                // fetch reviews as in other flows (best-effort)
+                try {
+                    String reviewsJson = apiClient.getReviewsForGameJson(g.getId());
+                    if (reviewsJson != null && !reviewsJson.isEmpty()) {
+                        List<GameReviewed> remoteReviews = objectMapper.readValue(reviewsJson,
+                                new TypeReference<List<GameReviewed>>() {});
+                        for (GameReviewed rm : remoteReviews) {
+                            String authorId = rm.getUserId() != null ? rm.getUserId() : "";
+                            String authorName = rm.getUsername() != null ? rm.getUsername() : "";
+                            int rating = rm.getRating();
+                            String comment = rm.getReviewText() != null ? rm.getReviewText() : "";
+                            Review local = new Review(g.getId(), authorId, authorName, rating, comment, 0);
+                            try {
+                                java.lang.reflect.Field idField = Review.class.getDeclaredField("id");
+                                idField.setAccessible(true);
+                                idField.set(local, rm.getReviewId() != null ? rm.getReviewId() : local.getId());
+                            } catch (Exception ignore) {}
+                            try {
+                                java.lang.reflect.Field createdAtField = Review.class.getDeclaredField("createdAt");
+                                createdAtField.setAccessible(true);
+                                long regTs = rm.getRegistrationTimestamp();
+                                if (regTs > 0L)
+                                    createdAtField.set(local, java.time.LocalDateTime.ofInstant(
+                                            java.time.Instant.ofEpochMilli(regTs), java.time.ZoneId.systemDefault()));
+                            } catch (Exception ignore) {}
+                            g.getReviews().add(local);
+                        }
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Failed to load reviews for wishlist game " + g.getId() + ": " + ex.getMessage());
+                }
+
+                result.add(g);
+            }
+            return result;
+        } catch (Exception e) {
+            showError("Failed to load user wishlist", e);
+            return new ArrayList<>();
+        }
+    }
+
+    public void addToWishlist(String userId, String gameId) throws Exception {
+        PlatformApiClient apiClient = new PlatformApiClient();
+        // Use Avro-generated WishlistModel and Avro-configured ObjectMapper
+        WishlistModel wm = new WishlistModel();
+        wm.setUserId(userId);
+        wm.setGameId(gameId);
+        wm.setAddedAt(System.currentTimeMillis());
+
+        String json = AvroJacksonConfig.avroObjectMapper().writeValueAsString(wm);
+        apiClient.addToWishlistJson(json);
+    }
+
+    public void removeFromWishlist(String userId, String gameId) throws Exception {
+        PlatformApiClient apiClient = new PlatformApiClient();
+        apiClient.deleteUserWishlistEntry(userId, gameId);
     }
 
     public void installGameForUser(String userId, String gameId) throws Exception {

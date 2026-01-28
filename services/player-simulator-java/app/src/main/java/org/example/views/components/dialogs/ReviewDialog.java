@@ -1,20 +1,26 @@
 package org.example.views.components.dialogs;
 
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import org.example.models.Game;
 import org.example.models.Review;
-import org.example.services.GameDataService;
 import org.example.services.SessionManager;
 import org.example.util.ApiClient;
 import org.example.util.AvroJacksonConfig;
 
 import com.gaming.events.GameReviewed;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 public class ReviewDialog {
 

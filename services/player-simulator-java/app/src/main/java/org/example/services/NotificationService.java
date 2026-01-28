@@ -3,8 +3,6 @@ package org.example.services;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.example.models.Notification;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gaming.api.models.NotificationModel;

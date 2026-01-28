@@ -64,4 +64,19 @@ public class PlatformApiClient {
     public String getReviewsForGameJson(String gameId) throws Exception {
         return ApiClient.get("/api/reviews/game/" + urlPath(gameId));
     }
+
+    // GET /api/wishlist/user/{userId}
+    public String getUserWishlistJson(String userId) throws Exception {
+        return ApiClient.get("/api/wishlist/user/" + urlPath(userId));
+    }
+
+    // POST /api/wishlist/new
+    public String addToWishlistJson(String jsonBody) throws Exception {
+        return ApiClient.postJson("/api/wishlist/new", jsonBody);
+    }
+
+    // DELETE /api/wishlist/user/{userId}/game/{gameId}
+    public String deleteUserWishlistEntry(String userId, String gameId) throws Exception {
+        return ApiClient.delete("/api/wishlist/user/" + urlPath(userId) + "/game/" + urlPath(gameId));
+    }
 }

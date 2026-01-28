@@ -2,10 +2,12 @@ package com.gaming.platform.service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.gaming.api.models.GameModel;
 import com.gaming.events.GameReviewed;
 import com.gaming.platform.model.Review;
 import com.gaming.platform.repository.ReviewRepository;
@@ -18,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ReviewService {
     private final ReviewRepository reviewRepository;
+    private final WishlistService wishlistService;
+    private final GameService gameService;
 
     public Review saveFromEvent(GameReviewed event) {
         Review review = new Review();
@@ -27,7 +31,19 @@ public class ReviewService {
         review.setRating(event.getRating());
         review.setComment(event.getReviewText().toString());
         review.setReviewedAt(Instant.now());
-        return reviewRepository.save(review);
+        Review resp =  reviewRepository.save(review);
+
+        try{
+            Optional<GameModel> game = gameService.getGameById(event.getGameId());
+
+            wishlistService.createNotificationFromEvent(event);
+            wishlistService.notifyWishlistUsersOfNewReview(event.getGameId(), game.map(GameModel::getTitle).orElse("Unknown Game"));
+            log.info("Saved review and notified wishlist users for game {}", event.getGameId());
+        } catch (Exception e) {
+            log.error("Failed to log saved review: {}", e.getMessage());
+        }
+
+        return resp;
     }
 
     public List<GameReviewed> getReviewsByGameId(String gameId) {

@@ -1,24 +1,24 @@
 package com.gaming.platform.service;
 
-import java.time. LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.gaming.api.models.PurchaseModel; 
+import com.gaming.api.models.PurchaseModel;
 import com.gaming.api.requests.PurchaseGameRequest;
-import com.gaming. platform.model.Game;
+import com.gaming.platform.model.Game;
 import com.gaming.platform.model.Purchase;
 import com.gaming.platform.model.User;
 import com.gaming.platform.producer.EventProducer;
-import com.gaming.platform.repository. GameRepository;
+import com.gaming.platform.repository.GameRepository;
 import com.gaming.platform.repository.PurchaseRepository;
-import com.gaming. platform.repository.UserRepository;
+import com.gaming.platform.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern. slf4j.Slf4j;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -34,17 +34,15 @@ public class PurchaseService {
     public PurchaseModel purchaseGame(PurchaseGameRequest request) {
         
         // Validate user exists
-        User user = userRepository.findById(request.getUserId().toString())
+        User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found:  " + request.getUserId()));
 
         // Validate game exists and is available
-        Game game = gameRepository.findById(request.getGameId().toString())
+        Game game = gameRepository.findById(request.getGameId())
                 .orElseThrow(() -> new IllegalArgumentException("Game not found: " + request.getGameId()));
 
                 // Check if user already owns the game
-        if (purchaseRepository.existsByUserIdAndGameId(
-                request.getUserId().toString(), 
-                request.getGameId().toString())) {
+                if (purchaseRepository.existsByUserIdAndGameId(request.getUserId(), request.getGameId())) {
             throw new IllegalStateException("User already owns this game:  " + game.getTitle());
         }
                 // Check user has sufficient balance and deduct it
@@ -53,24 +51,20 @@ public class PurchaseService {
                 if (balance == null || balance < price) {
                         throw new IllegalStateException("Insufficient balance: required=" + price + " available=" + balance);
                 }
-                user.setBalance(balance - price);
-                userRepository.save(user);
+        user.setBalance(balance - price);
+        userRepository.save(user);
 
                 // Create purchase entity (JPA)
         Purchase purchase = new Purchase();
-        purchase.setUserId(request.getUserId().toString());
-        purchase.setGameId(request.getGameId().toString());
+                purchase.setUserId(request.getUserId());
+                purchase.setGameId(request.getGameId());
         purchase.setPrice(game.getPrice());
         purchase.setPurchaseDate(LocalDateTime.now());
         purchase.setPaymentMethod(
-            request.getPaymentMethod() != null 
-                ? request. getPaymentMethod().toString() 
-                : null
+                        request.getPaymentMethod() != null ? request.getPaymentMethod() : null
         );
         purchase.setRegion(
-            request.getRegion() != null 
-                ? request.getRegion().toString() 
-                : null
+                        request.getRegion() != null ? request.getRegion() : null
         );
 
         Purchase savedPurchase = purchaseRepository.save(purchase);
@@ -90,10 +84,8 @@ public class PurchaseService {
         return purchases.stream()
                 .map(purchase -> {
                     // Fetch related entities
-                    User user = userRepository.findById(purchase.getUserId())
-                            .orElse(null);
-                    Game game = gameRepository.findById(purchase.getGameId())
-                            .orElse(null);
+                    User user = userRepository.findById(purchase.getUserId()).orElse(null);
+                    Game game = gameRepository.findById(purchase.getGameId()).orElse(null);
                     
                     return toPurchaseResponse(purchase, user, game);
                 })
@@ -105,10 +97,8 @@ public class PurchaseService {
         
         return purchases.stream()
                 .map(purchase -> {
-                    User user = userRepository.findById(purchase.getUserId())
-                            .orElse(null);
-                    Game game = gameRepository. findById(purchase.getGameId())
-                            .orElse(null);
+                    User user = userRepository.findById(purchase.getUserId()).orElse(null);
+                    Game game = gameRepository.findById(purchase.getGameId()).orElse(null);
                     
                     return toPurchaseResponse(purchase, user, game);
                 })

@@ -1,18 +1,20 @@
 package org.example.views.components.dialogs;
 
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.layout.Region;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.example.models.Game;
 import org.example.models.Platform;
 import org.example.models.Player;
 import org.example.services.GameDataService;
 import org.example.services.SessionManager;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Modality;
 
 public class GameDetailsDialog {
     
@@ -133,8 +135,51 @@ public class GameDetailsDialog {
             wishlistBtn.setText("Déjà possédé");
         }
         wishlistBtn.setOnAction(e -> {
-            game.setWishlisted(!game.isWishlisted());
+            boolean newState = !game.isWishlisted();
+            game.setWishlisted(newState);
             wishlistBtn.setText(game.isWishlisted() ? "❤ Retirer de la liste" : "🤍 Ajouter à la liste de souhaits");
+
+            if (newState) {
+                // Persist wishlist addition to backend before refreshing UI
+                Player current = org.example.services.SessionManager.getInstance().getCurrentPlayer();
+                String userId = current != null ? current.getId() : null;
+                if (userId != null) {
+                    try {
+                        org.example.services.GameDataService.getInstance().addToWishlist(userId, game.getId());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        Alert err = new Alert(Alert.AlertType.ERROR);
+                        err.setTitle("Erreur backend");
+                        err.setContentText("Impossible d'ajouter le jeu à la liste de souhaits : " + ex.getMessage());
+                        err.showAndWait();
+                        // revert local state on failure
+                        game.setWishlisted(!newState);
+                        wishlistBtn.setText(game.isWishlisted() ? "❤ Retirer de la liste" : "🤍 Ajouter à la liste de souhaits");
+                        return;
+                    }
+                }
+            }
+            else {
+                // Removing from wishlist: persist removal to backend
+                Player current = org.example.services.SessionManager.getInstance().getCurrentPlayer();
+                String userId = current != null ? current.getId() : null;
+                if (userId != null) {
+                    try {
+                        org.example.services.GameDataService.getInstance().removeFromWishlist(userId, game.getId());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        Alert err = new Alert(Alert.AlertType.ERROR);
+                        err.setTitle("Erreur backend");
+                        err.setContentText("Impossible de retirer le jeu de la liste de souhaits : " + ex.getMessage());
+                        err.showAndWait();
+                        // revert local state on failure
+                        game.setWishlisted(!newState);
+                        wishlistBtn.setText(game.isWishlisted() ? "❤ Retirer de la liste" : "🤍 Ajouter à la liste de souhaits");
+                        return;
+                    }
+                }
+            }
+
             if (onWishlistChanged != null) {
                 onWishlistChanged.run();
             }

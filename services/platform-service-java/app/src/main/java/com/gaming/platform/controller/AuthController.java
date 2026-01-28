@@ -1,6 +1,9 @@
 package com.gaming.platform.controller;
 
 import java.util.Map;
+import java.util.Objects;
+import java.time.LocalDateTime;
+import org.springframework.http.HttpStatus;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +16,8 @@ import com.gaming.platform.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -20,60 +25,58 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
     private final UserRepository userRepository;
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
+    private static ResponseEntity<Map<String, String>> unauthorized() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
+    }
+
+    private static ResponseEntity<Map<String, String>> badRequest(String msg) {
+        return ResponseEntity.badRequest().body(Map.of("error", msg));
+    }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody Map<String, String> loginRequest,
-            HttpServletRequest request) {
-
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest, HttpServletRequest request) {
         String username = loginRequest.get("username");
         String password = loginRequest.get("password");
 
-        // Find user by username (User entity)
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            log.warn("Login attempt with missing username or password");
+            return badRequest("Missing username or password");
+        }
+
         return userRepository.findByUsername(username)
                 .map(user -> {
                     // Check password (plain text for now, hash in production)
-                    if (user.getPassword().equals(password)) {
+                    if (Objects.equals(user.getPassword(), password)) {
                         String ipAddress = request.getRemoteAddr();
                         // Update last login
-                        // You may need to inject UserService here if not present
-                        // For now, update directly
-                        user.setLastLogin(java.time.LocalDateTime.now());
+                        user.setLastLogin(LocalDateTime.now());
                         userRepository.save(user);
-                        System.out.println("User " + username + " logged in from IP: " + ipAddress);
-                        // create UserModel to return
+                        log.info("User {} logged in from IP: {}", username, ipAddress);
+
                         UserModel userModel = new UserModel();
-                        // populate userModel fields
                         userModel.setUserId(user.getUserId());
                         userModel.setUsername(user.getUsername());
                         userModel.setEmail(user.getEmail());
                         userModel.setBalance(user.getBalance());
-                        // Convert LocalDateTime to epoch millis safely
-                        Long registeredAt = null;
-                        if (user.getRegistrationDate() != null) {
-                            registeredAt = user.getRegistrationDate()
-                                    .atZone(java.time.ZoneOffset.UTC)
-                                    .toInstant()
-                                    .toEpochMilli();
-                        }
-                        Long lastLoginAt = null;
-                        if (user.getLastLogin() != null) {
-                            lastLoginAt = user.getLastLogin()
-                                    .atZone(java.time.ZoneOffset.UTC)
-                                    .toInstant()
-                                    .toEpochMilli();
-                        }
+
+                        Long registeredAt = toEpochMillis(user.getRegistrationDate());
+                        Long lastLoginAt = toEpochMillis(user.getLastLogin());
+
                         userModel.setRegisteredAt(registeredAt);
                         userModel.setLastLogin(lastLoginAt);
                         userModel.setCountry(user.getCountry());
-                        // add other fields as necessary
+
                         return ResponseEntity.ok(userModel);
-                    } else {
-                        return ResponseEntity.status(401)
-                                .body(Map.of("error", "Invalid credentials"));
                     }
+                    return unauthorized();
                 })
-                .orElseGet(() -> ResponseEntity.status(401)
-                        .body(Map.of("error", "Invalid credentials")));
+                .orElseGet(AuthController::unauthorized);
+    }
+
+    private static Long toEpochMillis(LocalDateTime dt) {
+        if (dt == null) return null;
+        return dt.atZone(java.time.ZoneOffset.UTC).toInstant().toEpochMilli();
     }
 }

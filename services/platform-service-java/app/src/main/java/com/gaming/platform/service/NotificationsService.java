@@ -1,6 +1,7 @@
 package com.gaming.platform.service;
 
 import java.time.Instant;
+import java.util.UUID;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,13 +27,13 @@ public class NotificationsService {
         List<NotificationModel> notifications = notificationRepository.findByUserId(userId).stream()
                 .map(this::toNotificationModel)
                 .collect(Collectors.toList());
-        log.info("Retrieved {} available games", notifications.size());
+        log.info("Retrieved {} available notifications", notifications.size());
         return notifications;
     }
 
     public Notification createNotification(String userId, String description) {
         Notification notification = new Notification();
-        notification.setNotificationId(java.util.UUID.randomUUID().toString());
+        notification.setNotificationId(UUID.randomUUID().toString());
         notification.setUserId(userId);
         notification.setDescription(description);
         notification.setTimestamp(Instant.now());

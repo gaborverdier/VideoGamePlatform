@@ -25,9 +25,7 @@ public class PurchaseController {
     private final PurchaseService purchaseService;
 
     @PostMapping
-    public ResponseEntity<PurchaseModel> purchaseGame(
-            @RequestBody PurchaseGameRequest request) { 
-
+    public ResponseEntity<PurchaseModel> purchaseGame(@RequestBody PurchaseGameRequest request) {
         PurchaseModel response = purchaseService.purchaseGame(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

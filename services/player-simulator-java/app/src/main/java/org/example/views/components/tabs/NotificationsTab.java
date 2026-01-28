@@ -185,7 +185,7 @@ public class NotificationsTab extends ScrollPane {
         
         // Autres notifications
         if (!otherNotifs.isEmpty()) {
-            Label otherHeader = new Label("🔔 Autres notifications");
+            Label otherHeader = new Label("🔔 Notifications");
             otherHeader.setStyle("-fx-background-color: #555; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10;");
             otherHeader.setMaxWidth(Double.MAX_VALUE);
             notifList.getChildren().add(otherHeader);

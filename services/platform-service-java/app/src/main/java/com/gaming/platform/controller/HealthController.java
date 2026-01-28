@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +18,7 @@ public class HealthController {
         Map<String, Object> health = new HashMap<>();
         health.put("status", "UP");
         health.put("service", "platform-service");
-        health.put("timestamp", LocalDateTime.now());
+        health.put("timestamp", Instant.now().toString());
         health.put("version", "1.0.0");
         return ResponseEntity.ok(health);
     }

@@ -50,7 +50,7 @@ public class LibraryService {
         lib.setUserId(userId);
         lib.setGameId(gameId);
         lib.setAddedAt(LocalDateTime.now());
-        Game game = gameRepository.findById(gameId.toString())
+        Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found: " + gameId));
 
         // Load user and check balance
@@ -64,6 +64,9 @@ public class LibraryService {
         }
         user.setBalance(balance - price);
         userRepository.save(user);
+
+        // remove from wishlist if present
+        libraryRepository.deleteFromWishlistIfExists(userId, gameId);
 
         return libraryRepository.save(lib);
     }

@@ -6,6 +6,9 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import org.example.models.Game;
+import org.example.services.GameDataService;
+import org.example.services.SessionManager;
+import javafx.application.Platform;
 import org.example.views.components.dialogs.GameDetailsDialog;
 
 import java.util.List;
@@ -41,11 +44,20 @@ public class WishlistTab extends ScrollPane {
     public void updateView() {
         gameGrid.getChildren().clear();
 
-        List<Game> wishlistedGames = libraryTab != null 
-            ? libraryTab.getGames().stream()
-                .filter(Game::isWishlisted)
-                .toList()
-            : java.util.Collections.emptyList();
+        // If user logged in, fetch wishlist from backend (transforms GameModel -> Game)
+        java.util.List<Game> wishlistedGames = java.util.Collections.emptyList();
+        try {
+            String userId = SessionManager.getInstance().getCurrentPlayer() != null
+                    ? SessionManager.getInstance().getCurrentPlayer().getId()
+                    : null;
+            if (userId != null) {
+                wishlistedGames = GameDataService.getInstance().getUserWishlist(userId);
+            } else if (libraryTab != null) {
+                wishlistedGames = libraryTab.getGames().stream().filter(Game::isWishlisted).toList();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
         if (wishlistedGames.isEmpty()) {
             Label emptyLabel = new Label("Aucun jeu dans votre liste de souhaits.\nAjoutez des jeux depuis la Bibliothèque !");
@@ -104,6 +116,7 @@ public class WishlistTab extends ScrollPane {
     }
     
     public void refresh() {
-        updateView();
+        // Refresh may be triggered from non-JavaFX thread; ensure UI update on FX thread
+        Platform.runLater(this::updateView);
     }
 }
