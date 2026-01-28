@@ -61,6 +61,7 @@ create_topic "game-crash-reported" 5 1
 # ANALYTICS / AGGREGATION
 # ============================================
 create_topic "crash-aggregated" 3 1
+create_topic "game-popularity-score" 3 1
 
 echo "[kafka-init] All topics created successfully!"
-echo "[kafka-init] Total topics: 14"
+echo "[kafka-init] Total topics: 16"

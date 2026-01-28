@@ -1,0 +1,47 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.analytics",
+  "name": "GameCrashStats",
+  "doc": "Aggregated crash statistics for a game over a time window",
+  "fields": [
+    {
+      "name": "gameId",
+      "type": "string",
+      "doc": "Game identifier"
+    },
+    {
+      "name": "windowStart",
+      "type": "long",
+      "doc": "Start of the aggregation window (Unix timestamp in milliseconds)"
+    },
+    {
+      "name": "windowEnd",
+      "type": "long",
+      "doc": "End of the aggregation window (Unix timestamp in milliseconds)"
+    },
+    {
+      "name": "crashCount",
+      "type": "long",
+      "doc": "Total number of crashes in this window"
+    },
+    {
+      "name": "uniqueUsersAffected",
+      "type": "long",
+      "doc": "Number of unique users who experienced crashes"
+    },
+    {
+      "name": "platforms",
+      "type": {
+        "type": "array",
+        "items": "string"
+      },
+      "doc": "List of platforms where crashes occurred"
+    },
+    {
+      "name": "mostCommonError",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Most common error message in this window"
+    }
+  ]
+}
