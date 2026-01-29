@@ -1,10 +1,11 @@
 package org.example.topology
 
-import com.gaming.analytics.GameCrashStats
+import com.gaming.api.models.CrashAggregationModel
 import com.gaming.events.GameCrashReported
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
+import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.kstream.*
 import org.example.config.KafkaStreamsConfig
 import java.time.Duration
@@ -24,8 +25,9 @@ class CrashAggregationTopology {
     }
     
     fun build(builder: StreamsBuilder) {
+        // Serdes configuration
         val crashSerde: SpecificAvroSerde<GameCrashReported> = KafkaStreamsConfig.createAvroSerde()
-        val crashAggregatedSerde: SpecificAvroSerde<CrashAggregation> = KafkaStreamsConfig.createAvroSerde()
+        val crashAggregatedSerde: SpecificAvroSerde<CrashAggregationModel> = KafkaStreamsConfig.createAvroSerde()
         
         // 1. Read crash events from Kafka
         val crashStream: KStream<String, GameCrashReported> = builder.stream(
@@ -36,7 +38,7 @@ class CrashAggregationTopology {
         // 2. Group by gameId and apply tumbling window
         val crashCounts: KTable<Windowed<String>, Long> = crashStream
             // Extract gameId as key
-            .selectKey { _, crash -> crash.gameId.toString() }
+            .selectKey { _, crash -> crash.getGameId().toString() }
             
             // Group by gameId
             .groupByKey(Grouped.with(Serdes.String(), crashSerde))
@@ -44,28 +46,38 @@ class CrashAggregationTopology {
             // Apply tumbling window of 5 minutes
             .windowedBy(TimeWindows.ofSizeWithNoGrace(WINDOW_SIZE))
             
-            // Utiliser count() qui est optimisé pour les agrégations simples
+            // Count crashes per window
             .count()
         
-        // 3. Transformer en CrashAggregation
-        val crashAggregation: KTable<Windowed<String>, CrashAggregation> = crashCounts
-            .mapValues { windowedKey, count ->
-                CrashAggregation.newBuilder()
-                    .setGameId(windowedKey.key())
-                    .setWindowStart(windowedKey.window().start())
-                    .setWindowEnd(windowedKey.window().end())
+        // 3. Transform to CrashAggregationModel
+        val crashAggregation: KStream<String, CrashAggregationModel> = crashCounts
+            .toStream()
+            .map { windowedKey, count ->
+                val gameId = windowedKey.key()
+                val window = windowedKey.window()
+                
+                val aggregation = CrashAggregationModel.newBuilder()
+                    .setId("${gameId}-${window.start()}")
+                    .setGameId(gameId)
                     .setCrashCount(count)
-                    .setUniqueUsersAffected(count) // Approximation : 1 crash = 1 user
-                    .setPlatforms(emptyList()) // Simplifié pour éviter complexité
-                    .setMostCommonError(null) // Simplifié
+                    .setTimestamp(System.currentTimeMillis())
+                    .setWindowStart(window.start())
+                    .setWindowEnd(window.end())
                     .build()
+                
+                KeyValue(gameId, aggregation)
             }
         
         // 4. Write to output topic
-        crashAggregation
-            .toStream()
-            .selectKey { windowedKey, _ -> windowedKey.key() }
-            .to(OUTPUT_TOPIC, Produced.with(Serdes.String(), crashAggregatedSerde))
+        crashAggregation.to(
+            OUTPUT_TOPIC,
+            Produced.with(Serdes.String(), crashAggregatedSerde)
+        )
+        
+        // 5. Log for debugging
+        crashAggregation.foreach { key, value ->
+            println("📊 Crash Aggregation produced: gameId=$key, count=${value.getCrashCount()}, window=[${value.getWindowStart()} - ${value.getWindowEnd()}]")
+        }
         
         println("✅ Crash Aggregation Topology built")
         println("   📥 Input: $INPUT_TOPIC")
