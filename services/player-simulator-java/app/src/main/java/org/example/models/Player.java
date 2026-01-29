@@ -49,6 +49,18 @@ public class Player {
     
     // Setters
     public void setWallet(double wallet) { this.wallet = wallet; }
+
+    // Add a game to the player's owned list (used when hydrating from backend)
+    public void addOwnedGame(Game game) {
+        if (game == null) return;
+        if (!ownedGames.contains(game)) {
+            ownedGames.add(game);
+        }
+        // mark game as owned locally
+        try {
+            game.setOwned(true);
+        } catch (Exception ignore) {}
+    }
     
     // Acheter un jeu sur une plateforme donnée
     public PurchaseResult purchaseGame(Game game, Platform platform) {
@@ -59,7 +71,12 @@ public class Player {
         if (!game.getSupportedPlatforms().contains(platform)) {
             return PurchaseResult.UNSUPPORTED_PLATFORM;
         }
+        // Prevent purchasing if the player already owns this game (on any platform)
+        if (ownsGame(game.getId())) {
+            return PurchaseResult.ALREADY_OWNED;
+        }
 
+        // Also prevent purchasing the same platform twice
         if (game.isOwnedOnPlatform(platform)) {
             return PurchaseResult.ALREADY_OWNED;
         }

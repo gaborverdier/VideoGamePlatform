@@ -1,7 +1,7 @@
 package com.gaming.platform.service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -55,7 +55,7 @@ public class UserService {
         user.setDateOfBirth(request.getDateOfBirth());
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setBalance(100.0);
+        user.setBalance(250.0);
         user.setPassword(request.getPassword()); // TODO: Hash password before saving
         user.setCountry(request.getCountry() != null ? request.getCountry() : null);
         user.setRegistrationDate(LocalDateTime.now());
@@ -98,9 +98,6 @@ public class UserService {
             user.setLastLogin(LocalDateTime.now());
             userRepository.save(user);
 
-            // Publish user-login event to Kafka
-            eventProducer.publishUserLogin(user, ipAddress);
-
             log.info("Updated last login for user: {} from IP: {}", user.getUsername(), ipAddress);
         });
     }
@@ -112,13 +109,13 @@ public class UserService {
                 .setEmail(user.getEmail() != null ? user.getEmail() : "")
                 .setBalance(user.getBalance() != null ? user.getBalance() : 0.0)
                 .setRegisteredAt(
-                        user.getRegistrationDate() != null
-                                ? user.getRegistrationDate().toInstant(ZoneOffset.UTC).toEpochMilli()
-                                : System.currentTimeMillis())
+                    user.getRegistrationDate() != null
+                        ? user.getRegistrationDate().atZone(ZoneId.of("Europe/Paris")).toInstant().toEpochMilli()
+                        : System.currentTimeMillis())
                 .setLastLogin(
-                        user.getLastLogin() != null
-                                ? user.getLastLogin().toInstant(ZoneOffset.UTC).toEpochMilli()
-                                : null)
+                    user.getLastLogin() != null
+                        ? user.getLastLogin().atZone(ZoneId.of("Europe/Paris")).toInstant().toEpochMilli()
+                        : null)
                 .setCountry(user.getCountry())
                 .build();
     }

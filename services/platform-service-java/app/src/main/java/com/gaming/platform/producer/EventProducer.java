@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import com.gaming.api.models.NotificationModel;
 import com.gaming.events.GamePurchased;
-import com.gaming.events.UserLogin;
 import com.gaming.events.UserRegistered;
 import com.gaming.platform.model.Game;
 import com.gaming.platform.model.Purchase;
@@ -32,7 +31,6 @@ public class EventProducer {
 
     private static final String USER_REGISTERED_TOPIC = "user-registered";
     private static final String GAME_PURCHASED_TOPIC = "game-purchased";
-    private static final String USER_LOGIN_TOPIC = "user-login";
     private static final String NOTIFICATION_TOPIC = "new-notification";
 
     public EventProducer(@Qualifier("producerProperties") Properties producerProperties) {
@@ -56,7 +54,7 @@ public class EventProducer {
     public void publishNotification(NotificationModel notification) {
         // Placeholder for notification publishing logic
         try {
- 
+
             sendEvent(NOTIFICATION_TOPIC, notification.getUserId(), notification);
             log.info("Notification published to topic {} for user {}", NOTIFICATION_TOPIC, notification.getUserId());
         } catch (Exception e) {
@@ -81,10 +79,10 @@ public class EventProducer {
                     .build();
 
             sendEvent(USER_REGISTERED_TOPIC, user.getUserId(), event);
-            log.info("📤 Published UserRegistered event for user: {}", user.getUsername());
+            log.info("[EVENT PUBLISHED] Published UserRegistered event for user: {}", user.getUsername());
 
         } catch (Exception e) {
-            log.error("❌ Error publishing UserRegistered event", e);
+            log.error("[XXXXX] Error publishing UserRegistered event", e);
             throw new RuntimeException("Failed to publish UserRegistered event", e);
         }
     }
@@ -118,28 +116,6 @@ public class EventProducer {
     }
 
     /**
-     * Publish UserLogin event
-     */
-    public void publishUserLogin(User user, String ipAddress) {
-        try {
-            UserLogin event = UserLogin.newBuilder()
-                    .setUserId(user.getUserId())
-                    .setUsername(user.getUsername())
-                    .setLoginTimestamp(System.currentTimeMillis())
-                    .setIpAddress(ipAddress)
-                    .setCountry(user.getCountry())
-                    .build();
-
-            sendEvent(USER_LOGIN_TOPIC, user.getUserId(), event);
-            log.info("📤 Published UserLogin event for user: {}", user.getUsername());
-
-        } catch (Exception e) {
-            log.error("❌ Error publishing UserLogin event", e);
-            // Don't throw - login should succeed even if event fails
-        }
-    }
-
-    /**
      * Generic method to send any Avro event
      */
     private void sendEvent(String topic, String key, SpecificRecordBase event) {
@@ -148,15 +124,15 @@ public class EventProducer {
 
             RecordMetadata metadata = producer.send(record).get();
 
-            log.debug("✅ Event sent to topic: {}, partition: {}, offset: {}",
+            log.debug("[SUCCESS] Event sent to topic: {}, partition: {}, offset: {}",
                     topic, metadata.partition(), metadata.offset());
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("❌ Interrupted while sending event to topic: {}", topic, e);
+            log.error("[XXXXX] Interrupted while sending event to topic: {}", topic, e);
             throw new RuntimeException("Failed to send event to Kafka", e);
         } catch (ExecutionException e) {
-            log.error("❌ Error sending event to topic: {}", topic, e);
+            log.error("[XXXXX] Error sending event to topic: {}", topic, e);
             throw new RuntimeException("Failed to send event to Kafka", e);
         }
     }

@@ -248,7 +248,7 @@ public class GameDetailsDialog {
                 }
                 case ALREADY_OWNED -> {
                     Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setContentText("Tu possèdes déjà ce jeu sur " + chosenPlatform.getLabel() + ".");
+                    info.setContentText("Tu possèdes déjà ce jeu.");
                     info.showAndWait();
                 }
                 default -> {
