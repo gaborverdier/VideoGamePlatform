@@ -1,5 +1,9 @@
 package com.views.components.dialogs;
 
+import com.gaming.api.models.PublisherModel;
+import com.util.ApiClient;
+import com.util.AvroJacksonConfig;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -7,6 +11,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
+import java.util.UUID;
 
 public class PublisherLoginDialog {
     
@@ -109,19 +115,81 @@ public class PublisherLoginDialog {
         Scene scene = new Scene(root, 500, 400);
         dialog.setScene(scene);
         
-        String[] result = {null, null, null}; // [name, email, type]
+        String[] result = {null, null, null}; // [name, email, type] si créer un compte, [email,mdp] si se connecter
         
-        // Change text depending on mode
-        modeGroup.selectedToggleProperty().addListener((obs, oldV, newV) -> {
-            if (newV == createMode) loginButton.setText("Créer le compte");
-            else loginButton.setText("Connexion");
-        });
+        // Change text and fields depending on mode
+        Runnable refreshModeUI = () -> {
+            boolean isCreate = modeGroup.getSelectedToggle() == createMode;
+            loginButton.setText(isCreate ? "Créer le compte" : "Connexion");
+
+            nameLabel.setVisible(isCreate);
+            nameLabel.setManaged(isCreate);
+            nameField.setVisible(isCreate);
+            nameField.setManaged(isCreate);
+
+            typeLabel.setVisible(isCreate);
+            typeLabel.setManaged(isCreate);
+            typeBox.setVisible(isCreate);
+            typeBox.setManaged(isCreate);
+        };
+
+        modeGroup.selectedToggleProperty().addListener((obs, oldV, newV) -> refreshModeUI.run());
+        refreshModeUI.run();
 
         loginButton.setOnAction(e -> {
-            if (!nameField.getText().isEmpty() && !emailField.getText().isEmpty()) {
-                result[0] = nameField.getText();
-                result[1] = emailField.getText();
-                result[2] = companyButton.isSelected() ? "COMPANY" : "INDEPENDENT";
+            boolean isCreate = modeGroup.getSelectedToggle() == createMode;
+            boolean hasEmail = !emailField.getText().isEmpty();
+            boolean hasPassword = !passwordField.getText().isEmpty();
+            boolean hasName = !nameField.getText().isEmpty();
+
+            if (isCreate && (hasName && hasEmail && hasPassword)) {
+                // Appel de l'API pour créer le compte
+                String name = nameField.getText();
+                String email = emailField.getText();
+                String password = passwordField.getText();
+                boolean isCompany = companyButton.isSelected();
+                
+                try {
+                    // Créer l'objet PublisherModel (classe Avro générée)
+                    PublisherModel publisher = PublisherModel.newBuilder()
+                        .setId(UUID.randomUUID().toString())
+                        .setName(name)
+                        .setEmail(email)
+                        .setPassword(password)
+                        .setIsCompany(isCompany)
+                        .build();
+                    
+                    // Convertir en JSON et envoyer via ApiClient
+                    String json = AvroJacksonConfig.avroObjectMapper().writeValueAsString(publisher);
+                    String responseJson = ApiClient.postJson("/api/publishers", json);
+                    
+                    // Parser la réponse
+                    PublisherModel created = AvroJacksonConfig.avroObjectMapper()
+                        .readValue(responseJson, PublisherModel.class);
+                    
+                    result[0] = name;
+                    result[1] = email;
+                    result[2] = isCompany ? "COMPANY" : "INDEPENDENT";
+                    
+                    Alert success = new Alert(Alert.AlertType.INFORMATION);
+                    success.setTitle("Succès");
+                    success.setContentText("Compte créé avec succès !");
+                    success.showAndWait();
+                    dialog.close();
+                    
+                } catch (Exception ex) {
+                    System.out.println("[CREATE] Error during account creation:");
+                    ex.printStackTrace();
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Erreur");
+                    alert.setContentText("Erreur lors de la création du compte: " + ex.getMessage());
+                    alert.showAndWait();
+                }
+            } 
+            else if (!isCreate && (hasEmail && hasPassword)) {
+                result[0] = emailField.getText();
+                result[1] = passwordField.getText();
+                // TODO: Appel de l'API pour se connecter (authentification)
                 dialog.close();
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);

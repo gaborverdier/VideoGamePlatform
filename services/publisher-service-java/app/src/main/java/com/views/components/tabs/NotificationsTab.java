@@ -46,8 +46,8 @@ public class NotificationsTab extends ScrollPane {
         
         Crash crash1 = new Crash();
         crash1.setGame(game1);
-        crash1.setDescription("NullPointerException in GameEngine.update()");
-        crash1.setCrashDate("2026-01-20");
+        crash1.setErrorMessage("NullPointerException in GameEngine.update()");
+        crash1.setCrashTimeStamp(System.currentTimeMillis());
         crashReports.add(crash1);
 
         Game game2 = new Game();
@@ -55,8 +55,8 @@ public class NotificationsTab extends ScrollPane {
         
         Crash crash2 = new Crash();
         crash2.setGame(game2);
-        crash2.setDescription("OutOfMemoryException");
-        crash2.setCrashDate("2026-01-20");
+        crash2.setErrorMessage("OutOfMemoryException");
+        crash2.setCrashTimeStamp(System.currentTimeMillis());
         crashReports.add(crash2);
 
         // Reviews
@@ -157,12 +157,12 @@ public class NotificationsTab extends ScrollPane {
         Label gameLabel = new Label(crash.getGame().getTitle());
         gameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #FF6B6B;");
 
-        Label dateLabel = new Label(crash.getCrashDate());
+        Label dateLabel = new Label(crash.getCrashTimeStamp().toString());
         dateLabel.setStyle("-fx-text-fill: #999; -fx-font-size: 11px;");
 
         headerBox.getChildren().addAll(gameLabel, dateLabel);
 
-        Label errorLabel = new Label("Erreur: " + crash.getDescription());
+        Label errorLabel = new Label("Erreur: " + crash.getErrorMessage());
         errorLabel.setStyle("-fx-text-fill: #ff9999; -fx-font-size: 12px; -fx-wrap-text: true;");
         errorLabel.setWrapText(true);
 

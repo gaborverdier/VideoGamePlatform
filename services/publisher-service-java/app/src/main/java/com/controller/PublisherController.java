@@ -43,4 +43,6 @@ public class PublisherController {
         publisher.setId(id);
         return ResponseEntity.ok(publisherService.updatePublisher(id, publisher));
     }
+
+    //TODO : Verif authentification
 }

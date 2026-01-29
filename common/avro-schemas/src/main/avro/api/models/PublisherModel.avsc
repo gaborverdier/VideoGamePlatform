@@ -5,6 +5,9 @@
   "doc": "Publisher Data Transfer Object",
   "fields": [
     {"name": "id", "type": "string"},
-    {"name": "name", "type": "string"}
+    {"name": "name", "type": "string"},
+    {"name": "email", "type": "string"},
+    {"name": "password", "type": "string"},
+    {"name" : "isCompany", "type": "boolean"}
   ]
 }

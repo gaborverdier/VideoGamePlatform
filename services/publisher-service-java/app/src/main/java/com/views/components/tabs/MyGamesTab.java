@@ -137,7 +137,7 @@ public class MyGamesTab extends ScrollPane {
                 patch.setGame(game);
                 patch.setVersion(patchData.version);
                 patch.setDescription(patchData.comment);
-                patch.setReleaseDate(java.time.LocalDate.now().toString());
+                patch.setReleaseTimeStamp(System.currentTimeMillis());
                 if (game.getPatches() == null) game.setPatches(new java.util.ArrayList<>());
                 game.getPatches().add(patch);
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -157,7 +157,7 @@ public class MyGamesTab extends ScrollPane {
                 dlc.setGame(game);
                 dlc.setName(dlcData.name);
                 dlc.setDescription(dlcData.description);
-                dlc.setReleaseDate(java.time.LocalDate.now().toString());
+                dlc.setReleaseTimeStamp(System.currentTimeMillis());
                 if (game.getDlcs() == null) game.setDlcs(new java.util.ArrayList<>());
                 game.getDlcs().add(dlc);
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);

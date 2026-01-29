@@ -82,9 +82,9 @@ public class MyGameDialog {
                 VBox card = new VBox(6);
                 card.setPadding(new Insets(8));
                 card.setStyle("-fx-background-color:#4a2a2a; -fx-background-radius:4; -fx-border-color:#FF6B6B; -fx-border-width:1;");
-                Label date = new Label(c.getCrashDate());
+                Label date = new Label(c.getCrashTimeStamp().toString());
                 date.setStyle("-fx-text-fill:#999; -fx-font-size:11px;");
-                Label desc = new Label(c.getDescription());
+                Label desc = new Label(c.getErrorMessage());
                 desc.setStyle("-fx-text-fill:#ffb3b3; -fx-wrap-text: true;");
                 desc.setWrapText(true);
                 card.getChildren().addAll(date, desc);
@@ -109,7 +109,7 @@ public class MyGameDialog {
                 VBox card = new VBox(6);
                 card.setPadding(new Insets(8));
                 card.setStyle("-fx-background-color:#3c3c3c; -fx-background-radius:4;");
-                Label name = new Label(d.getName() + " — " + (d.getReleaseDate() == null ? "" : d.getReleaseDate()));
+                Label name = new Label(d.getName() + " — " + (d.getReleaseTimeStamp() == null ? "" : d.getReleaseTimeStamp()));
                 name.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
                 Label desc = new Label(d.getDescription() == null ? "" : d.getDescription());
                 desc.setStyle("-fx-text-fill:#ddd; -fx-wrap-text:true;");
@@ -130,7 +130,7 @@ public class MyGameDialog {
                 VBox card = new VBox(6);
                 card.setPadding(new Insets(8));
                 card.setStyle("-fx-background-color:#3c3c3c; -fx-background-radius:4;");
-                Label ver = new Label("v" + (p.getVersion() == null ? "" : p.getVersion()) + " — " + (p.getReleaseDate() == null ? "" : p.getReleaseDate()));
+                Label ver = new Label("v" + (p.getVersion() == null ? "" : p.getVersion()) + " — " + (p.getReleaseTimeStamp() == null ? "" : p.getReleaseTimeStamp()));
                 ver.setStyle("-fx-text-fill:white; -fx-font-weight: bold;");
                 Label desc = new Label(p.getDescription() == null ? "" : String.join("\n", p.getDescription().split("\n")));
                 desc.setStyle("-fx-text-fill:#ddd; -fx-wrap-text:true;");
