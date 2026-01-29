@@ -17,8 +17,9 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import com.gaming.events.GameCrashReported;
-import com.handler.CrashReportedEventHandler;
+import com.gaming.api.models.CrashAggregationModel;
+import com.mapper.CrashAggregationMapper;
+import com.service.CrashService;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -32,14 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 public class EventConsumer {
 
     private final Properties consumerProperties;
-    //private final CrashEventHandler crashEventHandler;
-    private final CrashReportedEventHandler crashReportedEventHandler;
+    private final CrashAggregationMapper crashAggregationMapper;
+    private final CrashService crashService;
     private final ExecutorService executorService;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     private KafkaConsumer<String, Object> consumer;
 
-    private static final String GAME_CRASH_REPORTED = "game-crash-reported";
+    private static final String CRASH_AGGREGATED = "crash-aggregated";
     private static final String GAME_UPDATED_TOPIC = "game-updated";
     private static final String GAME_PATCH_RELEASED_TOPIC = "game-patch-released";
     private static final String GAME_AVAILABILITY_CHANGED_TOPIC = "game-availability-changed";
@@ -48,9 +49,11 @@ public class EventConsumer {
 
     public EventConsumer(
             @Qualifier("consumerProperties") Properties consumerProperties,
-            CrashReportedEventHandler crashReportedEventHandler) {
+            CrashAggregationMapper crashAggregationMapper,
+            CrashService crashService) {
         this.consumerProperties = consumerProperties;
-        this.crashReportedEventHandler = crashReportedEventHandler;
+        this.crashAggregationMapper = crashAggregationMapper;
+        this.crashService = crashService;
         this.executorService = Executors.newSingleThreadExecutor();
     }
 
@@ -76,7 +79,7 @@ public class EventConsumer {
     private void consumeEvents() {
         consumer = new KafkaConsumer<>(consumerProperties);
         consumer.subscribe(Arrays.asList(
-                GAME_CRASH_REPORTED,
+                CRASH_AGGREGATED,
                 GAME_UPDATED_TOPIC,
                 GAME_PATCH_RELEASED_TOPIC,
                 GAME_AVAILABILITY_CHANGED_TOPIC,
@@ -129,15 +132,26 @@ public class EventConsumer {
         String topic = record.topic();
 
         switch (topic) {
-            case GAME_CRASH_REPORTED:
-                GameCrashReported crashEvent = (GameCrashReported) record.value();
-                log.info("🚨 Processing GameCrashReported event: {}", crashEvent);
-                crashReportedEventHandler.handle(crashEvent);
-                
+            case CRASH_AGGREGATED:
+                CrashAggregationModel crashAggEvent = (CrashAggregationModel) record.value();
+                log.info("📊 Processing CrashAggregated event: gameId={}, crashCount={}", 
+                    crashAggEvent.getGameId(), crashAggEvent.getCrashCount());
+                handleCrashAggregated(crashAggEvent);
                 break;
         
             default:
                 break;
+        }
+    }
+    
+    private void handleCrashAggregated(CrashAggregationModel event) {
+        try {
+            var crashAggregation = crashAggregationMapper.fromAvro(event);
+            crashService.saveCrashAggregation(crashAggregation);
+            log.info("✅ Saved crash aggregation: {} (Game: {}, Count: {})",
+                    crashAggregation.getId(), crashAggregation.getGameId(), crashAggregation.getCrashCount());
+        } catch (Exception e) {
+            log.error("❌ Failed to save crash aggregation for gameId: {}", event.getGameId(), e);
         }
     }
 }

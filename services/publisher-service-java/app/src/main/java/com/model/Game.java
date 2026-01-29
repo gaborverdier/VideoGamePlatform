@@ -22,7 +22,7 @@ public class Game {
     private Publisher publisher;
 
     @OneToMany(mappedBy = "game")
-    private List<Crash> crashes;
+    private List<CrashAggregation> crashes;
 
     @OneToMany(mappedBy = "game")
     private List<Patch> patches;

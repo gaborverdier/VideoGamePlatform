@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.models",
+  "name": "CrashAggregationModel",
+  "doc": "Crash Aggregation Model Doc",
+  "fields": [
+    {"name": "id", "type": "string"},
+    {"name": "gameId", "type": "string"},
+    {"name": "crashCount", "type": "long"},
+    {"name": "timestamp", "type": "long"},
+    {"name": "windowStart", "type": "long"},
+    {"name": "windowEnd", "type": "long"}
+  ]
+}
