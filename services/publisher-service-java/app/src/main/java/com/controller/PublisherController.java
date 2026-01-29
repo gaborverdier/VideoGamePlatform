@@ -1,9 +1,14 @@
 package com.controller;
 
 import com.gaming.api.models.PublisherModel;
+import com.gaming.api.requests.NewPublisherRequest;
+import com.gaming.api.requests.PublisherAuth;
 import com.mapper.PublisherMapper;
 import com.model.Publisher;
 import com.service.PublisherService;
+
+import io.micrometer.core.ipc.http.HttpSender.Response;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,9 +36,17 @@ public class PublisherController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/auth")
+    public ResponseEntity<PublisherModel> authenticatePublisher(@RequestBody PublisherAuth auth) {
+        Publisher pub = publisherMapper.fromPublisherAuth(auth);
+        return publisherService.authenticatePublisher(pub)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(401).build());
+    }
+
     @PostMapping
-    public ResponseEntity<PublisherModel> createPublisher(@RequestBody PublisherModel publisherModel) {
-        Publisher publisher = publisherMapper.fromDTO(publisherModel);
+    public ResponseEntity<PublisherModel> createPublisher(@RequestBody NewPublisherRequest publisherModel) {
+        Publisher publisher = publisherMapper.fromNewPublisherRequest(publisherModel);
         return ResponseEntity.ok(publisherService.createPublisher(publisher));
     }
 

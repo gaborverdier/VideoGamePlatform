@@ -1,6 +1,7 @@
 package com.views.components.dialogs;
 
 import com.gaming.api.models.PublisherModel;
+import com.gaming.api.requests.NewPublisherRequest;
 import com.util.ApiClient;
 import com.util.AvroJacksonConfig;
 
@@ -150,9 +151,8 @@ public class PublisherLoginDialog {
                 boolean isCompany = companyButton.isSelected();
                 
                 try {
-                    // Créer l'objet PublisherModel (classe Avro générée)
-                    PublisherModel publisher = PublisherModel.newBuilder()
-                        .setId(UUID.randomUUID().toString())
+                    // Créer l'objet NewPublisherRequest (classe Avro générée)
+                    NewPublisherRequest publisher = NewPublisherRequest.newBuilder()
                         .setName(name)
                         .setEmail(email)
                         .setPassword(password)

@@ -43,4 +43,10 @@ public class PublisherService {
         Publisher updated = publisherRepository.save(publisher);
         return publisherMapper.toDTO(updated);
     }
+
+    public Optional<PublisherModel> authenticatePublisher(Publisher publisher) {
+        Optional<Publisher> found = publisherRepository.findByEmailAndPassword(
+            publisher.getEmail(), publisher.getPassword());
+        return found.map(publisherMapper::toDTO);
+    }
 }

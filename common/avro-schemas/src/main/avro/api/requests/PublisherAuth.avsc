@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.requests",
+  "name": "PublisherAuth",
+  "doc": "Publisher auth request object",
+  "fields": [
+    {"name": "email", "type": "string"},
+    {"name": "password", "type": "string"}
+  ]
+}
