@@ -17,10 +17,12 @@ public class MyGamesTab extends ScrollPane {
     private FlowPane gameGrid;
     private List<Game> publishedGames;
     private Runnable onUpdate;
+    private NotificationsTab notificationsTab;
 
-    public MyGamesTab(Runnable onUpdate) {
+    public MyGamesTab(NotificationsTab notificationsTab, Runnable onUpdate) {
         this.publishedGames = new ArrayList<>();
         this.onUpdate = onUpdate;
+        this.notificationsTab = notificationsTab;
 
         gameGrid = new FlowPane();
         gameGrid.setHgap(15);
@@ -43,6 +45,10 @@ public class MyGamesTab extends ScrollPane {
                 game.setTitle(data.name);
                 game.setPlatform(data.platform);
                 game.setGenre(String.join(", ", data.genres));
+                // initialize relational lists so UI can append to them
+                game.setCrashes(new java.util.ArrayList<>());
+                game.setPatches(new java.util.ArrayList<>());
+                game.setDlcs(new java.util.ArrayList<>());
                 publishedGames.add(game);
                 updateView();
                 if (onUpdate != null) onUpdate.run();
@@ -93,6 +99,29 @@ public class MyGamesTab extends ScrollPane {
         Label genreLabel = new Label("Genres: " + game.getGenre());
         genreLabel.setStyle("-fx-text-fill: #aaa;");
 
+        // Statistiques: note moyenne et temps de jeu moyen
+        double avgRating = 0.0;
+        double avgPlaytime = 0.0;
+        int ratingCount = 0;
+        int playtimeCount = 0;
+        if (notificationsTab != null && notificationsTab.getReviews() != null) {
+            for (com.model.Review r : notificationsTab.getReviews()) {
+                if (r.getGameName() != null && r.getGameName().equals(game.getTitle())) {
+                    ratingCount++;
+                    avgRating += r.getRating();
+                    if (r.getPlaytimeMinutes() != null) {
+                        playtimeCount++;
+                        avgPlaytime += r.getPlaytimeMinutes();
+                    }
+                }
+            }
+        }
+        String avgRatingText = ratingCount > 0 ? String.format("%.2f", avgRating / ratingCount) : "N/A";
+        String avgPlaytimeText = playtimeCount > 0 ? String.format("%d min", (int)Math.round(avgPlaytime / playtimeCount)) : "N/A";
+
+        Label statsLabel = new Label("Note moyenne: " + avgRatingText + "   |   Temps de jeu moyen: " + avgPlaytimeText);
+        statsLabel.setStyle("-fx-text-fill: #ddd; -fx-font-size: 12px;");
+
         // Boutons d'action
         HBox actionsBox = new HBox(10);
         actionsBox.setAlignment(Pos.CENTER);
@@ -109,6 +138,8 @@ public class MyGamesTab extends ScrollPane {
                 patch.setVersion(patchData.version);
                 patch.setDescription(patchData.comment);
                 patch.setReleaseDate(java.time.LocalDate.now().toString());
+                if (game.getPatches() == null) game.setPatches(new java.util.ArrayList<>());
+                game.getPatches().add(patch);
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Succès");
                 alert.setContentText("Patch v" + patchData.version + " publié avec succès!");
@@ -127,6 +158,8 @@ public class MyGamesTab extends ScrollPane {
                 dlc.setName(dlcData.name);
                 dlc.setDescription(dlcData.description);
                 dlc.setReleaseDate(java.time.LocalDate.now().toString());
+                if (game.getDlcs() == null) game.setDlcs(new java.util.ArrayList<>());
+                game.getDlcs().add(dlc);
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Succès");
                 alert.setContentText("DLC '" + dlcData.name + "' publié avec succès!");
@@ -136,10 +169,15 @@ public class MyGamesTab extends ScrollPane {
 
         actionsBox.getChildren().addAll(patchButton, dlcButton);
 
-        card.getChildren().addAll(nameLabel, platformLabel, genreLabel, actionsBox);
+        card.getChildren().addAll(nameLabel, platformLabel, genreLabel, statsLabel, actionsBox);
 
         card.setOnMouseEntered(e -> card.setStyle("-fx-background-color: #4a4a4a; -fx-background-radius: 5; -fx-cursor: hand;"));
         card.setOnMouseExited(e -> card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5; -fx-cursor: hand;"));
+
+        // Ouvrir la fenêtre détaillée du jeu
+        card.setOnMouseClicked(e -> {
+            com.views.components.dialogs.MyGameDialog.show(game, notificationsTab);
+        });
 
         return card;
     }

@@ -23,6 +23,24 @@ public class PublisherLoginDialog {
         Label titleLabel = new Label("Plateforme Éditeurs");
         titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;");
         
+        // Mode: se connecter ou créer un compte
+        Label modeLabel = new Label("Mode:");
+        modeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+
+        ToggleGroup modeGroup = new ToggleGroup();
+        RadioButton loginMode = new RadioButton("Se connecter");
+        loginMode.setToggleGroup(modeGroup);
+        loginMode.setSelected(true);
+        loginMode.setStyle("-fx-text-fill: white;");
+
+        RadioButton createMode = new RadioButton("Créer un compte");
+        createMode.setToggleGroup(modeGroup);
+        createMode.setStyle("-fx-text-fill: white;");
+
+        HBox modeBox = new HBox(15);
+        modeBox.setAlignment(Pos.CENTER);
+        modeBox.getChildren().addAll(loginMode, createMode);
+
         // Choix du type d'éditeur
         Label typeLabel = new Label("Type d'éditeur:");
         typeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
@@ -86,13 +104,19 @@ public class PublisherLoginDialog {
         
         buttonBox.getChildren().addAll(loginButton, cancelButton);
         
-        root.getChildren().addAll(titleLabel, new Separator(), typeLabel, typeBox, form, buttonBox);
+        root.getChildren().addAll(titleLabel, new Separator(), modeLabel, modeBox, typeLabel, typeBox, form, buttonBox);
         
         Scene scene = new Scene(root, 500, 400);
         dialog.setScene(scene);
         
         String[] result = {null, null, null}; // [name, email, type]
         
+        // Change text depending on mode
+        modeGroup.selectedToggleProperty().addListener((obs, oldV, newV) -> {
+            if (newV == createMode) loginButton.setText("Créer le compte");
+            else loginButton.setText("Connexion");
+        });
+
         loginButton.setOnAction(e -> {
             if (!nameField.getText().isEmpty() && !emailField.getText().isEmpty()) {
                 result[0] = nameField.getText();

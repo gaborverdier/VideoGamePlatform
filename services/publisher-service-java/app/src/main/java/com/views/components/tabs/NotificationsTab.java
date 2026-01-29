@@ -67,6 +67,7 @@ public class NotificationsTab extends ScrollPane {
             "player_999",
             "BobJones",
             5,
+            120,
             "Excellent jeu ! Vraiment addictif et bien développé.",
             LocalDateTime.now().minusHours(3)
         ));
@@ -78,6 +79,7 @@ public class NotificationsTab extends ScrollPane {
             "player_888",
             "CatherineWilson",
             4,
+            45,
             "Très bon jeu, quelques bugs mineurs mais globalement satisfait.",
             LocalDateTime.now().minusHours(12)
         ));
@@ -89,15 +91,20 @@ public class NotificationsTab extends ScrollPane {
             "player_777",
             "DavidBrown",
             3,
+            60,
             "Pas mal, mais un peu court et répétitif.",
             LocalDateTime.now().minusHours(24)
         ));
     }
 
+    public List<Review> getReviews() {
+        return reviews;
+    }
+
     private void updateView() {
         notificationsList.getChildren().clear();
 
-        Label titleLabel = new Label("🔔 Notifications");
+        Label titleLabel = new Label("Notifications");
         titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;");
         notificationsList.getChildren().add(titleLabel);
 
@@ -198,6 +205,10 @@ public class NotificationsTab extends ScrollPane {
     public void addCrashReport(Crash crash) {
         crashReports.add(crash);
         updateView();
+    }
+
+    public List<Crash> getCrashReports() {
+        return crashReports;
     }
 
     public void addReview(Review review) {

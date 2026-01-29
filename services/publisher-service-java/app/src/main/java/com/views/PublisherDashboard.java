@@ -51,16 +51,15 @@ public class PublisherDashboard {
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabPane.setStyle("-fx-background-color: #2b2b2b;");
 
-        // Tab 1: Mes jeux
-        myGamesTab = new MyGamesTab(() -> {
-            notificationsTab.setVisible(true);
+        // Tab 1: Mes jeux and Tab 2: Notifications
+        notificationsTab = new NotificationsTab();
+        myGamesTab = new MyGamesTab(notificationsTab, () -> {
+            if (notificationsTab != null) notificationsTab.setVisible(true);
         });
-        Tab gamesTab = new Tab("📚 Mes jeux", myGamesTab);
+        Tab gamesTab = new Tab("Mes jeux", myGamesTab);
         gamesTab.setStyle("-fx-font-size: 12px;");
 
-        // Tab 2: Notifications
-        notificationsTab = new NotificationsTab();
-        Tab notificationsTabComponent = new Tab("🔔 Notifications", notificationsTab);
+        Tab notificationsTabComponent = new Tab("Notifications", notificationsTab);
         notificationsTabComponent.setStyle("-fx-font-size: 12px;");
 
         tabPane.getTabs().addAll(gamesTab, notificationsTabComponent);
@@ -84,8 +83,6 @@ public class PublisherDashboard {
         HBox titleBox = new HBox(20);
         titleBox.setAlignment(Pos.CENTER_LEFT);
 
-        Label logoLabel = new Label("🎮");
-        logoLabel.setStyle("-fx-font-size: 28px;");
 
         VBox titleVBox = new VBox(5);
         Label titleLabel = new Label("Plateforme Éditeurs");
@@ -95,7 +92,7 @@ public class PublisherDashboard {
         subtitleLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #aaa;");
 
         titleVBox.getChildren().addAll(titleLabel, subtitleLabel);
-        titleBox.getChildren().addAll(logoLabel, titleVBox);
+        titleBox.getChildren().add(titleVBox);
 
         header.getChildren().add(titleBox);
 
