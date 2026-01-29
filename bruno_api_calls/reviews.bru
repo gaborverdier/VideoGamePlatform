@@ -1,0 +1,30 @@
+meta {
+  name: reviews
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8082/api/reviews
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "gameId": "game123",
+    "userId": "user678",
+    "username": "Bad User",
+    "rating": 1,
+    "reviewText": "HORRIBLE GAME!"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

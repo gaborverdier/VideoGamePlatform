@@ -1,0 +1,23 @@
+meta {
+  name: create publisher
+  type: http
+  seq: 9
+}
+
+post {
+  url: 
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "pub-123",
+    "name": "Epic Games"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
