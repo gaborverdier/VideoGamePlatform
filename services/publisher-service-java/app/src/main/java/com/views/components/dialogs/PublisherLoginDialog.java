@@ -17,7 +17,7 @@ import java.util.UUID;
 
 public class PublisherLoginDialog {
     
-    public static String[] show() {
+    public static PublisherModel show() {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("Connexion Éditeur");
@@ -90,6 +90,8 @@ public class PublisherLoginDialog {
         passwordField.setPromptText("Votre mot de passe");
         passwordField.setPrefWidth(300);
         
+        final PublisherModel[] result = new PublisherModel[1];
+        
         form.add(nameLabel, 0, 0);
         form.add(nameField, 1, 0);
         form.add(emailLabel, 0, 1);
@@ -115,8 +117,6 @@ public class PublisherLoginDialog {
         
         Scene scene = new Scene(root, 500, 400);
         dialog.setScene(scene);
-        
-        String[] result = {null, null, null}; // [name, email, type] si créer un compte, [email,mdp] si se connecter
         
         // Change text and fields depending on mode
         Runnable refreshModeUI = () -> {
@@ -167,9 +167,7 @@ public class PublisherLoginDialog {
                     PublisherModel created = AvroJacksonConfig.avroObjectMapper()
                         .readValue(responseJson, PublisherModel.class);
                     
-                    result[0] = name;
-                    result[1] = email;
-                    result[2] = isCompany ? "COMPANY" : "INDEPENDENT";
+                    result[0] = created;
                     
                     Alert success = new Alert(Alert.AlertType.INFORMATION);
                     success.setTitle("Succès");
@@ -187,10 +185,37 @@ public class PublisherLoginDialog {
                 }
             } 
             else if (!isCreate && (hasEmail && hasPassword)) {
-                result[0] = emailField.getText();
-                result[1] = passwordField.getText();
-                // TODO: Appel de l'API pour se connecter (authentification)
-                dialog.close();
+                // Appel de l'API pour se connecter (authentification)
+                String email = emailField.getText();
+                String password = passwordField.getText();
+                
+                try {
+                    // Créer l'objet PublisherAuth (classe Avro générée)
+                    com.gaming.api.requests.PublisherAuth auth = com.gaming.api.requests.PublisherAuth.newBuilder()
+                        .setEmail(email)
+                        .setPassword(password)
+                        .build();
+                    
+                    // Convertir en JSON et envoyer via ApiClient
+                    String json = AvroJacksonConfig.avroObjectMapper().writeValueAsString(auth);
+                    String responseJson = ApiClient.postJson("/api/publishers/auth", json);
+                    
+                    // Parser la réponse
+                    PublisherModel authenticated = AvroJacksonConfig.avroObjectMapper()
+                        .readValue(responseJson, PublisherModel.class);
+                    
+                    result[0] = authenticated;
+                    
+                    dialog.close();
+                    
+                } catch (Exception ex) {
+                    System.out.println("[LOGIN] Error during authentication:");
+                    ex.printStackTrace();
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Erreur");
+                    alert.setContentText("Erreur lors de la connexion: " + ex.getMessage());
+                    alert.showAndWait();
+                }
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Champs manquants");
@@ -202,6 +227,6 @@ public class PublisherLoginDialog {
         cancelButton.setOnAction(e -> dialog.close());
         
         dialog.showAndWait();
-        return result;
+        return result[0];
     }
 }

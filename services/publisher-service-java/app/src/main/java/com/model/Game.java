@@ -19,6 +19,8 @@ public class Game {
     private Long releaseTimeStamp;
     private Double price;
     private String version;
+    private String description;
+
 
     @ManyToOne
     @JoinColumn(name = "publisher_id")

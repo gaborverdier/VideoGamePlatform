@@ -9,12 +9,12 @@ import javafx.stage.Stage;
 import com.views.components.tabs.MyGamesTab;
 import com.views.components.tabs.NotificationsTab;
 import com.views.components.dialogs.PublisherLoginDialog;
+import com.gaming.api.models.PublisherModel;
 
 public class PublisherDashboard {
 
     private Stage primaryStage;
-    private String publisherName;
-    private String publisherType;
+    private PublisherModel currentPublisher;
     private MyGamesTab myGamesTab;
     private NotificationsTab notificationsTab;
 
@@ -24,17 +24,16 @@ public class PublisherDashboard {
 
     public void show() {
         // Login dialog
-        String[] loginData = PublisherLoginDialog.show();
+        PublisherModel publisher = PublisherLoginDialog.show();
         
-        if (loginData[0] == null) {
+        if (publisher == null) {
             primaryStage.close();
             return;
         }
 
-        this.publisherName = loginData[0];
-        this.publisherType = loginData[2];
+        this.currentPublisher = publisher;
 
-        primaryStage.setTitle("Tableau de Bord Éditeur - " + publisherName);
+        primaryStage.setTitle("Tableau de Bord Éditeur - " + publisher.getName());
         primaryStage.setWidth(1000);
         primaryStage.setHeight(700);
 
@@ -53,7 +52,7 @@ public class PublisherDashboard {
 
         // Tab 1: Mes jeux and Tab 2: Notifications
         notificationsTab = new NotificationsTab();
-        myGamesTab = new MyGamesTab(notificationsTab, () -> {
+        myGamesTab = new MyGamesTab(currentPublisher, notificationsTab, () -> {
             if (notificationsTab != null) notificationsTab.setVisible(true);
         });
         Tab gamesTab = new Tab("Mes jeux", myGamesTab);
@@ -88,7 +87,7 @@ public class PublisherDashboard {
         Label titleLabel = new Label("Plateforme Éditeurs");
         titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;");
 
-        Label subtitleLabel = new Label("Bienvenue, " + publisherName + " (" + (publisherType.equals("COMPANY") ? "Entreprise" : "Indépendant") + ")");
+        Label subtitleLabel = new Label("Bienvenue, " + currentPublisher.getName() + " (" + (currentPublisher.getIsCompany() ? "Entreprise" : "Indépendant") + ")");
         subtitleLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #aaa;");
 
         titleVBox.getChildren().addAll(titleLabel, subtitleLabel);

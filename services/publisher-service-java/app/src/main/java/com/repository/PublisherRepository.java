@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface PublisherRepository extends JpaRepository<Publisher, String> {
 
     Optional<Publisher> findByEmailAndPassword(String email, String password);
+    Optional<Publisher> findByEmail(String email);
 }
