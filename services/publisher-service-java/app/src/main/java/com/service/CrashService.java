@@ -1,45 +1,42 @@
 package com.service;
 
-import com.model.Crash;
-import com.model.Game;
+import com.model.CrashAggregation;
 import com.repository.CrashRepository;
 import com.repository.GameRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class CrashService {
     @Autowired
     private CrashRepository crashRepository;
     @Autowired
     private GameRepository gameRepository;
 
-    public List<Crash> getAllCrashes() {
+    public List<CrashAggregation> getAllCrashes() {
         return crashRepository.findAll();
     }
 
-    public Optional<Crash> getCrashById(String id) {
+    public Optional<CrashAggregation> getCrashById(String id) {
         return crashRepository.findById(id);
     }
 
-    public List<Crash> getCrashesByGame(String gameId) {
-        Game game = gameRepository.findById(gameId).orElse(null);
-        if (game == null) {
-            return List.of();
-        }
-        return game.getCrashes();
+    public List<CrashAggregation> getCrashesByGame(String gameId) {
+        return crashRepository.findByGameIdOrderByWindowStartDesc(gameId);
     }
 
-    public Crash createCrash(Crash crash) {
+    public CrashAggregation saveCrashAggregation(CrashAggregation crash) {
         // Validation métier : le jeu doit exister
-        if (crash.getGame() == null || crash.getGame().getId() == null) {
+        if (crash.getGameId() == null || crash.getGameId().isEmpty()) {
             throw new IllegalArgumentException("Le crash doit être associé à un jeu valide");
         }
-        if (!gameRepository.existsById(crash.getGame().getId())) {
-            throw new IllegalArgumentException("Le jeu avec l'ID " + crash.getGame().getId() + " n'existe pas");
+        if (!gameRepository.existsById(crash.getGameId())) {
+            log.warn("⚠️ Game {} not found, saving crash aggregation anyway", crash.getGameId());
         }
         return crashRepository.save(crash);
     }
