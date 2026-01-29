@@ -54,7 +54,6 @@ public class PurchaseService {
         user.setBalance(balance - price);
         userRepository.save(user);
 
-                // Create purchase entity (JPA)
         Purchase purchase = new Purchase();
                 purchase.setUserId(request.getUserId());
                 purchase.setGameId(request.getGameId());
@@ -83,7 +82,6 @@ public class PurchaseService {
         
         return purchases.stream()
                 .map(purchase -> {
-                    // Fetch related entities
                     User user = userRepository.findById(purchase.getUserId()).orElse(null);
                     Game game = gameRepository.findById(purchase.getGameId()).orElse(null);
                     

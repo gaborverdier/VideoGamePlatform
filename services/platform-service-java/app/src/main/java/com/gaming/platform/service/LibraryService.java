@@ -2,6 +2,8 @@ package com.gaming.platform.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +27,8 @@ public class LibraryService {
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
 
-    public LibraryService(LibraryRepository libraryRepository, GameService gameService, GameRepository gameRepository, UserRepository userRepository) {
+    public LibraryService(LibraryRepository libraryRepository, GameService gameService, GameRepository gameRepository,
+            UserRepository userRepository) {
         this.libraryRepository = libraryRepository;
         this.gameService = gameService;
         this.gameRepository = gameRepository;
@@ -39,13 +42,19 @@ public class LibraryService {
     public List<GameModel> getGamesForUser(String userId) {
         return libraryRepository.findByUserId(userId).stream()
                 .map(lib -> gameService.getGameById(lib.getGameId()))
-                .filter(java.util.Optional::isPresent)
-                .map(java.util.Optional::get)
-                .collect(java.util.stream.Collectors.toList());
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
     }
 
     @Transactional
     public Library addToLibrary(String userId, String gameId) {
+        // Reject if the user already has this game in their library
+        Library existing = libraryRepository.findByUserIdAndGameId(userId, gameId);
+        if (existing != null) {
+            throw new IllegalArgumentException("Game already in library: " + gameId);
+        }
+
         Library lib = new Library();
         lib.setUserId(userId);
         lib.setGameId(gameId);

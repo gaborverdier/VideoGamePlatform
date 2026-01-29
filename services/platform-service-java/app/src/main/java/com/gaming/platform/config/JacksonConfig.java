@@ -20,13 +20,8 @@ public class JacksonConfig {
         ObjectMapper mapper = Jackson2ObjectMapperBuilder.json()
                 .build();
 
-        // Ignore Avro schema properties during serialization
         mapper.addMixIn(SpecificRecordBase.class, IgnoreAvroProperties.class);
-
-        // Don't fail on unknown properties
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        // Don't include null values
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         return mapper;

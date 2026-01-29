@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.avro.specific.SpecificRecordBase;
 import org.example.models.Player;
+import org.example.models.Game;
 import org.example.services.SessionManager;
 import org.example.util.ApiClient;
 import org.example.util.AvroJacksonConfig;
@@ -220,6 +221,16 @@ public class LoginDialog {
                             double wallet = userModel.getBalance();
 
                             Player player = new Player(userId, username, email, wallet);
+
+                            // Populate player's owned games from backend so ownership persists across restarts
+                            try {
+                                java.util.List<Game> lib = org.example.services.GameDataService.getInstance().getUserLibrary(userId);
+                                for (Game g : lib) {
+                                    player.addOwnedGame(g);
+                                }
+                            } catch (Exception ex) {
+                                System.err.println("Failed to hydrate user library on login: " + ex.getMessage());
+                            }
 
                             SessionManager.getInstance().login(player);
                             Alert success = new Alert(Alert.AlertType.INFORMATION);

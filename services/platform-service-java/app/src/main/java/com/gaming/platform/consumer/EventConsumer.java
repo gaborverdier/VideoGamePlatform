@@ -134,7 +134,6 @@ public class EventConsumer {
         try {
             switch (topic) {
                 case GAME_CRASH_REPORTED:
-                    // print all details of the GameCrashReported event
                     Object val = record.value();
                     if (val instanceof GameCrashReported) {
                         handleGameCrashedReported((GameCrashReported) val);

@@ -47,7 +47,7 @@ public class AuthController {
 
         return userRepository.findByUsername(username)
                 .map(user -> {
-                    // Check password (plain text for now, hash in production)
+                    // Check password
                     if (Objects.equals(user.getPassword(), password)) {
                         String ipAddress = request.getRemoteAddr();
                         // Update last login
