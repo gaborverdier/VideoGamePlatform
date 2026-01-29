@@ -1,0 +1,43 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.analytics",
+  "name": "GamePopularityScore",
+  "doc": "Popularity score for a game based on active sessions and crash rate",
+  "fields": [
+    {
+      "name": "gameId",
+      "type": "string",
+      "doc": "Game identifier"
+    },
+    {
+      "name": "windowStart",
+      "type": "long",
+      "doc": "Start of the aggregation window (Unix timestamp in milliseconds)"
+    },
+    {
+      "name": "windowEnd",
+      "type": "long",
+      "doc": "End of the aggregation window (Unix timestamp in milliseconds)"
+    },
+    {
+      "name": "activeSessionCount",
+      "type": "long",
+      "doc": "Number of active game sessions in this window"
+    },
+    {
+      "name": "crashCount",
+      "type": "long",
+      "doc": "Number of crashes in this window"
+    },
+    {
+      "name": "popularityScore",
+      "type": "double",
+      "doc": "Popularity score = activeSessionCount - crashCount (normalized)"
+    },
+    {
+      "name": "qualityRating",
+      "type": "string",
+      "doc": "Quality rating: EXCELLENT, GOOD, AVERAGE, POOR, CRITICAL"
+    }
+  ]
+}

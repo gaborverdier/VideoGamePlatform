@@ -43,6 +43,8 @@ public class EventConsumer {
     private static final String GAME_UPDATED_TOPIC = "game-updated";
     private static final String GAME_PATCH_RELEASED_TOPIC = "game-patch-released";
     private static final String GAME_AVAILABILITY_CHANGED_TOPIC = "game-availability-changed";
+    private static final String DLC_RELEASED_TOPIC = "dlc-released";
+    private static final String DLC_UPDATED_TOPIC = "dlc-updated";
 
     public EventConsumer(
             @Qualifier("consumerProperties") Properties consumerProperties,
@@ -77,7 +79,10 @@ public class EventConsumer {
                 GAME_CRASH_REPORTED,
                 GAME_UPDATED_TOPIC,
                 GAME_PATCH_RELEASED_TOPIC,
-                GAME_AVAILABILITY_CHANGED_TOPIC));
+                GAME_AVAILABILITY_CHANGED_TOPIC,
+                DLC_RELEASED_TOPIC,
+                DLC_UPDATED_TOPIC
+            ));
 
         log.info("📥 Subscribed to topics: {}", consumer.subscription());
 

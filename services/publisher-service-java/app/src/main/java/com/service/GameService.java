@@ -82,11 +82,5 @@ public class GameService {
         return gameMapper.toDTO(updated);
     }
 
-    public void deleteGame(String id) {
-        // Validation métier : le jeu doit exister
-        if (!gameRepository.existsById(id)) {
-            throw new IllegalArgumentException("Jeu introuvable avec l'ID: " + id);
-        }
-        gameRepository.deleteById(id);
-    }
+
 }

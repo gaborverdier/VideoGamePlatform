@@ -44,9 +44,5 @@ public class PublisherController {
         return ResponseEntity.ok(publisherService.updatePublisher(id, publisher));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePublisher(@PathVariable String id) {
-        publisherService.deletePublisher(id);
-        return ResponseEntity.noContent().build();
-    }
+    //TODO : Verif authentification
 }

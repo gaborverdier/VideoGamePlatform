@@ -4,6 +4,7 @@ import com.gaming.api.models.DLCModel;
 import com.mapper.DLCMapper;
 import com.model.DLC;
 import com.model.Game;
+import com.producer.EventProducer;
 import com.repository.DLCRepository;
 import com.repository.GameRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,8 @@ public class DLCService {
     private DLCRepository dlcRepository;
     @Autowired
     private GameRepository gameRepository;
+    @Autowired
+    private EventProducer eventProducer;
 
     public List<DLCModel> getAllDLCs() {
         return dlcRepository.findAll().stream()
@@ -48,6 +51,18 @@ public class DLCService {
         
         dlc.setGame(game);
         DLC saved = dlcRepository.save(dlc);
+
+        DLCModel dto;
+        try {
+            dto = DLCMapper.toDTO(saved);
+
+            String key = saved.getId();
+            String topic = "dlc-released";
+            eventProducer.send(topic, key, dto);
+        } catch (Exception e) {
+            throw new RuntimeException("Échec de la production de l'événement pour le DLC créé", e);
+        }
+
         return DLCMapper.toDTO(saved);
     }
 
@@ -61,14 +76,18 @@ public class DLCService {
         dlc.setDescription(dlcDetails.getDescription());
         
         DLC updated = dlcRepository.save(dlc);
+
+        DLCModel dto;
+        try {
+            dto = DLCMapper.toDTO(updated);
+
+            String key = updated.getId();
+            String topic = "dlc-updated";
+            eventProducer.send(topic, key, dto);
+        } catch (Exception e) {
+            throw new RuntimeException("Échec de la production de l'événement pour le DLC update", e);
+        }
         return DLCMapper.toDTO(updated);
     }
 
-    public void deleteDLC(String id) {
-        // Validation métier : le DLC doit exister
-        if (!dlcRepository.existsById(id)) {
-            throw new IllegalArgumentException("DLC introuvable avec l'ID: " + id);
-        }
-        dlcRepository.deleteById(id);
-    }
 }

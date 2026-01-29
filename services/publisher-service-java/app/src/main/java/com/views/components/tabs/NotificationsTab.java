@@ -1,0 +1,218 @@
+package com.views.components.tabs;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import com.model.Crash;
+import com.model.Game;
+import com.model.Review;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class NotificationsTab extends ScrollPane {
+
+    private VBox notificationsList;
+    private List<Crash> crashReports;
+    private List<Review> reviews;
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    public NotificationsTab() {
+        this.crashReports = new ArrayList<>();
+        this.reviews = new ArrayList<>();
+
+        notificationsList = new VBox(10);
+        notificationsList.setPadding(new Insets(20));
+        notificationsList.setStyle("-fx-background-color: #2b2b2b;");
+
+        // Ajouter des données de test
+        addSampleData();
+        
+        updateView();
+
+        this.setContent(notificationsList);
+        this.setFitToWidth(true);
+        this.setStyle("-fx-background-color: #2b2b2b;");
+    }
+
+    private void addSampleData() {
+        // Crash reports - données de test
+        Game game1 = new Game();
+        game1.setTitle("The Last Shadow");
+        
+        Crash crash1 = new Crash();
+        crash1.setGame(game1);
+        crash1.setErrorMessage("NullPointerException in GameEngine.update()");
+        crash1.setCrashTimeStamp(System.currentTimeMillis());
+        crashReports.add(crash1);
+
+        Game game2 = new Game();
+        game2.setTitle("Quest Master");
+        
+        Crash crash2 = new Crash();
+        crash2.setGame(game2);
+        crash2.setErrorMessage("OutOfMemoryException");
+        crash2.setCrashTimeStamp(System.currentTimeMillis());
+        crashReports.add(crash2);
+
+        // Reviews
+        reviews.add(new Review(
+            "review_1",
+            "game_123",
+            "The Last Shadow",
+            "player_999",
+            "BobJones",
+            5,
+            120,
+            "Excellent jeu ! Vraiment addictif et bien développé.",
+            LocalDateTime.now().minusHours(3)
+        ));
+
+        reviews.add(new Review(
+            "review_2",
+            "game_789",
+            "Quest Master",
+            "player_888",
+            "CatherineWilson",
+            4,
+            45,
+            "Très bon jeu, quelques bugs mineurs mais globalement satisfait.",
+            LocalDateTime.now().minusHours(12)
+        ));
+
+        reviews.add(new Review(
+            "review_3",
+            "game_123",
+            "The Last Shadow",
+            "player_777",
+            "DavidBrown",
+            3,
+            60,
+            "Pas mal, mais un peu court et répétitif.",
+            LocalDateTime.now().minusHours(24)
+        ));
+    }
+
+    public List<Review> getReviews() {
+        return reviews;
+    }
+
+    private void updateView() {
+        notificationsList.getChildren().clear();
+
+        Label titleLabel = new Label("Notifications");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;");
+        notificationsList.getChildren().add(titleLabel);
+
+        // Section Crash Reports
+        if (!crashReports.isEmpty()) {
+            Label crashTitle = new Label("⚠️ RAPPORTS DE CRASH (" + crashReports.size() + ")");
+            crashTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #FF6B6B;");
+            notificationsList.getChildren().add(crashTitle);
+
+            for (Crash crash : crashReports) {
+                VBox crashCard = createCrashReportCard(crash);
+                notificationsList.getChildren().add(crashCard);
+            }
+
+            notificationsList.getChildren().add(new Separator());
+        }
+
+        // Section Reviews
+        if (!reviews.isEmpty()) {
+            Label reviewTitle = new Label("⭐ AVIS DES JOUEURS (" + reviews.size() + ")");
+            reviewTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #FFD700;");
+            notificationsList.getChildren().add(reviewTitle);
+
+            // Trier par date décroissante
+            List<Review> sortedReviews = reviews.stream()
+                .sorted((r1, r2) -> r2.getTimestamp().compareTo(r1.getTimestamp()))
+                .collect(Collectors.toList());
+
+            for (Review review : sortedReviews) {
+                VBox reviewCard = createReviewCard(review);
+                notificationsList.getChildren().add(reviewCard);
+            }
+        }
+
+        if (crashReports.isEmpty() && reviews.isEmpty()) {
+            Label emptyLabel = new Label("Aucune notification pour le moment");
+            emptyLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #aaa;");
+            notificationsList.getChildren().add(emptyLabel);
+        }
+    }
+
+    private VBox createCrashReportCard(Crash crash) {
+        VBox card = new VBox(8);
+        card.setPadding(new Insets(12));
+        card.setStyle("-fx-background-color: #4a2a2a; -fx-background-radius: 5; -fx-border-color: #FF6B6B; -fx-border-width: 2;");
+
+        HBox headerBox = new HBox(10);
+        headerBox.setAlignment(Pos.TOP_LEFT);
+
+        Label gameLabel = new Label(crash.getGame().getTitle());
+        gameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #FF6B6B;");
+
+        Label dateLabel = new Label(crash.getCrashTimeStamp().toString());
+        dateLabel.setStyle("-fx-text-fill: #999; -fx-font-size: 11px;");
+
+        headerBox.getChildren().addAll(gameLabel, dateLabel);
+
+        Label errorLabel = new Label("Erreur: " + crash.getErrorMessage());
+        errorLabel.setStyle("-fx-text-fill: #ff9999; -fx-font-size: 12px; -fx-wrap-text: true;");
+        errorLabel.setWrapText(true);
+
+        card.getChildren().addAll(headerBox, dateLabel, errorLabel);
+
+        return card;
+    }
+
+    private VBox createReviewCard(Review review) {
+        VBox card = new VBox(8);
+        card.setPadding(new Insets(12));
+        card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5;");
+
+        HBox headerBox = new HBox(10);
+        headerBox.setAlignment(Pos.TOP_LEFT);
+
+        Label gameLabel = new Label(review.getGameName());
+        gameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: white;");
+
+        Label playerLabel = new Label("Par " + review.getPlayerName());
+        playerLabel.setStyle("-fx-text-fill: #aaa;");
+
+        Label ratingLabel = new Label(review.getRatingStars());
+        ratingLabel.setStyle("-fx-text-fill: #FFD700; -fx-font-size: 12px;");
+
+        Label timeLabel = new Label(review.getTimestamp().format(formatter));
+        timeLabel.setStyle("-fx-text-fill: #999; -fx-font-size: 11px;");
+
+        headerBox.getChildren().addAll(gameLabel, playerLabel);
+
+        Label commentLabel = new Label(review.getComment());
+        commentLabel.setStyle("-fx-text-fill: #ddd; -fx-wrap-text: true;");
+        commentLabel.setWrapText(true);
+
+        card.getChildren().addAll(headerBox, ratingLabel, commentLabel, timeLabel);
+
+        return card;
+    }
+
+    public void addCrashReport(Crash crash) {
+        crashReports.add(crash);
+        updateView();
+    }
+
+    public List<Crash> getCrashReports() {
+        return crashReports;
+    }
+
+    public void addReview(Review review) {
+        reviews.add(review);
+        updateView();
+    }
+}
