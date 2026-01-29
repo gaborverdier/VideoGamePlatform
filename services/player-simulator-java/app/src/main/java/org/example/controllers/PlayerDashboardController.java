@@ -66,7 +66,7 @@ public class PlayerDashboardController {
             userId,
             gameId,
             gameVersion,
-            platform,
+            platform == null ? "unknown" : platform,
             combinedMessage,
             Instant.now().getEpochSecond()
         );
