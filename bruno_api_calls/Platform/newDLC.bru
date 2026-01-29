@@ -1,11 +1,11 @@
 meta {
-  name: CreateDLC
+  name: newDLC
   type: http
-  seq: 5
+  seq: 9
 }
 
 post {
-  url: http://localhost:8083/api/dlc/create
+  url: http://localhost:8082/api/dlc/new
   body: json
   auth: inherit
 }
@@ -14,9 +14,9 @@ body:json {
   {
     "id": "",
     "gameId": "d0767dd3-040b-438a-a39b-e7a7f772291e",
-    "title": "nouveau dlc",
-    "releaseTimeStamp": 20000000,
-    "description": "une description inutile"
+    "title": "truc bidul",
+    "releaseTimeStamp": 10000000,
+    "description": "string"
   }
 }
 

@@ -3,6 +3,7 @@ package org.example.views.components.dialogs;
 import org.example.models.Game;
 import org.example.services.SessionManager;
 import org.example.services.GameDataService;
+import com.gaming.api.models.DLCModel;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -156,13 +157,22 @@ public class OwnedGameDetailsDialog {
             }
         });
         
-        // Mises à jour
-        int pendingUpdates = game.getPendingUpdates().size();
-        Button updateBtn = new Button("⬇ Télécharger MAJ (" + pendingUpdates + ")");
-        updateBtn.setMaxWidth(Double.MAX_VALUE);
-        updateBtn.setDisable(pendingUpdates == 0);
-        updateBtn.setOnAction(e -> showUpdatesDialog(game, updateBtn, onUpdate));
-        
+        // Populate remote DLCs (best-effort) so the DLC button state is correct
+        try {
+            java.util.List<DLCModel> remote = GameDataService.getInstance().getDLCsForGame(game.getId());
+            if (remote != null) {
+                for (DLCModel dm : remote) {
+                    // add if not already present (by title)
+                    boolean exists = game.getAvailableDLCs().stream().anyMatch(d -> d.getName().equals(dm.getTitle()));
+                    if (!exists) {
+                        game.addDLC(dm.getTitle(), 0.0);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            System.err.println("Failed to fetch DLCs for owned game " + game.getId() + ": " + ex.getMessage());
+        }
+
         // DLCs
         int totalDLCs = game.getAvailableDLCs().size();
         Button dlcBtn = new Button("🎁 DLCs (" + totalDLCs + ")");
@@ -170,7 +180,7 @@ public class OwnedGameDetailsDialog {
         dlcBtn.setDisable(totalDLCs == 0);
         dlcBtn.setOnAction(e -> showDLCsDialog(game, dlcBtn, onUpdate));
         
-        actionsBox.getChildren().addAll(playBtn, reviewBtn, seeReviewsBtn, favoriteBtn, updateNowBtn, updateBtn, dlcBtn);
+        actionsBox.getChildren().addAll(playBtn, reviewBtn, seeReviewsBtn, favoriteBtn, updateNowBtn, dlcBtn);
         
         centerPane.getChildren().addAll(titleLabel, platformLabel, supportedLabel, statusLabel, timeLabel, new Separator(), actionsBox);
         

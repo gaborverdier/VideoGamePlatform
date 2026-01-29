@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,12 +22,15 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.gaming.api.models.DLCModel;
 import com.gaming.api.models.GameModel;
 import com.gaming.api.models.PatchModel;
 import com.gaming.events.GameCrashReported;
 import com.gaming.events.GameUpdated;
 import com.gaming.platform.model.CrashReport;
+import com.gaming.platform.model.DLC;
 import com.gaming.platform.model.Game;
+import com.gaming.platform.repository.DLCRepository;
 import com.gaming.platform.repository.GameRepository;
 import com.gaming.platform.service.CrashReportService;
 import com.gaming.platform.service.LibraryService;
@@ -40,6 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 public class EventConsumer {
+
+    private final DLCRepository DLCRepository;
 
     private final Properties consumerProperties;
     private final GameRepository gameRepository;
@@ -56,18 +60,21 @@ public class EventConsumer {
     private static final String GAME_UPDATED_TOPIC = "game-updated";
     private static final String GAME_PATCH_RELEASED_TOPIC = "game-patch-released";
     private static final String GAME_RELEASED = "game-released";
+    private static final String DLC_RELEASED = "dlc-released";
 
     public EventConsumer(@Qualifier("consumerProperties") Properties consumerProperties,
             GameRepository gameRepository,
             CrashReportService crashReportService,
             LibraryService libraryService,
-            NotificationsService notificationsService) {
+            NotificationsService notificationsService, 
+            DLCRepository DLCRepository) {
         this.consumerProperties = consumerProperties;
         this.gameRepository = gameRepository;
         this.crashReportService = crashReportService;
         this.libraryService = libraryService;
         this.notificationsService = notificationsService;
         this.executorService = Executors.newSingleThreadExecutor();
+        this.DLCRepository = DLCRepository;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -95,7 +102,8 @@ public class EventConsumer {
                 GAME_CRASH_REPORTED,
                 GAME_UPDATED_TOPIC,
                 GAME_PATCH_RELEASED_TOPIC,
-                GAME_RELEASED));
+                GAME_RELEASED,
+                DLC_RELEASED));
 
         log.info("📥 Subscribed to topics: {}", consumer.subscription());
 
@@ -171,8 +179,14 @@ public class EventConsumer {
                     if (record.value() instanceof GameModel) {
                         handleGameReleased((GameModel) record.value());
                     } else if (record.value() instanceof GenericRecord) {
-                        handleGameReleasedGeneric((GenericRecord) record.value());
-                        
+                        handleGameReleasedGeneric((GenericRecord) record.value());   
+                    }
+                    break;
+                case DLC_RELEASED:
+                    if (record.value() instanceof DLCModel) {
+                        handleDLCReleased((DLCModel) record.value());
+                    } else if (record.value() instanceof GenericRecord) {
+                        handleDLCReleasedGeneric((GenericRecord) record.value());
                     }
                     break;
                 default:
@@ -181,6 +195,35 @@ public class EventConsumer {
         } catch (Exception e) {
             log.error("Error processing record from topic: {}", topic, e);
         }
+    }
+
+    private void handleDLCReleased(DLCModel event) {
+        log.info("Received DLCReleased event: {}", event);
+        DLC dlc = new DLC();
+        dlc.setId(event.getId());
+        dlc.setGameId(event.getGameId());
+        dlc.setTitle(event.getTitle());
+        dlc.setDescription(event.getDescription());
+        dlc.setPrice(BigDecimal.valueOf(0.0));
+        dlc.setReleaseTimeStamp(event.getReleaseTimeStamp());
+        DLCRepository.save(dlc);
+
+        log.info("Saved new DLC: {}", dlc.getId());
+
+        // notify game owner about DLC release
+        log.info("Notifying game owner of game {} about DLC {} release", dlc.getGameId(), dlc.getId());
+        // get game owners from library service
+        libraryService.getUsersWithGameInLibrary(dlc.getGameId()).forEach(userId -> {
+            System.out.println("Notifying user " + userId + " about patch for game " + dlc.getGameId());
+            String description = String.format("New DLC Released for Game %s: %s", dlc.getGameId(), dlc.getId());
+            notificationsService.createNotification(userId, description);
+        });
+
+        notificationsService.createNotification(dlc.getGameId(), "New DLC Released: " + dlc.getId());
+    }
+
+    private void handleDLCReleasedGeneric(GenericRecord event) {
+        log.info("Received DLCReleased (generic) event: {}", event);
     }
 
     // GenericRecord handlers - map fields manually when SpecificRecord class is unavailable

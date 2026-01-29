@@ -78,11 +78,12 @@ public class GameDetailsDialog {
         Button seeReviewsBtn = new Button("Voir les avis");
         seeReviewsBtn.setOnAction(e -> ReviewsListDialog.show(game));
 
-        Label backendVerLabel = new Label("Version serveur: " + (game.getVersion() != null ? game.getVersion() : "N/A"));
-        backendVerLabel.setStyle("-fx-text-fill: #aaa;");
 
-        Label installedVerLabel = new Label("Version installée: " + (game.getInstalledVersion() != null ? game.getInstalledVersion() : "N/A"));
-        installedVerLabel.setStyle("-fx-text-fill: #aaa;");
+        // Label backendVerLabel = new Label("Version serveur: " + (game.getVersion() != null ? game.getVersion() : "N/A"));
+        // backendVerLabel.setStyle("-fx-text-fill: #aaa;");
+
+        // Label installedVerLabel = new Label("Version installée: " + (game.getInstalledVersion() != null ? game.getInstalledVersion() : "N/A"));
+        // installedVerLabel.setStyle("-fx-text-fill: #aaa;");
 
         // Plateformes disponibles
         Label platformTitle = new Label("Support :");
@@ -124,7 +125,7 @@ public class GameDetailsDialog {
         priceLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;");
         
         centerPane.getChildren().addAll(
-            titleLabel, genreLabel, publisherLabel, ratingBox, seeReviewsBtn, backendVerLabel, installedVerLabel,
+            titleLabel, genreLabel, publisherLabel, ratingBox, seeReviewsBtn,
             new Separator(), platformTitle, platformBox,
             new Separator(), descLabel, descArea,
             new Separator(), priceLabel
