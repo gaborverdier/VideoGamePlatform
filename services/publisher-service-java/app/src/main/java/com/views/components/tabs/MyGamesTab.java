@@ -224,9 +224,9 @@ public class MyGamesTab extends ScrollPane {
                 .setPlatform(data.platform)
                 .setGenre(String.join(", ", data.genres))
                 .setReleaseTimeStamp(System.currentTimeMillis())
-                .setPrice(20.0) // Default price, could be added to dialog
-                .setVersion("1.0") // Default version
-                .setDescription(null)
+                .setPrice(data.price)
+                .setVersion(data.version)
+                .setDescription(data.description)
                 .build();
             
             String json = AvroJacksonConfig.avroObjectMapper().writeValueAsString(gameModel);
