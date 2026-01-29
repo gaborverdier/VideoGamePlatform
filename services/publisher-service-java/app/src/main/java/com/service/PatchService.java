@@ -64,24 +64,4 @@ public class PatchService {
         return patchModel;
     }
 
-    public PatchModel updatePatch(String id, Patch patchDetails) {
-        // Validation métier : le patch doit exister
-        Patch patch = patchRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Patch introuvable avec l'ID: " + id));
-        
-        patch.setVersion(patchDetails.getVersion());
-        patch.setReleaseTimeStamp(patchDetails.getReleaseTimeStamp());
-        patch.setDescription(patchDetails.getDescription());
-        
-        Patch updated = patchRepository.save(patch);
-        return patchMapper.toDTO(updated);
-    }
-
-    public void deletePatch(String id) {
-        // Validation métier : le patch doit exister
-        if (!patchRepository.existsById(id)) {
-            throw new IllegalArgumentException("Patch introuvable avec l'ID: " + id);
-        }
-        patchRepository.deleteById(id);
-    }
 }

@@ -56,9 +56,4 @@ public class DLCController {
         return ResponseEntity.ok(dlcService.updateDLC(id, dlc));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDLC(@PathVariable String id) {
-        dlcService.deleteDLC(id);
-        return ResponseEntity.noContent().build();
-    }
 }

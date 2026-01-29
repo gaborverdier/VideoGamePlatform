@@ -39,6 +39,8 @@ create_topic "game-updated" 5 1
 create_topic "game-deleted" 1 1
 create_topic "game-patch-released" 5 1
 create_topic "game-availability-changed" 3 1
+create_topic "dlc-released" 5 1
+create_topic "dlc-updated" 5 1
 
 # ============================================
 # PURCHASE / TRANSACTION EVENTS
