@@ -1,12 +1,12 @@
 {
   "type": "record",
-  "namespace": "com.gaming.api.models",
-  "name": "PublisherModel",
-  "doc": "Publisher Data Transfer Object",
+  "namespace": "com.gaming.api.requests",
+  "name": "NewPublisherRequest",
+  "doc": "Publisher Request object",
   "fields": [
-    {"name": "id", "type": "string"},
     {"name": "name", "type": "string"},
     {"name": "email", "type": "string"},
+    {"name": "password", "type": "string"},
     {"name" : "isCompany", "type": "boolean"}
   ]
 }
