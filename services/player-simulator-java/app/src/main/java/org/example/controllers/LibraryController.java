@@ -22,7 +22,7 @@ public class LibraryController {
         try {
             String json = platformApi.getAllGamesJson();
             List<GameModel> avroGames = objectMapper.readValue(json, new TypeReference<List<GameModel>>() {});
-            return avroGames.stream().map(Game::fromAvroModel).collect(Collectors.toList());
+            return avroGames.stream().map(Game::fromAvroModelWithVersion).collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException("Failed to load games", e);
         }
@@ -33,7 +33,7 @@ public class LibraryController {
         try {
             String json = platformApi.searchGamesByTitleJson(title);
             List<GameModel> avroGames = objectMapper.readValue(json, new TypeReference<List<GameModel>>() {});
-            return avroGames.stream().map(Game::fromAvroModel).collect(Collectors.toList());
+            return avroGames.stream().map(Game::fromAvroModelWithVersion).collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException("Failed to search games", e);
         }
@@ -44,7 +44,7 @@ public class LibraryController {
         try {
             String json = platformApi.getGamesByGenreJson(genre);
             List<GameModel> avroGames = objectMapper.readValue(json, new TypeReference<List<GameModel>>() {});
-            return avroGames.stream().map(Game::fromAvroModel).collect(Collectors.toList());
+            return avroGames.stream().map(Game::fromAvroModelWithVersion).collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException("Failed to get games by genre", e);
         }
@@ -55,7 +55,7 @@ public class LibraryController {
         try {
             String json = platformApi.getGamesByPlatformJson(platform);
             List<GameModel> avroGames = objectMapper.readValue(json, new TypeReference<List<GameModel>>() {});
-            return avroGames.stream().map(Game::fromAvroModel).collect(Collectors.toList());
+            return avroGames.stream().map(Game::fromAvroModelWithVersion).collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException("Failed to get games by platform", e);
         }
@@ -66,7 +66,7 @@ public class LibraryController {
         try {
             String json = platformApi.getGameByIdJson(gameId);
             GameModel avroGame = objectMapper.readValue(json, GameModel.class);
-            return Game.fromAvroModel(avroGame);
+            return Game.fromAvroModelWithVersion(avroGame);
         } catch (Exception e) {
             throw new RuntimeException("Failed to get game details", e);
         }

@@ -47,6 +47,13 @@ public class LibraryService {
                 .collect(Collectors.toList());
     }
 
+    public List<String> getUsersWithGameInLibrary(String gameId) {
+        return libraryRepository.findByGameId(gameId).stream()
+                .map(Library::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public Library addToLibrary(String userId, String gameId) {
         // Reject if the user already has this game in their library

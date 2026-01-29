@@ -2,6 +2,7 @@ package org.example.views.components.dialogs;
 
 import org.example.models.Game;
 import org.example.services.SessionManager;
+import org.example.services.GameDataService;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -60,12 +61,34 @@ public class OwnedGameDetailsDialog {
         Label timeLabel = new Label("Temps de jeu: " + game.getPlayedTime() + " min");
         timeLabel.setStyle("-fx-text-fill: #aaa;");
         
+        Label backendVerLabel = new Label("Version serveur: " + (game.getVersion() != null ? game.getVersion() : "N/A"));
+        backendVerLabel.setStyle("-fx-text-fill: #aaa;");
+
+        Label installedVerLabel = new Label("Version installée: " + (game.getInstalledVersion() != null ? game.getInstalledVersion() : "N/A"));
+        installedVerLabel.setStyle("-fx-text-fill: #aaa;");
+        
         // Boutons d'action
         VBox actionsBox = new VBox(10);
-        
+
+        // create buttons first so handlers can reference each other
         Button playBtn = new Button(game.isInstalled() ? "▶ JOUER" : "⬇ INSTALLER");
         playBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
         playBtn.setMaxWidth(Double.MAX_VALUE);
+
+        Button updateNowBtn = new Button("🔁 Mettre à jour");
+        updateNowBtn.setMaxWidth(Double.MAX_VALUE);
+        boolean needsUpdate = game.isInstalled() && game.getVersion() != null && (game.getInstalledVersion() == null || !game.getVersion().equals(game.getInstalledVersion()));
+        if (needsUpdate) {
+            updateNowBtn.setDisable(false);
+            updateNowBtn.setStyle("-fx-background-color: #e53935; -fx-text-fill: white; -fx-font-weight: bold;");
+            updateNowBtn.setText("🔁 Mettre à jour → " + (game.getVersion() != null ? game.getVersion() : "N/A"));
+        } else {
+            updateNowBtn.setDisable(true);
+            updateNowBtn.setStyle("");
+            updateNowBtn.setText("🔁 Mettre à jour");
+        }
+
+        // now assign handlers
         playBtn.setOnAction(e -> {
             if (game.isInstalled()) {
                 GamePlayDialog.show(game, onUpdate, SessionManager.getInstance().getPlayerController());
@@ -74,25 +97,63 @@ public class OwnedGameDetailsDialog {
                     statusLabel.setText("✅ Installé");
                     statusLabel.setStyle("-fx-text-fill: #4CAF50; -fx-font-size: 14px;");
                     playBtn.setText("▶ JOUER");
+                    // update installed version label and update button state
+                    installedVerLabel.setText("Version installée: " + (game.getInstalledVersion() != null ? game.getInstalledVersion() : "N/A"));
+                    boolean nowNeedsUpdate = game.isInstalled() && game.getVersion() != null && (game.getInstalledVersion() == null || !game.getVersion().equals(game.getInstalledVersion()));
+                    if (nowNeedsUpdate) {
+                        updateNowBtn.setDisable(false);
+                        updateNowBtn.setStyle("-fx-background-color: #e53935; -fx-text-fill: white; -fx-font-weight: bold;");
+                        updateNowBtn.setText("🔁 Mettre à jour → " + (game.getVersion() != null ? game.getVersion() : "N/A"));
+                    } else {
+                        updateNowBtn.setDisable(true);
+                        updateNowBtn.setStyle("");
+                        updateNowBtn.setText("🔁 Mettre à jour");
+                    }
                     if (onUpdate != null) onUpdate.run();
                 });
             }
         });
-        
+
         Button reviewBtn = new Button("⭐ Laisser un avis");
         reviewBtn.setMaxWidth(Double.MAX_VALUE);
         reviewBtn.setOnAction(e -> ReviewDialog.show(game));
-        
+
         Button seeReviewsBtn = new Button("Voir les avis (" + game.getReviews().size() + ")");
         seeReviewsBtn.setMaxWidth(Double.MAX_VALUE);
         seeReviewsBtn.setOnAction(e -> ReviewsListDialog.show(game));
-        
+
         Button favoriteBtn = new Button(game.isFavorite() ? "❤ Retirer des favoris" : "❤ Ajouter aux favoris");
         favoriteBtn.setMaxWidth(Double.MAX_VALUE);
         favoriteBtn.setOnAction(e -> {
             game.setFavorite(!game.isFavorite());
             favoriteBtn.setText(game.isFavorite() ? "❤ Retirer des favoris" : "❤ Ajouter aux favoris");
             if (onUpdate != null) onUpdate.run();
+        });
+
+        updateNowBtn.setOnAction(e -> {
+            String userId = SessionManager.getInstance().getCurrentPlayer() != null ? SessionManager.getInstance().getCurrentPlayer().getId() : null;
+            if (userId == null) return;
+            try {
+                GameDataService.getInstance().installGameForUser(userId, game.getId(), game.getVersion());
+                game.setInstalled(true);
+                game.setInstalledVersion(game.getVersion());
+                updateNowBtn.setDisable(true);
+                updateNowBtn.setStyle("");
+                updateNowBtn.setText("🔁 Mettre à jour");
+                statusLabel.setText("✅ Installé");
+                statusLabel.setStyle("-fx-text-fill: #4CAF50; -fx-font-size: 14px;");
+                playBtn.setText("▶ JOUER");
+                installedVerLabel.setText("Version installée: " + (game.getInstalledVersion() != null ? game.getInstalledVersion() : "N/A"));
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setContentText("Jeu mis à jour vers la version " + game.getVersion());
+                info.showAndWait();
+                if (onUpdate != null) onUpdate.run();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Alert err = new Alert(Alert.AlertType.ERROR);
+                err.setContentText("Échec de la mise à jour : " + ex.getMessage());
+                err.showAndWait();
+            }
         });
         
         // Mises à jour
@@ -109,7 +170,7 @@ public class OwnedGameDetailsDialog {
         dlcBtn.setDisable(totalDLCs == 0);
         dlcBtn.setOnAction(e -> showDLCsDialog(game, dlcBtn, onUpdate));
         
-        actionsBox.getChildren().addAll(playBtn, reviewBtn, seeReviewsBtn, favoriteBtn, updateBtn, dlcBtn);
+        actionsBox.getChildren().addAll(playBtn, reviewBtn, seeReviewsBtn, favoriteBtn, updateNowBtn, updateBtn, dlcBtn);
         
         centerPane.getChildren().addAll(titleLabel, platformLabel, supportedLabel, statusLabel, timeLabel, new Separator(), actionsBox);
         

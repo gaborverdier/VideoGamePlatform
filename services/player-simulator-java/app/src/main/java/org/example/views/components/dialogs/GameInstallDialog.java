@@ -66,9 +66,10 @@ public class GameInstallDialog {
                             : null;
                     System.out.println("Current user ID: " + userId);
                     if (userId != null) {
-                        GameDataService.getInstance().installGameForUser(userId, game.getId());
+                        GameDataService.getInstance().installGameForUser(userId, game.getId(), game.getVersion());
                         game.setInstalled(true);
-                        System.out.println("Game " + game.getName() + " installed for user " + userId);
+                        game.setInstalledVersion(game.getVersion());
+                        System.out.println("Game " + game.getName() + " installed for user " + userId + " version=" + game.getVersion());
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();

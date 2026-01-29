@@ -15,6 +15,8 @@ import com.gaming.platform.model.Library;
 public interface LibraryRepository extends JpaRepository<Library, String> {
     List<Library> findByUserId(String userId);
 
+    List<Library> findByGameId(String gameId);
+
     boolean existsByUserIdAndGameId(String userId, String gameId);
 
     Library findByUserIdAndGameId(String userId, String gameId);

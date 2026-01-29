@@ -42,7 +42,7 @@ public class GameDataService {
             });
             List<Game> loaded = new ArrayList<>();
             for (GameModel avro : avroGames) {
-                Game g = Game.fromAvroModel(avro);
+                Game g = Game.fromAvroModelWithVersion(avro);
                 // fetch reviews for this game and map into local Review model
                 try {
                     String reviewsJson = apiClient.getReviewsForGameJson(g.getId());
@@ -143,7 +143,7 @@ public class GameDataService {
             });
             List<Game> result = new ArrayList<>();
             for (GameModel avro : avroGames) {
-                Game g = Game.fromAvroModel(avro);
+                Game g = Game.fromAvroModelWithVersion(avro);
                 // try to fetch reviews for each game in the user's library
                 try {
                     String reviewsJson = apiClient.getReviewsForGameJson(g.getId());
@@ -182,12 +182,14 @@ public class GameDataService {
                 result.add(g);
             }
 
-            // get installed flags from local storage
+            // get installed flags and installed versions from local storage
             try {
-                java.util.Set<String> installed = InstalledGamesStore.getInstance().getInstalledForUser(userId);
+                java.util.Map<String, String> installed = InstalledGamesStore.getInstance().getInstalledWithVersions(userId);
                 for (Game g : result) {
-                    if (installed.contains(g.getId()))
+                    if (installed.containsKey(g.getId())) {
                         g.setInstalled(true);
+                        g.setInstalledVersion(installed.get(g.getId()));
+                    }
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -206,7 +208,7 @@ public class GameDataService {
             List<GameModel> avroGames = objectMapper.readValue(json, new TypeReference<List<GameModel>>() {});
             List<Game> result = new ArrayList<>();
             for (GameModel avro : avroGames) {
-                Game g = Game.fromAvroModel(avro);
+                Game g = Game.fromAvroModelWithVersion(avro);
                 g.setWishlisted(true);
                 // fetch reviews as in other flows (best-effort)
                 try {
@@ -267,11 +269,15 @@ public class GameDataService {
     }
 
     public void installGameForUser(String userId, String gameId) throws Exception {
+        installGameForUser(userId, gameId, null);
+    }
+
+    public void installGameForUser(String userId, String gameId, String version) throws Exception {
         PlatformApiClient apiClient = new PlatformApiClient();
         apiClient.installGame(userId, gameId);
-        // Also mark as installed in local store
+        // Also mark as installed in local store with version
         try {
-            InstalledGamesStore.getInstance().markInstalled(userId, gameId);
+            InstalledGamesStore.getInstance().markInstalled(userId, gameId, version);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
