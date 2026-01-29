@@ -1,19 +1,18 @@
 meta {
-  name: create publisher
+  name: GetGames
   type: http
-  seq: 9
+  seq: 3
 }
 
-post {
-  url: 
+get {
+  url: http://localhost:8083/api/games
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "id": "pub-123",
-    "name": "Epic Games"
+    
   }
 }
 

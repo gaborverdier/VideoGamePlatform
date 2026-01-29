@@ -1,0 +1,22 @@
+meta {
+  name: GetPublishers
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8083/api/publishers
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

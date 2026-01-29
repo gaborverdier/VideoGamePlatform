@@ -20,10 +20,10 @@ public class GameMapper {
         dto.setPublisherId(game.getPublisher() != null ? game.getPublisher().getId() : null);
         dto.setPlatform(game.getPlatform());
         dto.setGenre(game.getGenre());
-        dto.setReleaseTimeStamp(0L); // à compléter si champ disponible
-        dto.setPrice(0.0); // à compléter si champ disponible
-        dto.setVersion(""); // à compléter si champ disponible
-        dto.setDescription(null); // à compléter si champ disponible
+        dto.setReleaseTimeStamp(game.getReleaseTimeStamp() != null ? game.getReleaseTimeStamp() : 0L);
+        dto.setPrice(game.getPrice() != null ? game.getPrice() : 0.0);
+        dto.setVersion(game.getVersion() != null ? game.getVersion() : "");
+        dto.setDescription(null);
         return dto;
     }
 
@@ -38,8 +38,10 @@ public class GameMapper {
         game.setTitle(dto.getTitle());
         game.setGenre(dto.getGenre());
         game.setPlatform(dto.getPlatform());
+        game.setReleaseTimeStamp(dto.getReleaseTimeStamp());
+        game.setPrice(dto.getPrice());
+        game.setVersion(dto.getVersion());
         game.setPublisher(publisher);
-        // autres champs à compléter si besoin
         return game;
     }
 }

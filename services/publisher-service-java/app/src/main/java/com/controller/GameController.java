@@ -9,11 +9,12 @@ import com.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Optional;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("api/games")
+@RequestMapping("/api/games")
 public class GameController {
     @Autowired
     private GameService gameService;
@@ -39,21 +40,25 @@ public class GameController {
         return ResponseEntity.ok(gameService.getGamesByPublisher(publisherId));
     }
 
-    @PostMapping("/publisher/{publisherId}")
-    public ResponseEntity<GameModel> createGame(@PathVariable("publisherId") String publisherId, @RequestBody GameModel gameModel) {
-        Publisher publisher = publisherRepository.findById(publisherId)
-            .orElseThrow(() -> new IllegalArgumentException("Publisher introuvable avec l'ID: " + publisherId));
-        Game game = gameMapper.fromDTO(gameModel, publisher);
-        return ResponseEntity.ok(gameService.createGame(publisherId, game));
+    @PostMapping("/publish")
+    public ResponseEntity<GameModel> createGame(@RequestBody GameModel gameModel) {
+        Optional<Publisher> publisher = publisherRepository.findById(gameModel.getPublisherId());
+        if (!publisher.isPresent()) {
+            return ResponseEntity.badRequest().build();
+        }
+        Game game = gameMapper.fromDTO(gameModel, publisher.get());
+        return ResponseEntity.ok(gameService.createGame(gameModel.getPublisherId(), game));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<GameModel> updateGame(@PathVariable String id, @RequestBody GameModel gameModel) {
         GameModel existingGame = gameService.getGameById(id)
             .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + id));
-        Publisher publisher = publisherRepository.findById(existingGame.getPublisherId())
-            .orElseThrow(() -> new IllegalArgumentException("Publisher introuvable"));
-        Game game = gameMapper.fromDTO(gameModel, publisher);
+        Optional<Publisher> publisher = publisherRepository.findById(existingGame.getPublisherId());
+        if (!publisher.isPresent()) {
+            return ResponseEntity.badRequest().build();
+        }
+        Game game = gameMapper.fromDTO(gameModel, publisher.get());
         game.setId(id);
         return ResponseEntity.ok(gameService.updateGame(id, game));
     }

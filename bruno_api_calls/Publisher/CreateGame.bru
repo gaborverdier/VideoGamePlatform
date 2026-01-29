@@ -1,0 +1,29 @@
+meta {
+  name: CreateGame
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8083/api/games/publish
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "publisherId" : "a1a3b90f-95a7-446e-8f31-02c332d2e47f",
+      "title" : "Test",
+      "publisherName" : "a",
+      "platform" : "PC",
+      "genre" : "RPG",
+      "releaseTimeStamp": 1000000000.0,
+      "price":  20.0,
+      "version": "1.0"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
