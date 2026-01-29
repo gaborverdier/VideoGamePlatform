@@ -47,10 +47,10 @@ public class PatchService {
             .collect(Collectors.toList());
     }
 
-    public PatchModel createPatch(String gameId, Patch patch) {
+    public PatchModel createPatch(Patch patch) {
         // Validation métier : le jeu doit exister
-        Game game = gameRepository.findById(gameId)
-            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + gameId));
+        Game game = gameRepository.findById(patch.getGame().getId())
+            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + patch.getGame().getId()));
         
         patch.setGame(game);
         Patch saved = patchRepository.save(patch);

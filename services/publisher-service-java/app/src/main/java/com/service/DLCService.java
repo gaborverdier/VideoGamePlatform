@@ -22,16 +22,18 @@ public class DLCService {
     private GameRepository gameRepository;
     @Autowired
     private EventProducer eventProducer;
+    @Autowired
+    private DLCMapper dlcMapper;
 
     public List<DLCModel> getAllDLCs() {
         return dlcRepository.findAll().stream()
-            .map(DLCMapper::toDTO)
+            .map(dlcMapper::toDTO)
             .collect(Collectors.toList());
     }
 
     public Optional<DLCModel> getDLCById(String id) {
         return dlcRepository.findById(id)
-            .map(DLCMapper::toDTO);
+            .map(dlcMapper::toDTO);
     }
 
     public List<DLCModel> getDLCsByGame(String gameId) {
@@ -40,21 +42,21 @@ public class DLCService {
             return List.of();
         }
         return game.getDlcs().stream()
-            .map(DLCMapper::toDTO)
+            .map(dlcMapper::toDTO)
             .collect(Collectors.toList());
     }
 
-    public DLCModel createDLC(String gameId, DLC dlc) {
+    public Optional<DLCModel> createDLC(DLC dlc) {
         // Validation métier : le jeu doit exister
-        Game game = gameRepository.findById(gameId)
-            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + gameId));
+        Game game = gameRepository.findById(dlc.getGame().getId())
+            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + dlc.getGame().getId()));
         
         dlc.setGame(game);
         DLC saved = dlcRepository.save(dlc);
 
         DLCModel dto;
         try {
-            dto = DLCMapper.toDTO(saved);
+            dto = dlcMapper.toDTO(saved);
 
             String key = saved.getId();
             String topic = "dlc-released";
@@ -63,13 +65,13 @@ public class DLCService {
             throw new RuntimeException("Échec de la production de l'événement pour le DLC créé", e);
         }
 
-        return DLCMapper.toDTO(saved);
+        return Optional.of(dlcMapper.toDTO(saved));
     }
 
-    public DLCModel updateDLC(String id, DLC dlcDetails) {
+    public Optional<DLCModel> updateDLC(DLC dlcDetails) {
         // Validation métier : le DLC doit exister
-        DLC dlc = dlcRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("DLC introuvable avec l'ID: " + id));
+        DLC dlc = dlcRepository.findById(dlcDetails.getId())
+            .orElseThrow(() -> new IllegalArgumentException("DLC introuvable avec l'ID: " + dlcDetails.getId()));
         
         dlc.setName(dlcDetails.getName());
         dlc.setReleaseTimeStamp(dlcDetails.getReleaseTimeStamp());
@@ -79,7 +81,7 @@ public class DLCService {
 
         DLCModel dto;
         try {
-            dto = DLCMapper.toDTO(updated);
+            dto = dlcMapper.toDTO(updated);
 
             String key = updated.getId();
             String topic = "dlc-updated";
@@ -87,7 +89,7 @@ public class DLCService {
         } catch (Exception e) {
             throw new RuntimeException("Échec de la production de l'événement pour le DLC update", e);
         }
-        return DLCMapper.toDTO(updated);
+        return Optional.of(dlcMapper.toDTO(updated));
     }
 
 }

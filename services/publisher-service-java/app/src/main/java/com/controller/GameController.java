@@ -42,25 +42,15 @@ public class GameController {
     }
 
     @PostMapping("/publish")
-    public ResponseEntity<GameModel> createGame(@RequestBody GameReleased gameModel) {
-        Optional<Publisher> publisher = publisherRepository.findById(gameModel.getPublisherId());
-        if (!publisher.isPresent()) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<?> createGame(@RequestBody GameReleased gameModel) {
+        
         Game game = gameMapper.fromReleaseModel(gameModel);
         return ResponseEntity.ok(gameService.createGame(gameModel.getPublisherId(), game));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<GameModel> updateGame(@PathVariable String id, @RequestBody GameModel gameModel) {
-        GameModel existingGame = gameService.getGameById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + id));
-        Optional<Publisher> publisher = publisherRepository.findById(existingGame.getPublisherId());
-        if (!publisher.isPresent()) {
-            return ResponseEntity.badRequest().build();
-        }
-        Game game = gameMapper.fromDTO(gameModel, publisher.get());
-        game.setId(id);
-        return ResponseEntity.ok(gameService.updateGame(id, game));
+    @PutMapping("/update")
+    public ResponseEntity<GameModel> updateGame(@RequestBody GameModel gameModel) {
+        Game game = gameMapper.fromDTO(gameModel);
+        return ResponseEntity.ok(gameService.updateGame(game));
     }
 }

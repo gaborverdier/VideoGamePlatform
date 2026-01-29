@@ -69,16 +69,13 @@ public class GameService {
         return dto;
     }
 
-    public GameModel updateGame(String id, Game gameDetails) {
+    public GameModel updateGame(Game gameDetails) {
         // Validation métier : le jeu doit exister
-        Game game = gameRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + id));
+        gameRepository.findById(gameDetails.getId())
+            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + gameDetails.getId()));
         
-        game.setTitle(gameDetails.getTitle());
-        game.setGenre(gameDetails.getGenre());
-        game.setPlatform(gameDetails.getPlatform());
-        
-        Game updated = gameRepository.save(game);
+                
+        Game updated = gameRepository.save(gameDetails);
         return gameMapper.toDTO(updated);
     }
 
