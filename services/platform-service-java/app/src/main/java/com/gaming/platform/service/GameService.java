@@ -60,7 +60,7 @@ public class GameService {
                 .setPublisherId("unknown") // Publisher ID not stored in Game entity
                 .setPlatform(game.getPlatform())
                 .setGenre(game.getGenre())
-                .setReleaseTimeStamp(game.getReleaseTimeStamp())
+                .setReleaseTimeStamp(game.getReleaseTimeStamp() != null ? game.getReleaseTimeStamp() : 0L)
                 .setPrice(game.getPrice().doubleValue())
                 .setVersion(game.getVersion())
                 .setDescription(game.getDescription())

@@ -324,14 +324,15 @@ public class EventConsumer {
         newGame.setGenre(event.getGenre().toString());
         newGame.setPrice(BigDecimal.valueOf(event.getPrice()));
         newGame.setVersion(event.getVersion().toString());
+        Long releaseTs = event.getReleaseTimeStamp();
+        newGame.setReleaseTimeStamp(releaseTs);
 
         if (event.getDescription() != null) {
             newGame.setDescription(event.getDescription().toString());
         }
 
-        newGame.setLastUpdated(LocalDateTime.ofInstant(
-                Instant.ofEpochMilli(event.getReleaseTimeStamp()),
-                ZoneOffset.UTC));
+        // TODO update last updated filed here
+        newGame.setLastUpdated(LocalDateTime.ofInstant(Instant.ofEpochMilli(releaseTs), ZoneOffset.UTC));
 
         gameRepository.save(newGame);
         log.info("Saved new game: {}", newGame.getTitle());
