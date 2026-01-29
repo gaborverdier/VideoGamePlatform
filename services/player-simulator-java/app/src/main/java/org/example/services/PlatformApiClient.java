@@ -65,6 +65,11 @@ public class PlatformApiClient {
         return ApiClient.get("/api/reviews/game/" + urlPath(gameId));
     }
 
+    // GET /api/dlc/game/{gameId}
+    public String getDLCsForGameJson(String gameId) throws Exception {
+        return ApiClient.get("/api/dlc/game/" + urlPath(gameId));
+    }
+
     // GET /api/wishlist/user/{userId}
     public String getUserWishlistJson(String userId) throws Exception {
         return ApiClient.get("/api/wishlist/user/" + urlPath(userId));

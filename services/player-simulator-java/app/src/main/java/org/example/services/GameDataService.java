@@ -4,17 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.example.models.Game;
+import org.example.models.Platform;
 import org.example.models.Review;
 import org.example.util.AvroJacksonConfig;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gaming.api.models.DLCModel;
 import com.gaming.api.models.GameModel;
 import com.gaming.api.models.WishlistModel;
 import com.gaming.events.GameReviewed;
 
-import javafx.application.Platform;
 import javafx.scene.control.Alert;
+
 
 public class GameDataService {
     private static GameDataService instance;
@@ -90,6 +92,18 @@ public class GameDataService {
                     // defensive: don't let logging break loading
                     System.err.println("Failed to count comments for game " + g.getId() + ": " + ex.getMessage());
                 }
+                // Populate DLCs for this game 
+                try {
+                    java.util.List<DLCModel> dlcs = getDLCsForGame(g.getId());
+                    if (dlcs != null) {
+                        for (DLCModel dm : dlcs) {
+                            // map DLCModel -> local Game.DLC (no price available from API, use 0.0)
+                            g.addDLC(dm.getTitle(), 0.0);
+                        }
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Failed to load DLCs for game " + g.getId() + ": " + ex.getMessage());
+                }
                 loaded.add(g);
             }
             this.allGames = loaded;
@@ -107,7 +121,7 @@ public class GameDataService {
     private void showError(String message, Exception e) {
         e.printStackTrace();
         try {
-            Platform.runLater(() -> {
+            javafx.application.Platform.runLater(() -> {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Data Load Error");
                 alert.setHeaderText(message);
@@ -181,6 +195,8 @@ public class GameDataService {
 
                 result.add(g);
             }
+            // Note: DLCs for games are populated in loadFromBackend and when opening OwnedGameDetailsDialog.
+            // Avoid fetching DLCs again here to prevent duplicates.
 
             // get installed flags and installed versions from local storage
             try {
@@ -244,6 +260,23 @@ public class GameDataService {
 
                 result.add(g);
             }
+            // Populate DLCs for wishlist games (best-effort)
+            try {
+                for (Game g : result) {
+                    try {
+                        java.util.List<DLCModel> dlcs = getDLCsForGame(g.getId());
+                        if (dlcs != null) {
+                            for (DLCModel dm : dlcs) {
+                                g.addDLC(dm.getTitle(), 0.0);
+                            }
+                        }
+                    } catch (Exception ignore) {
+                        System.err.println("Failed to load DLCs for wishlist game " + g.getId() + ": " + ignore.getMessage());
+                    }
+                }
+            } catch (Exception ex) {
+                // non-fatal
+            }
             return result;
         } catch (Exception e) {
             showError("Failed to load user wishlist", e);
@@ -286,5 +319,18 @@ public class GameDataService {
     public void purchaseGameForUser(String userId, String gameId) throws Exception {
         PlatformApiClient apiClient = new PlatformApiClient();
         apiClient.purchaseGame(userId, gameId);
+    }
+
+    public java.util.List<DLCModel> getDLCsForGame(String gameId) {
+        try {
+            PlatformApiClient apiClient = new PlatformApiClient();
+            String json = apiClient.getDLCsForGameJson(gameId);
+            if (json == null || json.isEmpty()) return new java.util.ArrayList<>();
+            java.util.List<DLCModel> dlcs = objectMapper.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<DLCModel>>() {});
+            return dlcs;
+        } catch (Exception e) {
+            showError("Failed to load DLCs for game", e);
+            return new java.util.ArrayList<>();
+        }
     }
 }

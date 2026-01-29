@@ -152,7 +152,10 @@ public class Game {
     }
     
     public void addDLC(String name, double price) {
-        availableDLCs.add(new DLC(name, price));
+        boolean exists = availableDLCs.stream().anyMatch(d -> d.getName().equals(name));
+        if (!exists) {
+            availableDLCs.add(new DLC(name, price));
+        }
     }
 
     public void installDLC(DLC dlc) {
