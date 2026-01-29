@@ -1,0 +1,26 @@
+meta {
+  name: CreateDLC
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8083/api/dlc/create
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "",
+    "gameId": "08f206c1-b3bf-4c4e-8ed4-6bd5bc8a4339",
+    "title": "truc bidul",
+    "releaseTimeStamp": 10000000,
+    "description": "string"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -35,12 +35,13 @@ public class GameMapper {
         return dto;
     }
 
-    public Game fromDTO(GameModel dto, com.model.Publisher publisher) {
+    public Game fromDTO(GameModel dto) {
         if (dto == null) throw new IllegalArgumentException("Le DTO ne peut pas être null");
         if (dto.getTitle() == null || dto.getTitle().isEmpty())
             throw new IllegalArgumentException("Le titre du jeu est obligatoire");
-        if (publisher == null)
-            throw new IllegalArgumentException("Le publisher est obligatoire");
+        Publisher publisher = publisherRepository.findById(dto.getPublisherId())
+            .orElseThrow(() -> new IllegalArgumentException("Le publisher avec l'ID spécifié est introuvable"));
+            
         Game game = new Game();
         game.setId(dto.getGameId());
         game.setTitle(dto.getTitle());

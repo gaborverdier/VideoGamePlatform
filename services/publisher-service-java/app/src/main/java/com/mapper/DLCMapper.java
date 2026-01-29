@@ -5,11 +5,17 @@ import com.model.DLC;
 import com.gaming.api.models.DLCModel;
 
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.repository.GameRepository;
+import com.model.Game;
+
 
 @Component
-
 public class DLCMapper {
-    public static DLCModel toDTO(DLC dlc) {
+    @Autowired
+    private GameRepository gameRepository;
+
+    public DLCModel toDTO(DLC dlc) {
         if (dlc == null) throw new IllegalArgumentException("DLC ne peut pas être null");
         DLCModel dto = new DLCModel();
         dto.setId(dlc.getId());
@@ -20,14 +26,16 @@ public class DLCMapper {
         return dto;
     }
 
-    public static DLC fromDTO(DLCModel dto, com.model.Game game) {
+    public DLC fromDTO(DLCModel dto) {
         if (dto == null) throw new IllegalArgumentException("Le DTO ne peut pas être null");
-        if (game == null) throw new IllegalArgumentException("Le jeu associé est obligatoire");
+
         DLC dlc = new DLC();
         dlc.setId(dto.getId());
         dlc.setName(dto.getTitle());
         dlc.setReleaseTimeStamp(dto.getReleaseTimeStamp());
         dlc.setDescription(dto.getDescription());
+        Game game = gameRepository.findById(dto.getGameId())
+            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + dto.getGameId()));
         dlc.setGame(game);
         return dlc;
     }

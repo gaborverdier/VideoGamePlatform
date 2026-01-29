@@ -39,12 +39,12 @@ public class PatchController {
         return ResponseEntity.ok(patchService.getPatchesByGame(gameId));
     }
 
-    @PostMapping("/game/{gameId}")
-    public ResponseEntity<PatchModel> createPatch(@PathVariable String gameId, @RequestBody PatchModel patchModel) {
-        Game game = gameRepository.findById(gameId)
-            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + gameId));
+    @PostMapping("/create")
+    public ResponseEntity<PatchModel> createPatch(@RequestBody PatchModel patchModel) {
+        Game game = gameRepository.findById(patchModel.getGameId())
+            .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + patchModel.getGameId()));
         Patch patch = patchMapper.fromDTO(patchModel, game);
-        return ResponseEntity.ok(patchService.createPatch(gameId, patch));
+        return ResponseEntity.ok(patchService.createPatch(patch));
     }
 
 }

@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,8 +24,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.gaming.api.models.GameModel;
+import com.gaming.api.models.PatchModel;
 import com.gaming.events.GameCrashReported;
-import com.gaming.events.GamePatchReleased;
 import com.gaming.events.GameUpdated;
 import com.gaming.platform.model.CrashReport;
 import com.gaming.platform.model.Game;
@@ -160,8 +161,8 @@ public class EventConsumer {
                     }
                     break;
                 case GAME_PATCH_RELEASED_TOPIC:
-                    if (record.value() instanceof GamePatchReleased) {
-                        handleGamePatchReleased((GamePatchReleased) record.value());
+                    if (record.value() instanceof PatchModel) {
+                        handleGamePatchReleased((PatchModel) record.value());
                     } else if (record.value() instanceof GenericRecord) {
                         handleGamePatchReleasedGeneric((GenericRecord) record.value());
                     }
@@ -301,33 +302,43 @@ public class EventConsumer {
                 });
     }
 
-    private void handleGamePatchReleased(GamePatchReleased event) {
-        log.info("Received GamePatchReleased event for game: {} (v{} -> v{})",
-                event.getGameTitle(), event.getPreviousVersion(), event.getNewVersion());
+    private void handleGamePatchReleased(PatchModel event) {
+        log.info("Received GamePatchReleased event for game: {} (v{})",
+                event.getGameId(), event.getVersion());
 
         String gameId = event.getGameId().toString();
         gameRepository.findById(gameId).ifPresent(game -> {
-            game.setVersion(event.getNewVersion().toString());
-            game.setLastUpdated(LocalDateTime.ofInstant(
-                    Instant.ofEpochMilli(event.getReleaseTimestamp()),
-                    ZoneOffset.UTC));
+            game.setVersion(event.getVersion().toString());
+            Long patchReleaseTs = null;
+            try {
+                patchReleaseTs = event.getReleaseTimeStamp();
+            } catch (NoSuchMethodError | RuntimeException ignore) {
+                // fallback: if the model changed, avoid crashing here
+            }
+
+            if (patchReleaseTs != null) {
+                game.setLastUpdated(LocalDateTime.ofInstant(
+                        Instant.ofEpochMilli(patchReleaseTs),
+                        ZoneOffset.UTC));
+            } else {
+                game.setLastUpdated(LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
+            }
 
             gameRepository.save(game);
             log.info("Updated game {} to version {}",
-                    game.getTitle(), event.getNewVersion());
-
-            if (event.getPatchNotes() != null) {
-                log.info("Patch notes: {}", event.getPatchNotes());
-            }
+                    game.getTitle(), event.getVersion());
         });
 
         // send notification to users about the patch
         // get list of users who have this game in library
         libraryService.getUsersWithGameInLibrary(gameId).forEach(userId -> {
+            System.out.println("Notifying user " + userId + " about patch for game " + gameId);
             String description = String.format("New patch released for %s: version %s",
-                    event.getGameTitle(), event.getNewVersion());
+                    event.getGameId(), event.getVersion());
             notificationsService.createNotification(userId, description);
         });
+
+        log.info("Processed patch release notifications for game: {}", event.getGameId());
 
 
 
@@ -346,6 +357,11 @@ public class EventConsumer {
         newGame.setVersion(event.getVersion().toString());
         Long releaseTs = event.getReleaseTimeStamp();
         newGame.setReleaseTimeStamp(releaseTs);
+
+
+        log.info(event.getGameId());
+        log.info(newGame.getGameId());
+
 
         if (event.getDescription() != null) {
             newGame.setDescription(event.getDescription().toString());
