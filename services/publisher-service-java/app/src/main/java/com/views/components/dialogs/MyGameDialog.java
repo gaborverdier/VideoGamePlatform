@@ -8,7 +8,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import com.model.Game;
-import com.model.Crash;
+import com.model.CrashAggregation;
 import com.model.Patch;
 import com.model.DLC;
 import com.model.Review;
@@ -71,20 +71,20 @@ public class MyGameDialog {
         // Crash reports tab
         VBox crashesBox = new VBox(8);
         crashesBox.setPadding(new Insets(12));
-        List<Crash> gameCrashes = notificationsTab != null ? notificationsTab.getCrashReports().stream()
+        List<CrashAggregation> gameCrashes = notificationsTab != null ? notificationsTab.getCrashReports().stream()
             .filter(c -> c.getGame() != null && c.getGame().getTitle() != null && c.getGame().getTitle().equals(game.getTitle()))
             .collect(Collectors.toList()) : List.of();
 
         if (gameCrashes.isEmpty()) {
             crashesBox.getChildren().add(new Label("Aucun rapport de crash pour ce jeu."));
         } else {
-            for (Crash c : gameCrashes) {
+            for (CrashAggregation c : gameCrashes) {
                 VBox card = new VBox(6);
                 card.setPadding(new Insets(8));
                 card.setStyle("-fx-background-color:#4a2a2a; -fx-background-radius:4; -fx-border-color:#FF6B6B; -fx-border-width:1;");
-                Label date = new Label(c.getCrashTimeStamp().toString());
+                Label date = new Label(new java.util.Date(c.getTimestamp()).toString());
                 date.setStyle("-fx-text-fill:#999; -fx-font-size:11px;");
-                Label desc = new Label(c.getErrorMessage());
+                Label desc = new Label("Crashes: " + c.getCrashCount() + " dans les dernières 5 minutes");
                 desc.setStyle("-fx-text-fill:#ffb3b3; -fx-wrap-text: true;");
                 desc.setWrapText(true);
                 card.getChildren().addAll(date, desc);

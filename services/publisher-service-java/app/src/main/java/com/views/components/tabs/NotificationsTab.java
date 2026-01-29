@@ -4,7 +4,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import com.model.Crash;
+
+import com.model.CrashAggregation;
 import com.model.Game;
 import com.model.Review;
 
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 public class NotificationsTab extends ScrollPane {
 
     private VBox notificationsList;
-    private List<Crash> crashReports;
+    private List<CrashAggregation> crashReports;
     private List<Review> reviews;
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -42,21 +43,33 @@ public class NotificationsTab extends ScrollPane {
     private void addSampleData() {
         // Crash reports - données de test
         Game game1 = new Game();
+        game1.setId("game_123");
         game1.setTitle("The Last Shadow");
         
-        Crash crash1 = new Crash();
-        crash1.setGame(game1);
-        crash1.setErrorMessage("NullPointerException in GameEngine.update()");
-        crash1.setCrashTimeStamp(System.currentTimeMillis());
+        CrashAggregation crash1 = CrashAggregation.builder()
+                .id("crash_1")
+                .gameId(game1.getId())
+                .crashCount(15L)
+                .timestamp(System.currentTimeMillis())
+                .windowStart(System.currentTimeMillis() - 300000)
+                .windowEnd(System.currentTimeMillis())
+                .game(game1)
+                .build();
         crashReports.add(crash1);
 
         Game game2 = new Game();
+        game2.setId("game_456");
         game2.setTitle("Quest Master");
         
-        Crash crash2 = new Crash();
-        crash2.setGame(game2);
-        crash2.setErrorMessage("OutOfMemoryException");
-        crash2.setCrashTimeStamp(System.currentTimeMillis());
+        CrashAggregation crash2 = CrashAggregation.builder()
+                .id("crash_2")
+                .gameId(game2.getId())
+                .crashCount(8L)
+                .timestamp(System.currentTimeMillis())
+                .windowStart(System.currentTimeMillis() - 300000)
+                .windowEnd(System.currentTimeMillis())
+                .game(game2)
+                .build();
         crashReports.add(crash2);
 
         // Reviews
@@ -114,7 +127,7 @@ public class NotificationsTab extends ScrollPane {
             crashTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #FF6B6B;");
             notificationsList.getChildren().add(crashTitle);
 
-            for (Crash crash : crashReports) {
+            for (CrashAggregation crash : crashReports) {
                 VBox crashCard = createCrashReportCard(crash);
                 notificationsList.getChildren().add(crashCard);
             }
@@ -146,7 +159,7 @@ public class NotificationsTab extends ScrollPane {
         }
     }
 
-    private VBox createCrashReportCard(Crash crash) {
+    private VBox createCrashReportCard(CrashAggregation crash) {
         VBox card = new VBox(8);
         card.setPadding(new Insets(12));
         card.setStyle("-fx-background-color: #4a2a2a; -fx-background-radius: 5; -fx-border-color: #FF6B6B; -fx-border-width: 2;");
@@ -154,15 +167,15 @@ public class NotificationsTab extends ScrollPane {
         HBox headerBox = new HBox(10);
         headerBox.setAlignment(Pos.TOP_LEFT);
 
-        Label gameLabel = new Label(crash.getGame().getTitle());
+        Label gameLabel = new Label(crash.getGame() != null ? crash.getGame().getTitle() : crash.getGameId());
         gameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #FF6B6B;");
 
-        Label dateLabel = new Label(crash.getCrashTimeStamp().toString());
+        Label dateLabel = new Label(new java.util.Date(crash.getTimestamp()).toString());
         dateLabel.setStyle("-fx-text-fill: #999; -fx-font-size: 11px;");
 
         headerBox.getChildren().addAll(gameLabel, dateLabel);
 
-        Label errorLabel = new Label("Erreur: " + crash.getErrorMessage());
+        Label errorLabel = new Label("Crashes: " + crash.getCrashCount() + " (window: 5 min)");
         errorLabel.setStyle("-fx-text-fill: #ff9999; -fx-font-size: 12px; -fx-wrap-text: true;");
         errorLabel.setWrapText(true);
 
@@ -202,12 +215,12 @@ public class NotificationsTab extends ScrollPane {
         return card;
     }
 
-    public void addCrashReport(Crash crash) {
+    public void addCrashReport(CrashAggregation crash) {
         crashReports.add(crash);
         updateView();
     }
 
-    public List<Crash> getCrashReports() {
+    public List<CrashAggregation> getCrashReports() {
         return crashReports;
     }
 

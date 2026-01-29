@@ -1,7 +1,6 @@
 package com.controller;
 
-import com.gaming.api.models.CrashModel;
-import com.mapper.CrashMapper;
+import com.model.CrashAggregation;
 import com.service.CrashService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,43 +10,28 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
-import com.model.Crash;
-
-
 @RestController
-@RequestMapping("api/crash")
+@RequestMapping("api/crash-aggregations")
 public class CrashController {
+    
     @Autowired
     private CrashService crashService;
-    @Autowired
-    private CrashMapper crashMapper;
-
 
     @GetMapping
-    public ResponseEntity<List<CrashModel>> getAllCrashes() {
-        List<CrashModel> crashes = crashMapper.toDTOList(crashService.getAllCrashes());
-        return ResponseEntity.ok(crashes);
+    public ResponseEntity<List<CrashAggregation>> getAllCrashAggregations() {
+        return ResponseEntity.ok(crashService.getAllCrashes());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CrashModel> getCrashById(@PathVariable String id) {
-        Optional<Crash> crash = crashService.getCrashById(id);
-        if (crash.isPresent()) {
-            return ResponseEntity.ok(crashMapper.toDTO(crash.get()));
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<CrashAggregation> getCrashAggregationById(@PathVariable String id) {
+        Optional<CrashAggregation> crash = crashService.getCrashById(id);
+        return crash.map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/game/{gameId}")
-    public ResponseEntity<List<CrashModel>> getCrashesByGame(@PathVariable String gameId) {
-        List<Crash> crashes = crashService.getCrashesByGame(gameId);
-        return ResponseEntity.ok(crashMapper.toDTOList(crashes));
-    }
-
-    @PostMapping("/report")
-    public ResponseEntity<CrashModel> createCrash(@RequestBody CrashModel event) {
-        Crash crash = crashService.createCrash(crashMapper.fromDTO(event));
-        return ResponseEntity.ok(crashMapper.toDTO(crash));
+    public ResponseEntity<List<CrashAggregation>> getCrashAggregationsByGame(@PathVariable String gameId) {
+        List<CrashAggregation> crashes = crashService.getCrashesByGame(gameId);
+        return ResponseEntity.ok(crashes);
     }
 }

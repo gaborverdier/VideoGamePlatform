@@ -25,7 +25,7 @@ class CrashAggregationTopology {
     
     fun build(builder: StreamsBuilder) {
         val crashSerde: SpecificAvroSerde<GameCrashReported> = KafkaStreamsConfig.createAvroSerde()
-        val statsSerde: SpecificAvroSerde<GameCrashStats> = KafkaStreamsConfig.createAvroSerde()
+        val crashAggregatedSerde: SpecificAvroSerde<CrashAggregation> = KafkaStreamsConfig.createAvroSerde()
         
         // 1. Read crash events from Kafka
         val crashStream: KStream<String, GameCrashReported> = builder.stream(
@@ -47,10 +47,10 @@ class CrashAggregationTopology {
             // Utiliser count() qui est optimisé pour les agrégations simples
             .count()
         
-        // 3. Transformer en GameCrashStats
-        val crashStats: KTable<Windowed<String>, GameCrashStats> = crashCounts
+        // 3. Transformer en CrashAggregation
+        val crashAggregation: KTable<Windowed<String>, CrashAggregation> = crashCounts
             .mapValues { windowedKey, count ->
-                GameCrashStats.newBuilder()
+                CrashAggregation.newBuilder()
                     .setGameId(windowedKey.key())
                     .setWindowStart(windowedKey.window().start())
                     .setWindowEnd(windowedKey.window().end())
@@ -62,10 +62,10 @@ class CrashAggregationTopology {
             }
         
         // 4. Write to output topic
-        crashStats
+        crashAggregation
             .toStream()
             .selectKey { windowedKey, _ -> windowedKey.key() }
-            .to(OUTPUT_TOPIC, Produced.with(Serdes.String(), statsSerde))
+            .to(OUTPUT_TOPIC, Produced.with(Serdes.String(), crashAggregatedSerde))
         
         println("✅ Crash Aggregation Topology built")
         println("   📥 Input: $INPUT_TOPIC")
