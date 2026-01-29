@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 public class Game {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String gameId;
 
     @Column(nullable = false)

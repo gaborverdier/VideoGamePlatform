@@ -48,7 +48,19 @@ public class LibraryService {
     }
 
     public List<String> getUsersWithGameInLibrary(String gameId) {
-        return libraryRepository.findByGameId(gameId).stream()
+        if (gameId == null) {
+            log.warn("getUsersWithGameInLibrary called with null gameId");
+            return List.of();
+        }
+
+        String normalized = gameId.trim();
+        List<Library> libs = libraryRepository.findByGameId(normalized);
+        log.info("getUsersWithGameInLibrary: gameId='{}' normalized='{}' found={} entries", gameId, normalized, libs == null ? 0 : libs.size());
+        if (libs == null || libs.isEmpty()) {
+            return List.of();
+        }
+
+        return libs.stream()
                 .map(Library::getUserId)
                 .distinct()
                 .collect(Collectors.toList());
