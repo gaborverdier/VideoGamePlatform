@@ -4,13 +4,10 @@ import com.gaming.api.models.GameModel;
 import com.gaming.api.requests.GameReleased;
 import com.mapper.GameMapper;
 import com.model.Game;
-import com.model.Publisher;
-import com.repository.PublisherRepository;
 import com.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.Optional;
 
 import java.util.List;
 
@@ -21,8 +18,6 @@ public class GameController {
     private GameService gameService;
     @Autowired
     private GameMapper gameMapper;
-    @Autowired
-    private PublisherRepository publisherRepository;
 
     @GetMapping
     public ResponseEntity<List<GameModel>> getAllGames() {
