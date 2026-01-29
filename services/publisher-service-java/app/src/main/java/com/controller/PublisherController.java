@@ -6,10 +6,13 @@ import com.gaming.api.requests.PublisherAuth;
 import com.mapper.PublisherMapper;
 import com.model.Publisher;
 import com.service.PublisherService;
+import java.util.Optional;
 
 import io.micrometer.core.ipc.http.HttpSender.Response;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,7 +39,7 @@ public class PublisherController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/auth")
+    @PostMapping("/auth")
     public ResponseEntity<PublisherModel> authenticatePublisher(@RequestBody PublisherAuth auth) {
         Publisher pub = publisherMapper.fromPublisherAuth(auth);
         return publisherService.authenticatePublisher(pub)
@@ -45,9 +48,18 @@ public class PublisherController {
     }
 
     @PostMapping
-    public ResponseEntity<PublisherModel> createPublisher(@RequestBody NewPublisherRequest publisherModel) {
+    public ResponseEntity<?> createPublisher(@RequestBody NewPublisherRequest publisherModel) {
         Publisher publisher = publisherMapper.fromNewPublisherRequest(publisherModel);
-        return ResponseEntity.ok(publisherService.createPublisher(publisher));
+        if (publisher == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Optional<PublisherModel> newPublisher = publisherService.createPublisher(publisher);
+        if (!newPublisher.isPresent()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Un publisher existe déjà avec ce mail");
+        } else {
+            return ResponseEntity.ok(newPublisher.get());
+        }
     }
 
     @PutMapping("/{id}")
@@ -56,6 +68,4 @@ public class PublisherController {
         publisher.setId(id);
         return ResponseEntity.ok(publisherService.updatePublisher(id, publisher));
     }
-
-    //TODO : Verif authentification
 }

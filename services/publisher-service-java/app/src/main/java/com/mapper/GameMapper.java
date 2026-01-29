@@ -2,11 +2,19 @@ package com.mapper;
 
 import com.model.Game;
 import com.gaming.api.models.GameModel;
+import com.gaming.api.requests.GameReleased;
+import com.model.Publisher;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import com.repository.PublisherRepository;
 
 import org.springframework.stereotype.Component;
 
 @Component
 public class GameMapper {
+    @Autowired
+    private PublisherRepository publisherRepository;
+
     public GameModel toDTO(Game game) {
         if (game == null) throw new IllegalArgumentException("Le jeu ne peut pas être null");
         if (game.getId() == null)
@@ -42,6 +50,26 @@ public class GameMapper {
         game.setPrice(dto.getPrice());
         game.setVersion(dto.getVersion());
         game.setPublisher(publisher);
+        return game;
+    }
+
+    public Game fromReleaseModel(GameReleased releaseModel) {
+        if (releaseModel == null) throw new IllegalArgumentException("Le modèle de sortie ne peut pas être null");
+        if (releaseModel.getTitle() == null || releaseModel.getTitle().isEmpty())
+            throw new IllegalArgumentException("Le titre du jeu est obligatoire");
+        Publisher publisher = publisherRepository.findById(releaseModel.getPublisherId())
+            .orElseThrow(() -> new IllegalArgumentException("Le publisher avec l'ID spécifié est introuvable"));
+        Game game = new Game();
+        game.setTitle(releaseModel.getTitle());
+        game.setGenre(releaseModel.getGenre());
+        game.setPlatform(releaseModel.getPlatform());
+        game.setReleaseTimeStamp(releaseModel.getReleaseTimeStamp());
+        game.setPrice(releaseModel.getPrice());
+        game.setVersion(releaseModel.getVersion());
+        game.setPublisher(publisher);
+        if (releaseModel.getDescription() != null) {
+            game.setDescription(releaseModel.getDescription());
+        }
         return game;
     }
 }

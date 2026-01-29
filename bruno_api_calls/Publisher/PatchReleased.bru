@@ -1,0 +1,26 @@
+meta {
+  name: PatchReleased
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8083/api/patch/game/8d0363e1-fe67-4f57-a300-45184692e3fe
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id" : "",
+    "gameId" : "8d0363e1-fe67-4f57-a300-45184692e3fe",
+      "version" : "2.0",
+      "releaseTimeStamp": 100000000,
+      "description": "string"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -8,6 +8,12 @@ import com.model.Game;
 import com.model.Patch;
 import com.model.DLC;
 import com.views.components.dialogs.*;
+import com.gaming.api.models.PublisherModel;
+import com.gaming.api.requests.GameReleased;
+import com.gaming.api.models.GameModel;
+import com.util.ApiClient;
+import com.util.AvroJacksonConfig;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +24,10 @@ public class MyGamesTab extends ScrollPane {
     private List<Game> publishedGames;
     private Runnable onUpdate;
     private NotificationsTab notificationsTab;
+    private PublisherModel currentPublisher;
 
-    public MyGamesTab(NotificationsTab notificationsTab, Runnable onUpdate) {
+    public MyGamesTab(PublisherModel currentPublisher, NotificationsTab notificationsTab, Runnable onUpdate) {
+        this.currentPublisher = currentPublisher;
         this.publishedGames = new ArrayList<>();
         this.onUpdate = onUpdate;
         this.notificationsTab = notificationsTab;
@@ -30,32 +38,8 @@ public class MyGamesTab extends ScrollPane {
         gameGrid.setPadding(new Insets(20));
         gameGrid.setStyle("-fx-background-color: #2b2b2b;");
 
-        // Bouton pour publier un jeu
-        VBox publishContainer = new VBox();
-        publishContainer.setPadding(new Insets(20));
-        
-        Button publishGameButton = new Button("Publier un jeu");
-        publishGameButton.setPrefWidth(350);
-        publishGameButton.setPrefHeight(180);
-        publishGameButton.setStyle("-fx-font-size: 14px; -fx-padding: 10px;");
-        publishGameButton.setOnAction(e -> {
-            PublishGameDialog.PublishedGameData data = PublishGameDialog.show();
-            if (data != null) {
-                Game game = new Game();
-                game.setTitle(data.name);
-                game.setPlatform(data.platform);
-                game.setGenre(String.join(", ", data.genres));
-                // initialize relational lists so UI can append to them
-                game.setCrashes(new java.util.ArrayList<>());
-                game.setPatches(new java.util.ArrayList<>());
-                game.setDlcs(new java.util.ArrayList<>());
-                publishedGames.add(game);
-                updateView();
-                if (onUpdate != null) onUpdate.run();
-            }
-        });
-        
-        gameGrid.getChildren().add(publishGameButton);
+        // Charger les jeux depuis l'API
+        loadGamesFromApi();
         
         updateView();
 
@@ -65,21 +49,26 @@ public class MyGamesTab extends ScrollPane {
     }
 
     private void updateView() {
-        if (publishedGames.isEmpty() && gameGrid.getChildren().size() <= 1) {
-            Label emptyLabel = new Label("Aucun jeu publié pour le moment.\nCliquez sur 'Publier un jeu' pour commencer!");
-            emptyLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #aaa;");
-            emptyLabel.setAlignment(Pos.CENTER);
-        } else {
-            // Garder le bouton de publication
-            while (gameGrid.getChildren().size() > publishedGames.size() + 1) {
-                gameGrid.getChildren().remove(1);
+        // Vider toutes les cartes de jeux (garder seulement le bouton de publication à l'index 0)
+        gameGrid.getChildren().clear();
+        
+        // Rajouter le bouton de publication
+        Button publishGameButton = new Button("Publier un jeu");
+        publishGameButton.setPrefWidth(350);
+        publishGameButton.setPrefHeight(180);
+        publishGameButton.setStyle("-fx-font-size: 14px; -fx-padding: 10px;");
+        publishGameButton.setOnAction(e -> {
+            PublishGameDialog.PublishedGameData data = PublishGameDialog.show();
+            if (data != null) {
+                publishGameToApi(data);
             }
-            
-            for (int i = gameGrid.getChildren().size() - 1; i < publishedGames.size(); i++) {
-                Game game = publishedGames.get(i);
-                VBox gameCard = createGameCard(game);
-                gameGrid.getChildren().add(gameCard);
-            }
+        });
+        gameGrid.getChildren().add(publishGameButton);
+        
+        // Ajouter toutes les cartes de jeux
+        for (Game game : publishedGames) {
+            VBox gameCard = createGameCard(game);
+            gameGrid.getChildren().add(gameCard);
         }
     }
 
@@ -191,5 +180,74 @@ public class MyGamesTab extends ScrollPane {
 
     public List<Game> getPublishedGames() {
         return publishedGames;
+    }
+
+    private void loadGamesFromApi() {
+        try {
+            String responseJson = ApiClient.get("/api/games/publisher/"+currentPublisher.getId());
+            List<GameModel> gameModels = AvroJacksonConfig.avroObjectMapper()
+                .readValue(responseJson, new TypeReference<List<GameModel>>() {});
+            
+            publishedGames.clear();
+            for (GameModel gameModel : gameModels) {
+                Game game = new Game();
+                game.setId(gameModel.getGameId());
+                game.setTitle(gameModel.getTitle());
+                game.setPlatform(gameModel.getPlatform());
+                game.setGenre(gameModel.getGenre());
+                game.setReleaseTimeStamp(gameModel.getReleaseTimeStamp());
+                game.setPrice(gameModel.getPrice());
+                game.setVersion(gameModel.getVersion());
+                // initialize relational lists
+                game.setCrashes(new ArrayList<>());
+                game.setPatches(new ArrayList<>());
+                game.setDlcs(new ArrayList<>());
+                publishedGames.add(game);
+            }
+            updateView();
+        } catch (Exception ex) {
+            System.out.println("[LOAD GAMES] Error loading games from API:");
+            ex.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erreur");
+            alert.setContentText("Erreur lors du chargement des jeux: " + ex.getMessage());
+            alert.showAndWait();
+        }
+    }
+
+    private void publishGameToApi(PublishGameDialog.PublishedGameData data) {
+        try {
+            GameReleased gameModel = GameReleased.newBuilder()
+                .setTitle(data.name)
+                .setPublisherName(currentPublisher.getName())
+                .setPublisherId(currentPublisher.getId())
+                .setPlatform(data.platform)
+                .setGenre(String.join(", ", data.genres))
+                .setReleaseTimeStamp(System.currentTimeMillis())
+                .setPrice(20.0) // Default price, could be added to dialog
+                .setVersion("1.0") // Default version
+                .setDescription(null)
+                .build();
+            
+            String json = AvroJacksonConfig.avroObjectMapper().writeValueAsString(gameModel);
+            String responseJson = ApiClient.postJson("/api/games/publish", json);
+            
+            // Recharger tous les jeux après publication
+            loadGamesFromApi();
+            
+            if (onUpdate != null) onUpdate.run();
+            
+            Alert success = new Alert(Alert.AlertType.INFORMATION);
+            success.setTitle("Succès");
+            success.setContentText("Jeu publié avec succès!");
+            success.showAndWait();
+        } catch (Exception ex) {
+            System.out.println("[PUBLISH GAME] Error publishing game:");
+            ex.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erreur");
+            alert.setContentText("Erreur lors de la publication du jeu: " + ex.getMessage());
+            alert.showAndWait();
+        }
     }
 }

@@ -29,9 +29,13 @@ public class PublisherService {
             .map(publisherMapper::toDTO);
     }
 
-    public PublisherModel createPublisher(Publisher publisher) {
+    public Optional<PublisherModel> createPublisher(Publisher publisher) {
+        Optional<Publisher> existing = publisherRepository.findByEmail(publisher.getEmail());
+        if (existing.isPresent()) {
+            return Optional.empty();
+        }
         Publisher saved = publisherRepository.save(publisher);
-        return publisherMapper.toDTO(saved);
+        return Optional.of(publisherMapper.toDTO(saved));
     }
 
     public PublisherModel updatePublisher(String id, Publisher publisherDetails) {

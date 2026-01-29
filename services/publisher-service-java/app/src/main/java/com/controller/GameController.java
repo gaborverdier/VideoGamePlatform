@@ -1,6 +1,7 @@
 package com.controller;
 
 import com.gaming.api.models.GameModel;
+import com.gaming.api.requests.GameReleased;
 import com.mapper.GameMapper;
 import com.model.Game;
 import com.model.Publisher;
@@ -41,12 +42,12 @@ public class GameController {
     }
 
     @PostMapping("/publish")
-    public ResponseEntity<GameModel> createGame(@RequestBody GameModel gameModel) {
+    public ResponseEntity<GameModel> createGame(@RequestBody GameReleased gameModel) {
         Optional<Publisher> publisher = publisherRepository.findById(gameModel.getPublisherId());
         if (!publisher.isPresent()) {
             return ResponseEntity.badRequest().build();
         }
-        Game game = gameMapper.fromDTO(gameModel, publisher.get());
+        Game game = gameMapper.fromReleaseModel(gameModel);
         return ResponseEntity.ok(gameService.createGame(gameModel.getPublisherId(), game));
     }
 
