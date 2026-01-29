@@ -30,6 +30,8 @@ import com.gaming.platform.model.CrashReport;
 import com.gaming.platform.model.Game;
 import com.gaming.platform.repository.GameRepository;
 import com.gaming.platform.service.CrashReportService;
+import com.gaming.platform.service.LibraryService;
+import com.gaming.platform.service.NotificationsService;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +46,9 @@ public class EventConsumer {
     private final ExecutorService executorService;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
+    private final NotificationsService notificationsService;
+    private final LibraryService libraryService;
+    
     private KafkaConsumer<String, Object> consumer;
 
     private static final String GAME_CRASH_REPORTED = "game-crash-reported";
@@ -53,10 +58,14 @@ public class EventConsumer {
 
     public EventConsumer(@Qualifier("consumerProperties") Properties consumerProperties,
             GameRepository gameRepository,
-            CrashReportService crashReportService) {
+            CrashReportService crashReportService,
+            LibraryService libraryService,
+            NotificationsService notificationsService) {
         this.consumerProperties = consumerProperties;
         this.gameRepository = gameRepository;
         this.crashReportService = crashReportService;
+        this.libraryService = libraryService;
+        this.notificationsService = notificationsService;
         this.executorService = Executors.newSingleThreadExecutor();
     }
 
@@ -311,6 +320,17 @@ public class EventConsumer {
                 log.info("Patch notes: {}", event.getPatchNotes());
             }
         });
+
+        // send notification to users about the patch
+        // get list of users who have this game in library
+        libraryService.getUsersWithGameInLibrary(gameId).forEach(userId -> {
+            String description = String.format("New patch released for %s: version %s",
+                    event.getGameTitle(), event.getNewVersion());
+            notificationsService.createNotification(userId, description);
+        });
+
+
+
     }
 
     private void handleGameReleased(GameModel event) {
@@ -331,8 +351,7 @@ public class EventConsumer {
             newGame.setDescription(event.getDescription().toString());
         }
 
-        // TODO update last updated filed here
-        newGame.setLastUpdated(LocalDateTime.ofInstant(Instant.ofEpochMilli(releaseTs), ZoneOffset.UTC));
+       newGame.setLastUpdated(LocalDateTime.ofInstant(Instant.ofEpochMilli(releaseTs), ZoneOffset.UTC));
 
         gameRepository.save(newGame);
         log.info("Saved new game: {}", newGame.getTitle());

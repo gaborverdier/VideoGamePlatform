@@ -32,6 +32,9 @@ public class Game {
     private List<String> installedUpdates = new ArrayList<>();
     private List<DLC> availableDLCs = new ArrayList<>();
     private List<Review> reviews = new ArrayList<>();
+    // Version info
+    private String version; // backend/latest version
+    private String installedVersion; // locally installed version
     
     // Constructeur complet
     public Game(String id, String name, double price, String genre, String publisherId, String publisherName,
@@ -183,6 +186,12 @@ public class Game {
         }
         return String.format("%.2f€", price);
     }
+
+    public String getVersion() { return version; }
+    public void setVersion(String version) { this.version = version; }
+
+    public String getInstalledVersion() { return installedVersion; }
+    public void setInstalledVersion(String installedVersion) { this.installedVersion = installedVersion; }
     
     @Override
     public String toString() {
@@ -254,5 +263,18 @@ public class Game {
             0, // playtime not present in Avro
             null // supportedPlatforms not present in Avro
         );
+    }
+
+    // Try to extract version from Avro model if present
+    public static Game fromAvroModelWithVersion(GameModel avro) {
+        Game g = fromAvroModel(avro);
+        try {
+            java.lang.reflect.Method m = avro.getClass().getMethod("getVersion");
+            if (m != null) {
+                Object v = m.invoke(avro);
+                if (v != null) g.setVersion(String.valueOf(v));
+            }
+        } catch (Exception ignore) {}
+        return g;
     }
 }

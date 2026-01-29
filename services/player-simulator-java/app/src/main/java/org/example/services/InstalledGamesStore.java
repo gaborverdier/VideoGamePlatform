@@ -18,7 +18,7 @@ public class InstalledGamesStore {
     private static InstalledGamesStore instance;
     private final ObjectMapper mapper = new ObjectMapper();
     private final Path storagePath;
-    private Map<String, Set<String>> installedByUser = new HashMap<>();
+    private Map<String, Map<String, String>> installedByUser = new HashMap<>();
 
     private InstalledGamesStore() {
         String home = System.getProperty("user.home");
@@ -29,7 +29,7 @@ public class InstalledGamesStore {
             if (Files.exists(storagePath)) {
                 byte[] bytes = Files.readAllBytes(storagePath);
                 if (bytes.length > 0) {
-                    installedByUser = mapper.readValue(bytes, new TypeReference<Map<String, Set<String>>>(){});
+                    installedByUser = mapper.readValue(bytes, new TypeReference<Map<String, Map<String, String>>>(){});
                 }
             }
         } catch (Exception e) {
@@ -46,25 +46,34 @@ public class InstalledGamesStore {
 
     public synchronized Set<String> getInstalledForUser(String userId) {
         if (userId == null) return Collections.emptySet();
-        return new HashSet<>(installedByUser.getOrDefault(userId, Collections.emptySet()));
+        return new HashSet<>(installedByUser.getOrDefault(userId, Collections.emptyMap()).keySet());
+    }
+
+    public synchronized Map<String, String> getInstalledWithVersions(String userId) {
+        if (userId == null) return Collections.emptyMap();
+        return new HashMap<>(installedByUser.getOrDefault(userId, Collections.emptyMap()));
     }
 
     public synchronized boolean isInstalled(String userId, String gameId) {
         if (userId == null || gameId == null) return false;
-        return installedByUser.getOrDefault(userId, Collections.emptySet()).contains(gameId);
+        return installedByUser.getOrDefault(userId, Collections.emptyMap()).containsKey(gameId);
     }
 
     public synchronized void markInstalled(String userId, String gameId) {
+        markInstalled(userId, gameId, null);
+    }
+
+    public synchronized void markInstalled(String userId, String gameId, String version) {
         if (userId == null || gameId == null) return;
-        installedByUser.computeIfAbsent(userId, k -> new HashSet<>()).add(gameId);
+        installedByUser.computeIfAbsent(userId, k -> new HashMap<>()).put(gameId, version);
         persist();
     }
 
     public synchronized void markUninstalled(String userId, String gameId) {
         if (userId == null || gameId == null) return;
-        Set<String> set = installedByUser.get(userId);
-        if (set != null) {
-            set.remove(gameId);
+        Map<String, String> map = installedByUser.get(userId);
+        if (map != null) {
+            map.remove(gameId);
             persist();
         }
     }
