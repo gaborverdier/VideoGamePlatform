@@ -84,4 +84,34 @@ public class PlatformApiClient {
     public String deleteUserWishlistEntry(String userId, String gameId) throws Exception {
         return ApiClient.delete("/api/wishlist/user/" + urlPath(userId) + "/game/" + urlPath(gameId));
     }
+
+    // POST /api/session/new
+    public String postSessionJson(String jsonBody) throws Exception {
+        return ApiClient.postJson("/api/session/new", jsonBody);
+    }
+
+    // GET /api/session/game/{gameId}/total?from=...&to=...
+    public long getTotalPlayedForGame(String gameId, long fromInclusive, long toInclusive) throws Exception {
+        String s = ApiClient.get("/api/session/game/" + urlPath(gameId) + "/total?from=" + fromInclusive + "&to=" + toInclusive);
+        if (s == null || s.isEmpty()) return 0L;
+        try {
+            return Long.parseLong(s.trim());
+        } catch (NumberFormatException ex) {
+            // sometimes server may return JSON number; try to parse as JSON
+            com.fasterxml.jackson.databind.ObjectMapper m = new com.fasterxml.jackson.databind.ObjectMapper();
+            return m.readValue(s, Long.class);
+        }
+    }
+
+    // convenience: total played for a game across all time
+    public long getTotalPlayedForGameAllTime(String gameId) throws Exception {
+        String s = ApiClient.get("/api/session/game/" + urlPath(gameId) + "/total/all");
+        if (s == null || s.isEmpty()) return 0L;
+        try {
+            return Long.parseLong(s.trim());
+        } catch (NumberFormatException ex) {
+            com.fasterxml.jackson.databind.ObjectMapper m = new com.fasterxml.jackson.databind.ObjectMapper();
+            return m.readValue(s, Long.class);
+        }
+    }
 }

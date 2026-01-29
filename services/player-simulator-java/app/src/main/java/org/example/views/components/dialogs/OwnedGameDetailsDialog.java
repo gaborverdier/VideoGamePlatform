@@ -3,6 +3,7 @@ package org.example.views.components.dialogs;
 import org.example.models.Game;
 import org.example.services.SessionManager;
 import org.example.services.GameDataService;
+import org.example.services.PlatformApiClient;
 import com.gaming.api.models.DLCModel;
 
 import javafx.geometry.Insets;
@@ -61,6 +62,20 @@ public class OwnedGameDetailsDialog {
         
         Label timeLabel = new Label("Temps de jeu: " + game.getPlayedTime() + " min");
         timeLabel.setStyle("-fx-text-fill: #aaa;");
+
+        // Fetch total playtime from platform server (non-blocking)
+        new Thread(() -> {
+            try {
+                PlatformApiClient api = new PlatformApiClient();
+                long totalMs = api.getTotalPlayedForGameAllTime(game.getId());
+                long totalMin = totalMs / 60_000L;
+                javafx.application.Platform.runLater(() -> {
+                    timeLabel.setText("Temps total de jeu: " + totalMin + " min ");
+                });
+            } catch (Exception ex) {
+                // best-effort: ignore failures
+            }
+        }).start();
         
         Label backendVerLabel = new Label("Version serveur: " + (game.getVersion() != null ? game.getVersion() : "N/A"));
         backendVerLabel.setStyle("-fx-text-fill: #aaa;");

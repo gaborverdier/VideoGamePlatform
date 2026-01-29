@@ -2,6 +2,8 @@ package org.example.views.components.dialogs;
 
 import org.example.controllers.PlayerDashboardController;
 import org.example.models.Game;
+import org.example.services.PlatformApiClient;
+import org.example.services.SessionManager;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -41,8 +43,11 @@ public class GamePlayDialog {
         
         Button minusBtn = new Button("- 10 min");
         minusBtn.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white;");
+        // track session delta separately to send to server on close
+        final int[] sessionMinutes = new int[] {0};
         minusBtn.setOnAction(e -> {
             game.addPlayedTime(-10);
+            sessionMinutes[0] -= 10;
             timeLabel.setText("Temps de jeu: " + game.getPlayedTime() + " min");
         });
         
@@ -50,6 +55,7 @@ public class GamePlayDialog {
         plusBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
         plusBtn.setOnAction(e -> {
             game.addPlayedTime(10);
+            sessionMinutes[0] += 10;
             timeLabel.setText("Temps de jeu: " + game.getPlayedTime() + " min");
         });
         
@@ -87,7 +93,28 @@ public class GamePlayDialog {
         
         Button quitBtn = new Button("Quitter le jeu");
         quitBtn.setStyle("-fx-background-color: #555; -fx-text-fill: white;");
+        long sessionStart = System.currentTimeMillis();
         quitBtn.setOnAction(e -> {
+            // send session to platform server (non-blocking)
+            new Thread(() -> {
+                try {
+                    String userId = SessionManager.getInstance().getCurrentPlayer() != null ? SessionManager.getInstance().getCurrentPlayer().getId() : null;
+                    if (userId != null && sessionMinutes[0] != 0) {
+                        long timePlayedMs = (long) sessionMinutes[0] * 60_000L;
+                        String json = String.format("{\"gameId\":\"%s\",\"userId\":\"%s\",\"startTimestamp\":%d,\"timePlayed\":%d}",
+                                game.getId(), userId, sessionStart, timePlayedMs);
+                        PlatformApiClient api = new PlatformApiClient();
+                        try {
+                            api.postSessionJson(json);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }).start();
+
             if (onUpdate != null) onUpdate.run();
             dialog.close();
         });
