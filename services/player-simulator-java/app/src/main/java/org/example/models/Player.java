@@ -63,22 +63,14 @@ public class Player {
         } catch (Exception ignore) {}
     }
     
-    // Acheter un jeu sur une plateforme donnée
-    public PurchaseResult purchaseGame(Game game, Platform platform) {
-        if (game == null || platform == null) {
+    // Acheter un jeu
+    public PurchaseResult purchaseGame(Game game) {
+        if (game == null) {
             return PurchaseResult.UNSUPPORTED_PLATFORM;
         }
 
-        if (!game.getSupportedPlatforms().contains(platform)) {
-            return PurchaseResult.UNSUPPORTED_PLATFORM;
-        }
-        // Prevent purchasing if the player already owns this game (on any platform)
+        // Prevent purchasing if the player already owns this game
         if (ownsGame(game.getId())) {
-            return PurchaseResult.ALREADY_OWNED;
-        }
-
-        // Also prevent purchasing the same platform twice
-        if (game.isOwnedOnPlatform(platform)) {
             return PurchaseResult.ALREADY_OWNED;
         }
 
@@ -87,7 +79,7 @@ public class Player {
         }
 
         wallet -= game.getPrice();
-        game.purchase(platform);
+        game.purchase();
         if (!ownedGames.contains(game)) {
             ownedGames.add(game);
         }

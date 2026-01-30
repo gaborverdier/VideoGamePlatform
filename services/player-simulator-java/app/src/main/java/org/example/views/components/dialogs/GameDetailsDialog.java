@@ -89,36 +89,19 @@ public class GameDetailsDialog {
         Label platformTitle = new Label("Support :");
         platformTitle.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
 
-        ToggleGroup platformGroup = new ToggleGroup();
-        VBox platformBox = new VBox(8);
-        platformBox.setPadding(new Insets(5, 0, 0, 0));
-
-        Platform defaultPlatform = null;
-        for (Platform platform : game.getSupportedPlatforms()) {
-            RadioButton option = new RadioButton(platform.getLabel());
-            option.setToggleGroup(platformGroup);
-            option.setUserData(platform);
-            option.setStyle("-fx-text-fill: white;");
-            platformBox.getChildren().add(option);
-            if (defaultPlatform == null && !game.isOwnedOnPlatform(platform)) {
-                defaultPlatform = platform;
-                option.setSelected(true);
-            }
-            if (defaultPlatform == null) {
-                defaultPlatform = platform;
-                option.setSelected(true);
-            }
-        }
+        Label platformLabel = new Label(game.getPlatform());
+        platformLabel.setStyle("-fx-text-fill: #aaa; -fx-font-size: 14px;");
         
         // Description
         Label descLabel = new Label("Description:");
         descLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
         
-        TextArea descArea = new TextArea(game.getDescription());
+        TextArea descArea = new TextArea(game.getDescription() != null ? game.getDescription() : "Pas de description disponible.");
         descArea.setWrapText(true);
         descArea.setEditable(false);
         descArea.setPrefRowCount(5);
-        descArea.setStyle("-fx-control-inner-background: #3c3c3c; -fx-text-fill: white;");
+        descArea.setPrefWidth(400);
+        descArea.setStyle("-fx-control-inner-background: #3c3c3c; -fx-text-fill: white; -fx-font-size: 13px;");
         
         // Prix
         Label priceLabel = new Label(game.getFormattedPrice());
@@ -126,7 +109,7 @@ public class GameDetailsDialog {
         
         centerPane.getChildren().addAll(
             titleLabel, genreLabel, publisherLabel, ratingBox, seeReviewsBtn,
-            new Separator(), platformTitle, platformBox,
+            new Separator(), platformTitle, platformLabel,
             new Separator(), descLabel, descArea,
             new Separator(), priceLabel
         );
@@ -196,23 +179,13 @@ public class GameDetailsDialog {
         cancelBtn.setStyle("-fx-background-color: #555; -fx-text-fill: white; -fx-font-size: 14px;");
         cancelBtn.setOnAction(e -> dialog.close());
         
-        boolean ownsAllPlatforms = game.ownsAllSupportedPlatforms();
-        Button buyBtn = new Button(ownsAllPlatforms ? "Déjà possédé sur tous les supports" : "Acheter");
-        buyBtn.setDisable(ownsAllPlatforms);
+        Button buyBtn = new Button(game.isOwned() ? "Déjà possédé" : "Acheter");
+        buyBtn.setDisable(game.isOwned());
         buyBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
         buyBtn.setOnAction(e -> {
-            Toggle selected = platformGroup.getSelectedToggle();
-            if (selected == null) {
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setContentText("Choisissez un support avant d'acheter.");
-                alert.showAndWait();
-                return;
-            }
-
-            Platform chosenPlatform = (Platform) selected.getUserData();
             Player.PurchaseResult result = SessionManager.getInstance()
                     .getCurrentPlayer()
-                    .purchaseGame(game, chosenPlatform);
+                    .purchaseGame(game);
 
             switch (result) {
                 case SUCCESS -> {
@@ -237,15 +210,12 @@ public class GameDetailsDialog {
                     purchaseConfirmed = true;
                     Alert success = new Alert(Alert.AlertType.INFORMATION);
                     success.setTitle("Achat réussi");
-                    success.setContentText("Le jeu a été ajouté sur " + chosenPlatform.getLabel() + " !\nN'oubliez pas de l'installer avant de jouer.");
+                    success.setContentText("Le jeu a été ajouté !\nN'oubliez pas de l'installer avant de jouer.");
                     success.showAndWait();
-                    boolean nowOwnsAll = game.ownsAllSupportedPlatforms();
-                    if (nowOwnsAll) {
-                        buyBtn.setText("Déjà possédé sur tous les supports");
-                        buyBtn.setDisable(true);
-                        wishlistBtn.setText("Déjà possédé");
-                        wishlistBtn.setDisable(true);
-                    }
+                    buyBtn.setText("Déjà possédé");
+                    buyBtn.setDisable(true);
+                    wishlistBtn.setText("Déjà possédé");
+                    wishlistBtn.setDisable(true);
                     dialog.close();
                 }
                 case INSUFFICIENT_FUNDS -> {
@@ -318,7 +288,7 @@ public class GameDetailsDialog {
                 row.setAlignment(Pos.CENTER_LEFT);
                 Label name = new Label(g.getName());
                 name.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
-                Label meta = new Label(g.getGenre() + " • " + g.getSupportedPlatformsLabel());
+                Label meta = new Label(g.getGenre() + " • " + g.getPlatform());
                 meta.setStyle("-fx-text-fill: #aaa;");
                 Region spacer = new Region();
                 HBox.setHgrow(spacer, Priority.ALWAYS);

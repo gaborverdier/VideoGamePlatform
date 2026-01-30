@@ -31,7 +31,7 @@ public class GameMapper {
         dto.setReleaseTimeStamp(game.getReleaseTimeStamp() != null ? game.getReleaseTimeStamp() : 0L);
         dto.setPrice(game.getPrice() != null ? game.getPrice() : 0.0);
         dto.setVersion(game.getVersion() != null ? game.getVersion() : "");
-        dto.setDescription(null);
+        dto.setDescription(game.getDescription());
         return dto;
     }
 

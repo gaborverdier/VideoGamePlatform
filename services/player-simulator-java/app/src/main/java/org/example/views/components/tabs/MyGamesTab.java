@@ -78,7 +78,7 @@ public class MyGamesTab extends ScrollPane {
         Label genreLabel = new Label(game.getGenre());
         genreLabel.setStyle("-fx-text-fill: #aaa;");
 
-        Label platformLabel = new Label("Support: " + (game.getOwnedPlatforms().isEmpty() ? "N/A" : game.getOwnedPlatformsLabel()));
+        Label platformLabel = new Label("Support: " + game.getPlatform());
         platformLabel.setStyle("-fx-text-fill: #aaa;");
 
         // Status installé ou non

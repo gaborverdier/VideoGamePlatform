@@ -51,10 +51,8 @@ public class OwnedGameDetailsDialog {
         Label titleLabel = new Label(game.getName());
         titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;");
 
-        Label platformLabel = new Label("Support acheté: " + (game.getOwnedPlatforms().isEmpty() ? "N/A" : game.getOwnedPlatformsLabel()));
+        Label platformLabel = new Label("Support: " + game.getPlatform());
         platformLabel.setStyle("-fx-text-fill: #aaa;");
-        Label supportedLabel = new Label("Supports disponibles: " + game.getSupportedPlatformsLabel());
-        supportedLabel.setStyle("-fx-text-fill: #aaa;");
         
         Label statusLabel = new Label(game.isInstalled() ? "✅ Installé" : "⬇ Pas encore installé");
         statusLabel.setStyle("-fx-text-fill: " + (game.isInstalled() ? "#4CAF50" : "#FF9800") + "; -fx-font-size: 14px;");
@@ -239,7 +237,7 @@ public class OwnedGameDetailsDialog {
 
         actionsBox.getChildren().addAll(playBtn, reviewBtn, seeReviewsBtn, favoriteBtn, updateNowBtn, dlcBtn);
         
-        centerPane.getChildren().addAll(titleLabel, platformLabel, supportedLabel, statusLabel, timeLabel, new Separator(), actionsBox);
+        centerPane.getChildren().addAll(titleLabel, platformLabel, statusLabel, timeLabel, new Separator(), actionsBox);
         
         // BAS: Bouton fermer
         HBox buttonBox = new HBox();

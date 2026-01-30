@@ -2,10 +2,7 @@ package org.example.models;
 import com.gaming.api.models.GameModel;
 import javafx.scene.image.Image;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class Game {
     private String id;
@@ -20,8 +17,7 @@ public class Game {
     private String description;
     private double rating;
     private int playtime;
-    private Set<Platform> supportedPlatforms;
-    private Set<Platform> ownedPlatforms;
+    private String platform;
     
     // Nouveaux attributs
     private boolean isInstalled = false;
@@ -41,7 +37,7 @@ public class Game {
     // Constructeur complet
     public Game(String id, String name, double price, String genre, String publisherId, String publisherName,
                 String coverImageUrl, String description, double rating, int playtime,
-                Set<Platform> supportedPlatforms) {
+                String platform) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -54,39 +50,31 @@ public class Game {
         this.description = description;
         this.rating = rating;
         this.playtime = playtime;
-        this.supportedPlatforms = normalizeSupportedPlatforms(supportedPlatforms);
-        this.ownedPlatforms = EnumSet.noneOf(Platform.class);
+        this.platform = platform != null ? platform : "PC";
     }
     
-    // Constructeur complet avec plateformes par défaut (PC)
+    // Constructeur complet avec plateforme par défaut (PC)
     public Game(String id, String name, double price, String genre, String publisherId, String publisherName,
                 String coverImageUrl, String description, double rating, int playtime) {
-        this(id, name, price, genre, publisherId, publisherName, coverImageUrl, description, rating, playtime,
-                EnumSet.of(Platform.PC));
+        this(id, name, price, genre, publisherId, publisherName, coverImageUrl, description, rating, playtime, "PC");
     }
 
     // Constructeur simplifié
     public Game(String name, double price, String genre, String coverImageUrl,
-                String description, double rating, int playtime, Set<Platform> supportedPlatforms) {
+                String description, double rating, int playtime, String platform) {
         this(generateId(), name, price, genre, "PUB-" + System.currentTimeMillis(),
-             "Unknown Publisher", coverImageUrl, description, rating, playtime, supportedPlatforms);
+             "Unknown Publisher", coverImageUrl, description, rating, playtime, platform);
     }
 
-    // Constructeur simplifié avec plateformes par défaut (PC)
+    // Constructeur simplifié avec plateforme par défaut (PC)
     public Game(String name, double price, String genre, String coverImageUrl,
                 String description, double rating, int playtime) {
-        this(name, price, genre, coverImageUrl, description, rating, playtime, EnumSet.of(Platform.PC));
+        this(name, price, genre, coverImageUrl, description, rating, playtime, "PC");
     }
+    
     
     private static String generateId() {
         return "GAME-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 1000);
-    }
-
-    private Set<Platform> normalizeSupportedPlatforms(Set<Platform> platforms) {
-        if (platforms == null || platforms.isEmpty()) {
-            return EnumSet.of(Platform.PC);
-        }
-        return EnumSet.copyOf(platforms);
     }
     
     // Getters
@@ -102,8 +90,7 @@ public class Game {
     public String getDescription() { return description; }
     public double getRating() { return rating; }
     public int getPlaytime() { return playtime; }
-    public Set<Platform> getSupportedPlatforms() { return EnumSet.copyOf(supportedPlatforms); }
-    public Set<Platform> getOwnedPlatforms() { return EnumSet.copyOf(ownedPlatforms); }
+    public String getPlatform() { return platform; }
     public boolean isInstalled() { return isInstalled; }
     public boolean isFavorite() { return isFavorite; }
     public boolean isWishlisted() { return isWishlisted; }
@@ -112,10 +99,6 @@ public class Game {
     public List<String> getInstalledUpdates() { return installedUpdates; }
     public List<DLC> getAvailableDLCs() { return availableDLCs; }
     public List<Review> getReviews() { return reviews; }
-    public boolean isOwnedOnPlatform(Platform platform) { return platform != null && ownedPlatforms.contains(platform); }
-    public boolean ownsAllSupportedPlatforms() { return ownedPlatforms.containsAll(supportedPlatforms); }
-    public String getSupportedPlatformsLabel() { return supportedPlatforms.stream().map(Platform::getLabel).collect(Collectors.joining(", ")); }
-    public String getOwnedPlatformsLabel() { return ownedPlatforms.stream().map(Platform::getLabel).collect(Collectors.joining(", ")); }
     
     // Setters
     public void setOwned(boolean owned) { this.owned = owned; }
@@ -123,19 +106,13 @@ public class Game {
     public void setFavorite(boolean favorite) { this.isFavorite = favorite; }
     public void setWishlisted(boolean wishlisted) { this.isWishlisted = wishlisted; }
     public void setPrice(double price) { this.price = price; }
+    public void setPlatform(String platform) { this.platform = platform; }
     
     // Méthodes
-    public boolean purchase(Platform platform) {
-        if (platform == null || !supportedPlatforms.contains(platform)) {
-            return false;
-        }
-        ownedPlatforms.add(platform);
+    public void purchase() {
         this.owned = true;
         this.isWishlisted = false;
-        return true;
-    }
-    
-    public void addPlayedTime(int minutes) {
+    }    public void addPlayedTime(int minutes) {
         if (this.playedTime + minutes >= 0) {
             this.playedTime += minutes;
         }
@@ -283,7 +260,7 @@ public class Game {
             avro.getDescription(),
             0.0, // rating not present in Avro
             0, // playtime not present in Avro
-            null // supportedPlatforms not present in Avro
+            avro.getPlatform() // platform from Avro
         );
     }
 

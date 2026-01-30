@@ -55,7 +55,7 @@ public class PagesTab extends ScrollPane {
         VBox library = new VBox(6);
         if (player != null && !player.getOwnedGames().isEmpty()) {
             for (Game g : player.getOwnedGames()) {
-                Label line = styledLabel("• " + g.getName() + " — " + g.getPlayedTime() + " min — " + g.getOwnedPlatformsLabel(), 13, false);
+                Label line = styledLabel("• " + g.getName() + " — " + g.getPlayedTime() + " min — " + g.getPlatform(), 13, false);
                 library.getChildren().add(line);
             }
         } else {
@@ -81,7 +81,7 @@ public class PagesTab extends ScrollPane {
         int row = 0;
         for (Game g : games) {
             Label name = styledLabel(g.getName(), 14, true);
-            Label meta = styledLabel(g.getGenre() + " • " + g.getPublisherName() + " • " + g.getSupportedPlatformsLabel(), 12, false);
+            Label meta = styledLabel(g.getGenre() + " • " + g.getPublisherName() + " • " + g.getPlatform(), 12, false);
             Label price = styledLabel(g.getFormattedPrice(), 13, true);
             price.setStyle("-fx-text-fill: #4CAF50; -fx-font-weight: bold;");
 
@@ -119,7 +119,7 @@ public class PagesTab extends ScrollPane {
 
             VBox list = new VBox(4);
             for (Game g : pubGames) {
-                Label line = styledLabel("• " + g.getName() + " — " + g.getSupportedPlatformsLabel(), 13, false);
+                Label line = styledLabel("• " + g.getName() + " — " + g.getPlatform(), 13, false);
                 list.getChildren().add(line);
             }
 

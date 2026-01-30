@@ -101,7 +101,7 @@ public class PublishersTab extends ScrollPane {
         genreLabel.setStyle("-fx-text-fill: #aaa; -fx-font-size: 13px;");
         genreLabel.setMinWidth(100);
 
-        Label platformsLabel = new Label(game.getSupportedPlatformsLabel());
+        Label platformsLabel = new Label(game.getPlatform());
         platformsLabel.setStyle("-fx-text-fill: #aaa; -fx-font-size: 13px;");
 
         Region spacer = new Region();
