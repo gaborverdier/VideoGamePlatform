@@ -54,4 +54,16 @@ public class SessionController {
         return ResponseEntity.ok(total);
     }
 
+    @GetMapping("/game/{gameId}/user/{userId}/total")
+    public ResponseEntity<Long> totalPlayedByUser(@PathVariable String gameId, @PathVariable String userId) {
+        long total = sessionService.totalPlayedTimeForUser(gameId, userId);
+        return ResponseEntity.ok(total);
+    }
+
+    @GetMapping("/game/{gameId}/player-count")
+    public ResponseEntity<Integer> getPlayerCount(@PathVariable String gameId) {
+        int count = sessionService.getPlayerCount(gameId);
+        return ResponseEntity.ok(count);
+    }
+
 }

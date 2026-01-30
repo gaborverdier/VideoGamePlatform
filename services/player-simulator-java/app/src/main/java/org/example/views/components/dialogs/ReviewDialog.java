@@ -32,9 +32,12 @@ public class ReviewDialog {
                 long localMin = game.getPlayedTime();
                 long backendMin = 0L;
                 try {
-                    PlatformApiClient api = new PlatformApiClient();
-                    long totalMs = api.getTotalPlayedForGameAllTime(game.getId());
-                    backendMin = totalMs / 60_000L;
+                    String userId = SessionManager.getInstance().getCurrentPlayer() != null ? SessionManager.getInstance().getCurrentPlayer().getId() : null;
+                    if (userId != null) {
+                        PlatformApiClient api = new PlatformApiClient();
+                        long totalMs = api.getTotalPlayedForUser(game.getId(), userId);
+                        backendMin = totalMs / 60_000L;
+                    }
                 } catch (Exception ex) {
                     // best-effort: ignore backend failures
                 }

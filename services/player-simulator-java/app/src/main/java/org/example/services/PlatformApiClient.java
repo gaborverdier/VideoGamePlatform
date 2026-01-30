@@ -115,6 +115,18 @@ public class PlatformApiClient {
         }
     }
 
+    // GET /api/session/game/{gameId}/user/{userId}/total - total played for a specific user
+    public long getTotalPlayedForUser(String gameId, String userId) throws Exception {
+        String s = ApiClient.get("/api/session/game/" + urlPath(gameId) + "/user/" + urlPath(userId) + "/total");
+        if (s == null || s.isEmpty()) return 0L;
+        try {
+            return Long.parseLong(s.trim());
+        } catch (NumberFormatException ex) {
+            com.fasterxml.jackson.databind.ObjectMapper m = new com.fasterxml.jackson.databind.ObjectMapper();
+            return m.readValue(s, Long.class);
+        }
+    }
+
     // POST /api/dlc-purchased/purchase/dlc/{dlcId}/user/{userId}
     public void purchaseDLC(String userId, String dlcId) throws Exception {
         ApiClient.postJson("/api/dlc-purchased/purchase/dlc/" + urlPath(dlcId) + "/user/" + urlPath(userId), "{}");

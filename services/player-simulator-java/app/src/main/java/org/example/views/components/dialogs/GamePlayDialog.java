@@ -46,8 +46,10 @@ public class GamePlayDialog {
         // track session delta separately to send to server on close
         final int[] sessionMinutes = new int[] {0};
         minusBtn.setOnAction(e -> {
+            int oldTime = game.getPlayedTime();
             game.addPlayedTime(-10);
-            sessionMinutes[0] -= 10;
+            int actualChange = game.getPlayedTime() - oldTime;
+            sessionMinutes[0] += actualChange;
             timeLabel.setText("Temps de jeu: " + game.getPlayedTime() + " min");
         });
         

@@ -60,15 +60,18 @@ public class OwnedGameDetailsDialog {
         Label timeLabel = new Label("Temps de jeu: " + game.getPlayedTime() + " min");
         timeLabel.setStyle("-fx-text-fill: #aaa;");
 
-        // Fetch total playtime from platform server (non-blocking)
+        // Fetch total playtime from platform server for current user only (non-blocking)
         new Thread(() -> {
             try {
-                PlatformApiClient api = new PlatformApiClient();
-                long totalMs = api.getTotalPlayedForGameAllTime(game.getId());
-                long totalMin = totalMs / 60_000L;
-                // cache the backend total on the Game instance so other dialogs can reuse it
-                game.setTotalPlayedAllTimeMs(totalMs);
-                javafx.application.Platform.runLater(() -> timeLabel.setText("Temps total de jeu: " + totalMin + " min "));
+                String userId = SessionManager.getInstance().getCurrentPlayer() != null ? SessionManager.getInstance().getCurrentPlayer().getId() : null;
+                if (userId != null) {
+                    PlatformApiClient api = new PlatformApiClient();
+                    long totalMs = api.getTotalPlayedForUser(game.getId(), userId);
+                    long totalMin = totalMs / 60_000L;
+                    // cache the backend total on the Game instance so other dialogs can reuse it
+                    game.setTotalPlayedAllTimeMs(totalMs);
+                    javafx.application.Platform.runLater(() -> timeLabel.setText("Temps total de jeu: " + totalMin + " min "));
+                }
             } catch (Exception ex) {
                 // best-effort: ignore failures
             }
@@ -104,14 +107,18 @@ public class OwnedGameDetailsDialog {
         // Open the updates dialog when clicking the update button
         updateNowBtn.setOnAction(e -> showUpdatesDialog(game, updateNowBtn, onUpdate));
 
-        // refresh playtime from platform server (used after closing GamePlayDialog)
+        // refresh playtime from platform server for current user (used after closing GamePlayDialog)
         Runnable refreshPlaytime = () -> {
             new Thread(() -> {
                 try {
-                    PlatformApiClient api = new PlatformApiClient();
-                    long totalMs = api.getTotalPlayedForGameAllTime(game.getId());
-                    long totalMin = totalMs / 60_000L;
-                    javafx.application.Platform.runLater(() -> timeLabel.setText("Temps total de jeu: " + totalMin + " min "));
+                    String userId = SessionManager.getInstance().getCurrentPlayer() != null ? SessionManager.getInstance().getCurrentPlayer().getId() : null;
+                    if (userId != null) {
+                        PlatformApiClient api = new PlatformApiClient();
+                        long totalMs = api.getTotalPlayedForUser(game.getId(), userId);
+                        long totalMin = totalMs / 60_000L;
+                        game.setTotalPlayedAllTimeMs(totalMs);
+                        javafx.application.Platform.runLater(() -> timeLabel.setText("Temps total de jeu: " + totalMin + " min "));
+                    }
                 } catch (Exception ex) {
                     // ignore
                 }

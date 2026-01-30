@@ -40,4 +40,13 @@ public class SessionService {
         List<Session> sessions = sessionRepository.findByGameId(gameId);
         return sessions.stream().mapToLong(Session::getTimePlayed).sum();
     }
+
+    public long totalPlayedTimeForUser(String gameId, String userId) {
+        List<Session> sessions = sessionRepository.findByGameIdAndUserId(gameId, userId);
+        return sessions.stream().mapToLong(Session::getTimePlayed).sum();
+    }
+
+    public int getPlayerCount(String gameId) {
+        return (int) sessionRepository.countDistinctUsersByGameId(gameId);
+    }
 }
