@@ -73,7 +73,7 @@ public class PlayerDashboard extends Application {
         TabPane tabs = new TabPane();
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
-        Tab libraryTabUI = new Tab("Bibliothèque", libraryTab);
+        Tab libraryTabUI = new Tab("Magasin", libraryTab);
         Tab myGamesTabUI = new Tab("Mes Jeux", myGamesTab);
         Tab publishersTabUI = new Tab("Éditeurs", publishersTab);
         Tab friendsTabUI = new Tab("Amis", friendsTab);
