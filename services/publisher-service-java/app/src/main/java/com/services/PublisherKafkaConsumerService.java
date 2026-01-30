@@ -127,9 +127,9 @@ public class PublisherKafkaConsumerService {
                             .id(crashModel.getId() != null ? crashModel.getId() : "crash-" + System.currentTimeMillis())
                             .gameId(gameId)
                             .crashCount(crashModel.getCrashCount())
-                            .timestamp(crashModel.getTimestamp() != null ? crashModel.getTimestamp() : System.currentTimeMillis())
-                            .windowStart(crashModel.getWindowStart() != null ? crashModel.getWindowStart() : System.currentTimeMillis() - 300000)
-                            .windowEnd(crashModel.getWindowEnd() != null ? crashModel.getWindowEnd() : System.currentTimeMillis())
+                            .timestamp(crashModel.getTimestamp() != 0 ? crashModel.getTimestamp() : System.currentTimeMillis())
+                            .windowStart(crashModel.getWindowStart() != 0 ? crashModel.getWindowStart() : System.currentTimeMillis() - 300000)
+                            .windowEnd(crashModel.getWindowEnd() != 0 ? crashModel.getWindowEnd() : System.currentTimeMillis())
                             .build();
                     
                     // Créer un objet Game minimal pour l'affichage
