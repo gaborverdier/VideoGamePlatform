@@ -18,8 +18,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.gaming.api.models.CrashAggregationModel;
+import com.gaming.api.models.GamePopularityScore;
 import com.mapper.CrashAggregationMapper;
 import com.service.CrashService;
+import com.service.GameService;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -35,12 +37,14 @@ public class EventConsumer {
     private final Properties consumerProperties;
     private final CrashAggregationMapper crashAggregationMapper;
     private final CrashService crashService;
+    private final GameService gameService;
     private final ExecutorService executorService;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     private KafkaConsumer<String, Object> consumer;
 
     private static final String CRASH_AGGREGATED = "crash-aggregated";
+    private static final String GAME_POPULARITY_SCORE_TOPIC = "game-popularity-score";
     private static final String GAME_UPDATED_TOPIC = "game-updated";
     private static final String GAME_PATCH_RELEASED_TOPIC = "game-patch-released";
     private static final String GAME_AVAILABILITY_CHANGED_TOPIC = "game-availability-changed";
@@ -50,10 +54,12 @@ public class EventConsumer {
     public EventConsumer(
             @Qualifier("consumerProperties") Properties consumerProperties,
             CrashAggregationMapper crashAggregationMapper,
-            CrashService crashService) {
+            CrashService crashService,
+            GameService gameService) {
         this.consumerProperties = consumerProperties;
         this.crashAggregationMapper = crashAggregationMapper;
         this.crashService = crashService;
+        this.gameService = gameService;
         this.executorService = Executors.newSingleThreadExecutor();
     }
 
@@ -80,6 +86,7 @@ public class EventConsumer {
         consumer = new KafkaConsumer<>(consumerProperties);
         consumer.subscribe(Arrays.asList(
                 CRASH_AGGREGATED,
+                GAME_POPULARITY_SCORE_TOPIC,
                 GAME_UPDATED_TOPIC,
                 GAME_PATCH_RELEASED_TOPIC,
                 GAME_AVAILABILITY_CHANGED_TOPIC,
@@ -138,6 +145,10 @@ public class EventConsumer {
                     crashAggEvent.getGameId(), crashAggEvent.getCrashCount());
                 handleCrashAggregated(crashAggEvent);
                 break;
+            
+            case GAME_POPULARITY_SCORE_TOPIC:
+                handleGamePopularityScore( (GamePopularityScore) record.value());
+                break;
         
             default:
                 break;
@@ -154,4 +165,21 @@ public class EventConsumer {
             log.error("❌ Failed to save crash aggregation for gameId: {}", event.getGameId(), e);
         }
     }
+    
+    private void handleGamePopularityScore(GamePopularityScore event) {
+        try {
+            String gameId = event.getGameId();
+            int score = event.getScore();
+            
+            // Calculate new price based on popularity score
+            // Score is 0-100, map to price range 10-60 euros
+        
+            
+            gameService.updateGamePrice(gameId,score);
+            
+        } catch (Exception e) {
+            log.error("❌ Failed to update game price for gameId: {}", event.getGameId(), e);
+        }
+    }
+    
 }

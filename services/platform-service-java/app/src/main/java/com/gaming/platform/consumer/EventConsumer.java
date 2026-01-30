@@ -162,8 +162,8 @@ public class EventConsumer {
                     }
                     break;
                 case GAME_UPDATED_TOPIC:
-                    if (record.value() instanceof GameUpdated) {
-                        handleGameUpdated((GameUpdated) record.value());
+                    if (record.value() instanceof GameModel) {
+                        handleGameUpdated((GameModel) record.value());
                     } else if (record.value() instanceof GenericRecord) {
                         handleGameUpdatedGeneric((GenericRecord) record.value());
                     }
@@ -296,7 +296,7 @@ public class EventConsumer {
         }
     }
 
-    private void handleGameUpdated(GameUpdated event) {
+    private void handleGameUpdated(GameModel event) {
         log.info("Received GameUpdated event for game: {}", event.getTitle());
 
         String gameId = event.getGameId().toString();
@@ -304,7 +304,7 @@ public class EventConsumer {
                 game -> {
                     // Update existing game
                     game.setTitle(event.getTitle().toString());
-                    game.setPublisher(event.getPublisher().toString());
+                    game.setPublisher(event.getPublisherId());
                     game.setPlatform(event.getPlatform().toString());
                     game.setGenre(event.getGenre().toString());
                     game.setPrice(BigDecimal.valueOf(event.getPrice()));
@@ -315,7 +315,8 @@ public class EventConsumer {
                     }
 
                     game.setLastUpdated(LocalDateTime.ofInstant(
-                            Instant.ofEpochMilli(event.getUpdateTimestamp()),
+
+                            Instant.now(),
                             ZoneOffset.UTC));
 
                     gameRepository.save(game);
@@ -326,7 +327,7 @@ public class EventConsumer {
                     Game newGame = new Game();
                     newGame.setGameId(gameId);
                     newGame.setTitle(event.getTitle().toString());
-                    newGame.setPublisher(event.getPublisher().toString());
+                    newGame.setPublisher(event.getPublisherId());
                     newGame.setPlatform(event.getPlatform().toString());
                     newGame.setGenre(event.getGenre().toString());
                     newGame.setPrice(BigDecimal.valueOf(event.getPrice()));
@@ -337,7 +338,7 @@ public class EventConsumer {
                     }
 
                     newGame.setLastUpdated(LocalDateTime.ofInstant(
-                            Instant.ofEpochMilli(event.getUpdateTimestamp()),
+                            Instant.now(),
                             ZoneOffset.UTC));
 
                     gameRepository.save(newGame);

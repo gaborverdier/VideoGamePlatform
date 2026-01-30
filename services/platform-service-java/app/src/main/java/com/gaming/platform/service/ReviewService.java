@@ -37,6 +37,7 @@ public class ReviewService {
         try{
             Optional<GameModel> game = gameService.getGameById(event.getGameId());
 
+            event.setReviewId(resp.getReviewId());
             // Publish GameReviewed event to Kafka
             eventProducer.publishGameReviewed(event);
 

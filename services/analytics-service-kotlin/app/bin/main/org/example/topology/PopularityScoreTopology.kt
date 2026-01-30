@@ -1,11 +1,12 @@
 package org.example.topology
 
-import com.gaming.analytics.GamePopularityScore
+import com.gaming.api.models.GamePopularityScore
 import com.gaming.api.models.CrashAggregationModel
 import com.gaming.events.GameReviewed
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
+import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.kstream.*
 import org.example.config.KafkaStreamsConfig
@@ -23,7 +24,7 @@ class PopularityScoreTopology {
         private const val REVIEW_TOPIC = "game-reviewed"
         private const val CRASH_TOPIC = "crash-aggregated"
         private const val OUTPUT_TOPIC = "game-popularity-score"
-        private val WINDOW_SIZE = Duration.ofMinutes(60)
+        private val WINDOW_SIZE = Duration.ofSeconds(60)
     }
     
     fun build(builder: StreamsBuilder) {
@@ -88,18 +89,18 @@ class PopularityScoreTopology {
                 }
             )
             .toStream()
-            .map { windowedKey, score ->
+            .map { windowedKey, scoreValue ->
                 KeyValue(
                     windowedKey.key(),
-                    GamePopularityScore.newBuilder(score)
+                    GamePopularityScore.newBuilder()
                         .setGameId(windowedKey.key())
-                        .setWindowStart(windowedKey.window().start())
-                        .setWindowEnd(windowedKey.window().end())
+                        .setScore(scoreValue)
                         .build()
                 )
             }
             .peek { gameId, score ->
-                println("📊 Popularity score for gameId=$gameId: score=${score.getPopularityScore()}, avgRating=${score.getAverageRating()}, reviews=${score.getTotalReviews()}, crashes=${score.getTotalCrashes()}")
+                println("📊 Popularity score calculated for gameId=$gameId: score=${score.getScore()}")
+                println("📤 Sending to topic '$OUTPUT_TOPIC': gameId=$gameId, score=${score.getScore()}")
             }
             .to(OUTPUT_TOPIC, Produced.with(Serdes.String(), scoreSerde))
         
@@ -109,36 +110,23 @@ class PopularityScoreTopology {
         println("   ⏱️  Window: ${WINDOW_SIZE.toMinutes()}min (Tumbling)")
     }
     
-    private fun calculateScore(reviewStat: ReviewStats, crashCount: Long): GamePopularityScore {
+    private fun calculateScore(reviewStat: ReviewStats, crashCount: Long): Int {
         val averageRating = if (reviewStat.count > 0) {
             reviewStat.totalRating / reviewStat.count
         } else {
-            0.0
+            3.0  // Default average rating if no reviews
         }
         
         // Popularity formula: (avgRating/5 * 100) - (crash penalty)
         // avgRating normalized to 0-100 scale, then subtract crash impact
-        val crashPenalty = crashCount * 5.0  // Each crash reduces score by 5 points
+        var crashPenalty = crashCount * 5.0  // Each crash reduces score by 5 points
+        if (crashPenalty == 0.0){
+            crashPenalty = -10.0 // Bonus for no crashes
+        }
         val baseScore = (averageRating / 5.0) * 100.0  // Convert rating to 0-100
         val popularityScore = (baseScore - crashPenalty).coerceIn(0.0, 100.0)
         
-        val crashRate = if (reviewStat.count > 0) {
-            (crashCount.toDouble() / reviewStat.count.toDouble()) * 100.0
-        } else {
-            0.0
-        }
-        
-        return GamePopularityScore.newBuilder()
-            .setGameId("")  // Will be set later with window info
-            .setPopularityScore(popularityScore)
-            .setAverageRating(averageRating)
-            .setTotalReviews(reviewStat.count)
-            .setCrashRate(crashRate)
-            .setTotalCrashes(crashCount)
-            .setWindowStart(0L)  // Will be set later
-            .setWindowEnd(0L)    // Will be set later
-            .setTimestamp(System.currentTimeMillis())
-            .build()
+        return popularityScore.toInt()
     }
     
     // Helper data class for review aggregation
