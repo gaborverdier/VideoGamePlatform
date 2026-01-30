@@ -48,6 +48,9 @@ class CrashAggregationTopology {
             
             // Count crashes per window
             .count()
+            
+            // Suppress intermediate results - only emit when window closes
+            .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
         
         // 3. Transform to CrashAggregationModel
         val crashAggregation: KStream<String, CrashAggregationModel> = crashCounts
@@ -67,17 +70,16 @@ class CrashAggregationTopology {
                 
                 KeyValue(gameId, aggregation)
             }
+            // Log for debugging before writing
+            .peek { key, value ->
+                println("📊 Crash Aggregation produced: gameId=$key, count=${value.getCrashCount()}, window=[${value.getWindowStart()} - ${value.getWindowEnd()}]")
+            }
         
         // 4. Write to output topic
         crashAggregation.to(
             OUTPUT_TOPIC,
             Produced.with(Serdes.String(), crashAggregatedSerde)
         )
-        
-        // 5. Log for debugging
-        crashAggregation.foreach { key, value ->
-            println("📊 Crash Aggregation produced: gameId=$key, count=${value.getCrashCount()}, window=[${value.getWindowStart()} - ${value.getWindowEnd()}]")
-        }
         
         println("✅ Crash Aggregation Topology built")
         println("   📥 Input: $INPUT_TOPIC")

@@ -34,8 +34,8 @@ object KafkaStreamsConfig {
             // Processing Guarantees
             put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE_V2)
             
-            // State Store
-            put(StreamsConfig.STATE_DIR_CONFIG, "./kafka-streams-state")
+            // State Store - Use shorter path to avoid Windows path length limitation
+            put(StreamsConfig.STATE_DIR_CONFIG, "C:/tmp/kafka-streams")
         }
     }
     

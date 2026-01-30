@@ -53,6 +53,7 @@ public class PlayerDashboard extends Application {
         // Initialize tabs before KafkaConsumerService
         libraryTab = new LibraryTab(this::onGamePurchased);
         libraryTab.setOnRefreshAll(this::refreshAll);
+    
         myGamesTab = new MyGamesTab(this::refreshAll);
         wishlistTab = new WishlistTab(this::onGamePurchased);
         wishlistTab.setLibraryTab(libraryTab);
@@ -79,6 +80,25 @@ public class PlayerDashboard extends Application {
         Tab wishlistTabUI = new Tab("Liste de souhaits", wishlistTab);
         Tab notificationsTabUI = new Tab("Notifications", notificationsTab);
         tabs.getTabs().addAll(libraryTabUI, myGamesTabUI, publishersTabUI, friendsTabUI, wishlistTabUI, notificationsTabUI);
+        
+        // Rafraîchir chaque onglet à chaque fois qu'on clique dessus
+        tabs.getSelectionModel().selectedItemProperty().addListener((observable, oldTab, newTab) -> {
+            if (newTab == libraryTabUI) {
+                GameDataService.getInstance().reload();
+                libraryTab.refresh();
+            } else if (newTab == myGamesTabUI) {
+                myGamesTab.refresh();
+            } else if (newTab == publishersTabUI) {
+                publishersTab.refresh();
+            } else if (newTab == friendsTabUI) {
+                friendsTab.refresh();
+            } else if (newTab == wishlistTabUI) {
+                wishlistTab.refresh();
+            } else if (newTab == notificationsTabUI) {
+                notificationsTab.setGames(GameDataService.getInstance().getAllGames());
+                loadUserNotifications();
+            }
+        });
 
         // Barre du haut avec le solde
         javafx.scene.control.Label soldeTitle = new javafx.scene.control.Label("Solde:");
