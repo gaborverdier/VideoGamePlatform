@@ -83,6 +83,9 @@ public class PublisherDashboard {
         );
         kafkaConsumerService.start();
 
+        // Charger les crashs manqués pendant l'absence (au démarrage)
+        notificationsTab.loadCrashReportsFromApi(currentPublisher.getId());
+
         // Arrêter le consumer quand la fenêtre se ferme
         primaryStage.setOnCloseRequest(event -> {
             if (kafkaConsumerService != null) {

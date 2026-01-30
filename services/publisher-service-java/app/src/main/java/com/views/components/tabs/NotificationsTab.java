@@ -1,5 +1,6 @@
 package com.views.components.tabs;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -146,6 +147,39 @@ public class NotificationsTab extends ScrollPane {
     public void addCrashReport(CrashAggregation crash) {
         crashReports.add(0, crash);
         updateView();
+    }
+
+    /**
+     * Charge les crash reports depuis l'API pour les jeux de l'éditeur.
+     * Utilisé au démarrage pour récupérer les crashs manqués pendant l'absence.
+     */
+    public void loadCrashReportsFromApi(String publisherId) {
+        if (publisherId == null || publisherId.isEmpty()) {
+            System.out.println("[NotificationsTab] No publisher ID to load crashes for");
+            return;
+        }
+        
+        new Thread(() -> {
+            List<CrashAggregation> allCrashes = new ArrayList<>();
+            try {
+                String json = ApiClient.get("/api/crash-aggregations/publisher/" + publisherId);
+                List<CrashAggregation> crashes = AvroJacksonConfig.avroObjectMapper()
+                    .readValue(json, new TypeReference<List<CrashAggregation>>() {});
+                allCrashes.addAll(crashes);
+            } catch (Exception e) {
+                System.err.println("[NotificationsTab] Error loading crashes for publisher " + publisherId + ": " + e.getMessage());
+            }
+            
+            // Trier par timestamp décroissant (plus récent en premier)
+            allCrashes.sort((c1, c2) -> Long.compare(c2.getTimestamp(), c1.getTimestamp()));
+            
+            Platform.runLater(() -> {
+                crashReports.clear();
+                crashReports.addAll(allCrashes);
+                updateView();
+                System.out.println("[NotificationsTab] Loaded " + allCrashes.size() + " crash reports from API");
+            });
+        }).start();
     }
 
     public List<CrashAggregation> getCrashReports() {
