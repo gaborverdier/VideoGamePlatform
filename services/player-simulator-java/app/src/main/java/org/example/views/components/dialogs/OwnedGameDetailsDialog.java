@@ -107,7 +107,22 @@ public class OwnedGameDetailsDialog {
         // now assign handlers
         playBtn.setOnAction(e -> {
             if (game.isInstalled()) {
-                GamePlayDialog.show(game, onUpdate, SessionManager.getInstance().getPlayerController());
+                GamePlayDialog.show(game, () -> {
+                    timeLabel.setText("Temps de jeu: " + game.getPlayedTime() + " min");
+                    new Thread(() -> {
+                        try {
+                            PlatformApiClient api = new PlatformApiClient();
+                            long totalMs = api.getTotalPlayedForGameAllTime(game.getId());
+                            long totalMin = totalMs / 60_000L;
+                            javafx.application.Platform.runLater(() -> {
+                                timeLabel.setText("Temps total de jeu: " + totalMin + " min ");
+                            });
+                        } catch (Exception ex) {
+                            // best-effort: ignore failures
+                        }
+                    }).start();
+                    if (onUpdate != null) onUpdate.run();
+                }, SessionManager.getInstance().getPlayerController());
             } else {
                 GameInstallDialog.show(game, () -> {
                     statusLabel.setText("✅ Installé");
@@ -130,13 +145,16 @@ public class OwnedGameDetailsDialog {
             }
         });
 
-        Button reviewBtn = new Button("⭐ Laisser un avis");
-        reviewBtn.setMaxWidth(Double.MAX_VALUE);
-        reviewBtn.setOnAction(e -> ReviewDialog.show(game));
-
         Button seeReviewsBtn = new Button("Voir les avis (" + game.getReviews().size() + ")");
         seeReviewsBtn.setMaxWidth(Double.MAX_VALUE);
         seeReviewsBtn.setOnAction(e -> ReviewsListDialog.show(game));
+
+        Button reviewBtn = new Button("⭐ Laisser un avis");
+        reviewBtn.setMaxWidth(Double.MAX_VALUE);
+        reviewBtn.setOnAction(e -> {
+            ReviewDialog.show(game);
+            seeReviewsBtn.setText("Voir les avis (" + game.getReviews().size() + ")");
+        });
 
         Button favoriteBtn = new Button(game.isFavorite() ? "❤ Retirer des favoris" : "❤ Ajouter aux favoris");
         favoriteBtn.setMaxWidth(Double.MAX_VALUE);
@@ -301,23 +319,22 @@ public class OwnedGameDetailsDialog {
             HBox infoRow = new HBox(15);
             infoRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             
-            if (dlc.isInstalled()) {
-                Label timeLabel = new Label("⏱ " + dlc.getPlayedTime() + " min jouées");
-                timeLabel.setStyle("-fx-text-fill: #aaa;");
-                
-                infoRow.getChildren().addAll(timeLabel);
-            }
-
             // Boutons d'action
             HBox actionsRow = new HBox(10);
             actionsRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             
             if (dlc.isInstalled()) {
+                Label dlcTimeLabel = new Label("⏱ " + dlc.getPlayedTime() + " min jouées");
+                dlcTimeLabel.setStyle("-fx-text-fill: #aaa;");
+                
+                infoRow.getChildren().addAll(dlcTimeLabel);
+
                 Button playDlcBtn = new Button("▶ Jouer");
                 playDlcBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
                 playDlcBtn.setOnAction(e -> {
                     // Simuler 15 min de jeu sur le DLC
                     dlc.addPlayedTime(15);
+                    dlcTimeLabel.setText("⏱ " + dlc.getPlayedTime() + " min jouées");
                     Alert info = new Alert(Alert.AlertType.INFORMATION);
                     info.setContentText("Vous avez joué 15 minutes au DLC " + dlc.getName() + " !");
                     info.showAndWait();

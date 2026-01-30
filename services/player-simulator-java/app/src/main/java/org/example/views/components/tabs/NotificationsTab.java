@@ -77,11 +77,6 @@ public class NotificationsTab extends ScrollPane {
         updateNotifications();
     }
 
-    // Example usage:
-    // List<Notification> notifList = new ArrayList<>();
-    // notifList.add(new Notification(Notification.Type.GAME_UPDATE, "Test", "this is a test 2", false, null));
-    // notificationsTab.loadNotifications(notifList);
-    
     public void setGames(List<Game> games) {
         this.allGames = games;
         generateNotifications();

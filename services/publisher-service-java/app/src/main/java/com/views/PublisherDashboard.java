@@ -17,6 +17,7 @@ public class PublisherDashboard {
     private PublisherModel currentPublisher;
     private MyGamesTab myGamesTab;
     private NotificationsTab notificationsTab;
+    private Label statsLabel;
 
     public PublisherDashboard(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -54,6 +55,7 @@ public class PublisherDashboard {
         notificationsTab = new NotificationsTab();
         myGamesTab = new MyGamesTab(currentPublisher, notificationsTab, () -> {
             if (notificationsTab != null) notificationsTab.setVisible(true);
+            updateStats();
         });
         Tab gamesTab = new Tab("Mes jeux", myGamesTab);
         gamesTab.setStyle("-fx-font-size: 12px;");
@@ -104,7 +106,7 @@ public class PublisherDashboard {
         footer.setStyle("-fx-background-color: #1a1a1a; -fx-border-color: #3c3c3c; -fx-border-width: 1 0 0 0;");
         footer.setAlignment(Pos.CENTER_RIGHT);
 
-        Label statsLabel = new Label("Jeux publiés: " + myGamesTab.getPublishedGames().size());
+        statsLabel = new Label("Jeux publiés: " + myGamesTab.getPublishedGames().size());
         statsLabel.setStyle("-fx-text-fill: white;");
 
         Button logoutButton = new Button("Déconnexion");
@@ -116,5 +118,11 @@ public class PublisherDashboard {
         footer.getChildren().addAll(statsLabel, new Separator(), logoutButton);
 
         return footer;
+    }
+
+    private void updateStats() {
+        if (statsLabel != null && myGamesTab != null) {
+            statsLabel.setText("Jeux publiés: " + myGamesTab.getPublishedGames().size());
+        }
     }
 }

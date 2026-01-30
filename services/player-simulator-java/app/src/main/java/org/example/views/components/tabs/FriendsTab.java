@@ -16,14 +16,12 @@ public class FriendsTab extends VBox {
     private VBox friendsList;
     private TextField searchField;
     private List<Player> allPlayers;
+    private Label friendsTitle;
     
     public FriendsTab() {
         setSpacing(15);
         setPadding(new Insets(20));
         setStyle("-fx-background-color: #1e1e1e;");
-        
-        // Simuler quelques joueurs
-        initSimulatedPlayers();
         
         // En-tête
         Label titleLabel = new Label("👥 Mes Amis");
@@ -44,7 +42,7 @@ public class FriendsTab extends VBox {
         searchBox.getChildren().addAll(searchField, searchBtn);
         
         // Liste des amis
-        Label friendsTitle = new Label("Amis (" + SessionManager.getInstance().getCurrentPlayer().getFriendIds().size() + ")");
+        friendsTitle = new Label("Amis (" + SessionManager.getInstance().getCurrentPlayer().getFriendIds().size() + ")");
         friendsTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
         
         ScrollPane scrollPane = new ScrollPane();
@@ -62,23 +60,17 @@ public class FriendsTab extends VBox {
         refresh();
     }
     
-    private void initSimulatedPlayers() {
-        allPlayers = new ArrayList<>();
-        // Simuler quelques joueurs fictifs
-        allPlayers.add(new Player("PLAYER-001", "GamerPro42", "gamerpro@email.com", 150.0));
-        allPlayers.add(new Player("PLAYER-002", "NightOwl", "nightowl@email.com", 75.0));
-        allPlayers.add(new Player("PLAYER-003", "SpeedRunner", "speedrunner@email.com", 200.0));
-        allPlayers.add(new Player("PLAYER-004", "CasualGamer", "casual@email.com", 50.0));
-        allPlayers.add(new Player("PLAYER-005", "ProLeagueX", "proleague@email.com", 300.0));
-        allPlayers.add(new Player("PLAYER-006", "RetroFan", "retro@email.com", 80.0));
-        allPlayers.add(new Player("PLAYER-007", "StreamerKing", "streamer@email.com", 500.0));
-    }
     
     public void refresh() {
         friendsList.getChildren().clear();
         
         Player currentPlayer = SessionManager.getInstance().getCurrentPlayer();
         List<String> friendIds = currentPlayer.getFriendIds();
+        
+        // Mettre à jour le compteur d'amis
+        if (friendsTitle != null) {
+            friendsTitle.setText("Amis (" + friendIds.size() + ")");
+        }
         
         if (friendIds.isEmpty()) {
             Label noFriends = new Label("Vous n'avez pas encore d'amis. Utilisez la recherche pour en ajouter !");

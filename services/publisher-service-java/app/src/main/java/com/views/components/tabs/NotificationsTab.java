@@ -29,85 +29,12 @@ public class NotificationsTab extends ScrollPane {
         notificationsList = new VBox(10);
         notificationsList.setPadding(new Insets(20));
         notificationsList.setStyle("-fx-background-color: #2b2b2b;");
-
-        // Ajouter des données de test
-        addSampleData();
         
         updateView();
 
         this.setContent(notificationsList);
         this.setFitToWidth(true);
         this.setStyle("-fx-background-color: #2b2b2b;");
-    }
-
-    private void addSampleData() {
-        // Crash reports - données de test
-        Game game1 = new Game();
-        game1.setId("game_123");
-        game1.setTitle("The Last Shadow");
-        
-        CrashAggregation crash1 = CrashAggregation.builder()
-                .id("crash_1")
-                .gameId(game1.getId())
-                .crashCount(15L)
-                .timestamp(System.currentTimeMillis())
-                .windowStart(System.currentTimeMillis() - 300000)
-                .windowEnd(System.currentTimeMillis())
-                .game(game1)
-                .build();
-        crashReports.add(crash1);
-
-        Game game2 = new Game();
-        game2.setId("game_456");
-        game2.setTitle("Quest Master");
-        
-        CrashAggregation crash2 = CrashAggregation.builder()
-                .id("crash_2")
-                .gameId(game2.getId())
-                .crashCount(8L)
-                .timestamp(System.currentTimeMillis())
-                .windowStart(System.currentTimeMillis() - 300000)
-                .windowEnd(System.currentTimeMillis())
-                .game(game2)
-                .build();
-        crashReports.add(crash2);
-
-        // Reviews
-        reviews.add(new Review(
-            "review_1",
-            "game_123",
-            "The Last Shadow",
-            "player_999",
-            "BobJones",
-            5,
-            120,
-            "Excellent jeu ! Vraiment addictif et bien développé.",
-            LocalDateTime.now().minusHours(3)
-        ));
-
-        reviews.add(new Review(
-            "review_2",
-            "game_789",
-            "Quest Master",
-            "player_888",
-            "CatherineWilson",
-            4,
-            45,
-            "Très bon jeu, quelques bugs mineurs mais globalement satisfait.",
-            LocalDateTime.now().minusHours(12)
-        ));
-
-        reviews.add(new Review(
-            "review_3",
-            "game_123",
-            "The Last Shadow",
-            "player_777",
-            "DavidBrown",
-            3,
-            60,
-            "Pas mal, mais un peu court et répétitif.",
-            LocalDateTime.now().minusHours(24)
-        ));
     }
 
     public List<Review> getReviews() {
