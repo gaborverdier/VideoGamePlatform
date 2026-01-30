@@ -120,7 +120,7 @@ public class MyGamesTab extends ScrollPane {
         patchButton.setPrefWidth(100);
         patchButton.setStyle("-fx-font-size: 11px;");
         patchButton.setOnAction(e -> {
-            PublishPatchDialog.PatchData patchData = PublishPatchDialog.show();
+            PublishPatchDialog.PatchData patchData = PublishPatchDialog.show(game.getId());
             if (patchData != null) {
                 Patch patch = new Patch();
                 patch.setGame(game);
@@ -140,7 +140,7 @@ public class MyGamesTab extends ScrollPane {
         dlcButton.setPrefWidth(100);
         dlcButton.setStyle("-fx-font-size: 11px;");
         dlcButton.setOnAction(e -> {
-            PublishDLCDialog.DLCData dlcData = PublishDLCDialog.show();
+            PublishDLCDialog.DLCData dlcData = PublishDLCDialog.show(game.getId());
             if (dlcData != null) {
                 DLC dlc = new DLC();
                 dlc.setGame(game);

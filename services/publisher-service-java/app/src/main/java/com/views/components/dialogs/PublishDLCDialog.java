@@ -1,5 +1,9 @@
 package com.views.components.dialogs;
 
+import com.gaming.api.models.DLCModel;
+import com.util.AvroJacksonConfig;
+import com.util.ApiClient;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -10,7 +14,7 @@ import javafx.stage.Stage;
 
 public class PublishDLCDialog {
     
-    public static DLCData show() {
+    public static DLCData show(String gameId) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("Publier un DLC");
@@ -85,6 +89,20 @@ public class PublishDLCDialog {
                 try {
                     double price = Double.parseDouble(priceField.getText());
                     
+                    DLCModel dlcModel = new DLCModel();
+                    dlcModel.setTitle(nameField.getText());
+                    dlcModel.setPrice(price);
+                    dlcModel.setDescription(descriptionArea.getText());
+                    dlcModel.setGameId(gameId);
+                    dlcModel.setReleaseTimeStamp(System.currentTimeMillis());
+
+                    String json = AvroJacksonConfig.avroObjectMapper().writeValueAsString(dlcModel);
+                    String responseJson = ApiClient.postJson("/api/dlc/create", json);
+                    System.out.println("Response JSON: " + responseJson);
+
+                    DLCModel created = AvroJacksonConfig.avroObjectMapper()
+                        .readValue(responseJson, DLCModel.class);
+
                     result[0] = new DLCData(
                         nameField.getText(),
                         price,
@@ -95,6 +113,13 @@ public class PublishDLCDialog {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Erreur");
                     alert.setContentText("Le prix doit être un nombre valide");
+                    alert.showAndWait();
+                } catch (Exception ex) {
+                    System.out.println("[DLC] Error during DLC publish:");
+                    ex.printStackTrace();
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Erreur");
+                    alert.setContentText("Erreur lors de la publication du DLC: " + ex.getMessage());
                     alert.showAndWait();
                 }
             } else {

@@ -1,5 +1,9 @@
 package com.views.components.dialogs;
 
+import com.gaming.api.models.PatchModel;
+import com.util.ApiClient;
+import com.util.AvroJacksonConfig;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -12,7 +16,7 @@ import java.util.List;
 
 public class PublishPatchDialog {
     
-    public static PatchData show() {
+    public static PatchData show(String gameId) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("Publier une mise à jour (Patch)");
@@ -88,13 +92,36 @@ public class PublishPatchDialog {
                 List<String> modifications = Arrays.asList(modificationsArea.getText().split("\n"));
                 modifications.replaceAll(String::trim);
                 modifications.removeIf(String::isEmpty);
-                
-                result[0] = new PatchData(
-                    versionField.getText(),
-                    commentArea.getText(),
-                    modifications
-                );
-                dialog.close();
+
+                try {
+                    PatchModel patchModel = new PatchModel();
+                    patchModel.setId("");
+                    patchModel.setGameId(gameId);
+                    patchModel.setVersion(versionField.getText());
+                    patchModel.setReleaseTimeStamp(System.currentTimeMillis());
+                    patchModel.setDescription(commentArea.getText());
+
+                    String json = AvroJacksonConfig.avroObjectMapper().writeValueAsString(patchModel);
+                    String responseJson = ApiClient.postJson("/api/patch/create", json);
+                    System.out.println("Response JSON: " + responseJson);
+
+                    PatchModel created = AvroJacksonConfig.avroObjectMapper()
+                        .readValue(responseJson, PatchModel.class);
+
+                    result[0] = new PatchData(
+                        created.getVersion(),
+                        created.getDescription(),
+                        modifications
+                    );
+                    dialog.close();
+                } catch (Exception ex) {
+                    System.out.println("[PATCH] Error during patch publish:");
+                    ex.printStackTrace();
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Erreur");
+                    alert.setContentText("Erreur lors de la publication du patch: " + ex.getMessage());
+                    alert.showAndWait();
+                }
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Champs manquants");
