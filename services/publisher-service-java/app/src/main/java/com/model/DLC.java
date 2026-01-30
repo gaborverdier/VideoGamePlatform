@@ -15,6 +15,7 @@ public class DLC {
     private String name;
     private Long releaseTimeStamp;
     private String description;
+    private Double price;
 
     @ManyToOne
     @JoinColumn(name = "game_id")

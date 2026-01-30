@@ -23,6 +23,7 @@ public class DLCMapper {
         dto.setTitle(dlc.getName());
         dto.setReleaseTimeStamp(dlc.getReleaseTimeStamp());
         dto.setDescription(dlc.getDescription());
+        dto.setPrice(dlc.getPrice());
         return dto;
     }
 
@@ -37,6 +38,7 @@ public class DLCMapper {
         Game game = gameRepository.findById(dto.getGameId())
             .orElseThrow(() -> new IllegalArgumentException("Jeu introuvable avec l'ID: " + dto.getGameId()));
         dlc.setGame(game);
+        dlc.setPrice(dto.getPrice());
         return dlc;
     }
 }

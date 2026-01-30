@@ -8,6 +8,7 @@
     {"name": "gameId", "type": "string"},
     {"name": "title", "type": "string"},
     {"name":"releaseTimeStamp", "type": "long"},
-    {"name": "description", "type": "string"}
+    {"name": "description", "type": "string"},
+    {"name": "price", "type": "double"}
   ]
 }
