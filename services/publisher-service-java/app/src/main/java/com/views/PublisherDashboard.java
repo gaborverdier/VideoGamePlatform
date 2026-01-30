@@ -10,6 +10,12 @@ import com.views.components.tabs.MyGamesTab;
 import com.views.components.tabs.NotificationsTab;
 import com.views.components.dialogs.PublisherLoginDialog;
 import com.gaming.api.models.PublisherModel;
+import com.services.PublisherKafkaConsumerService;
+import com.model.Game;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class PublisherDashboard {
 
@@ -18,6 +24,7 @@ public class PublisherDashboard {
     private MyGamesTab myGamesTab;
     private NotificationsTab notificationsTab;
     private Label statsLabel;
+    private PublisherKafkaConsumerService kafkaConsumerService;
 
     public PublisherDashboard(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -64,6 +71,24 @@ public class PublisherDashboard {
         notificationsTabComponent.setStyle("-fx-font-size: 12px;");
 
         tabPane.getTabs().addAll(gamesTab, notificationsTabComponent);
+
+        // Initialiser le consumer Kafka pour écouter les crashs en temps réel
+        List<String> gameIds = myGamesTab.getPublishedGames().stream()
+                .map(Game::getId)
+                .collect(Collectors.toList());
+        kafkaConsumerService = new PublisherKafkaConsumerService(
+                currentPublisher.getId(), 
+                new ArrayList<>(gameIds), 
+                notificationsTab
+        );
+        kafkaConsumerService.start();
+
+        // Arrêter le consumer quand la fenêtre se ferme
+        primaryStage.setOnCloseRequest(event -> {
+            if (kafkaConsumerService != null) {
+                kafkaConsumerService.stop();
+            }
+        });
 
         root.setCenter(tabPane);
 
@@ -123,6 +148,14 @@ public class PublisherDashboard {
     private void updateStats() {
         if (statsLabel != null && myGamesTab != null) {
             statsLabel.setText("Jeux publiés: " + myGamesTab.getPublishedGames().size());
+            
+            // Mettre à jour les IDs de jeux pour le consumer Kafka
+            if (kafkaConsumerService != null) {
+                List<String> gameIds = myGamesTab.getPublishedGames().stream()
+                        .map(Game::getId)
+                        .collect(Collectors.toList());
+                kafkaConsumerService.updateGameIds(gameIds);
+            }
         }
     }
 }
