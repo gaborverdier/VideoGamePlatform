@@ -68,7 +68,7 @@ public class PlayerDashboardController {
             gameVersion,
             platform == null ? "unknown" : platform,
             combinedMessage,
-            Instant.now().getEpochSecond()
+            Instant.now().toEpochMilli()
         );
 
         // reset session

@@ -21,7 +21,7 @@ class CrashAggregationTopology {
     companion object {
         private const val INPUT_TOPIC = "game-crash-reported"
         private const val OUTPUT_TOPIC = "crash-aggregated"
-        private val WINDOW_SIZE = Duration.ofMinutes(5)
+        private val WINDOW_SIZE = Duration.ofSeconds(30)
     }
     
     fun build(builder: StreamsBuilder) {
@@ -33,7 +33,16 @@ class CrashAggregationTopology {
         val crashStream: KStream<String, GameCrashReported> = builder.stream(
             INPUT_TOPIC,
             Consumed.with(Serdes.String(), crashSerde)
+                // TEMPORARY FIX: Use Kafka message timestamp instead of crashTimestamp
+                // because crash events have incorrect timestamps (1970 instead of 2026)
+                .withTimestampExtractor { record, _ ->
+                    record.timestamp() // Use when message arrived in Kafka
+                }
         )
+            // Log incoming crashes for debugging
+            .peek { key, crash ->
+                println("🔴 Crash received: gameId=${crash.getGameId()}, crashTimestamp=${java.time.Instant.ofEpochMilli(crash.getCrashTimestamp())} (INCORRECT - using Kafka timestamp instead)")
+            }
         
         // 2. Group by gameId and apply tumbling window
         val crashCounts: KTable<Windowed<String>, Long> = crashStream
@@ -43,7 +52,7 @@ class CrashAggregationTopology {
             // Group by gameId
             .groupByKey(Grouped.with(Serdes.String(), crashSerde))
             
-            // Apply tumbling window of 5 minutes
+            // Apply tumbling window of 30 seconds
             .windowedBy(TimeWindows.ofSizeWithNoGrace(WINDOW_SIZE))
             
             // Count crashes per window
@@ -72,7 +81,10 @@ class CrashAggregationTopology {
             }
             // Log for debugging before writing
             .peek { key, value ->
-                println("📊 Crash Aggregation produced: gameId=$key, count=${value.getCrashCount()}, window=[${value.getWindowStart()} - ${value.getWindowEnd()}]")
+                val windowStart = java.time.Instant.ofEpochMilli(value.getWindowStart())
+                val windowEnd = java.time.Instant.ofEpochMilli(value.getWindowEnd())
+                println("📊 Crash Aggregation produced: gameId=$key, count=${value.getCrashCount()}")
+                println("   Window: [$windowStart - $windowEnd]")
             }
         
         // 4. Write to output topic
@@ -84,6 +96,7 @@ class CrashAggregationTopology {
         println("✅ Crash Aggregation Topology built")
         println("   📥 Input: $INPUT_TOPIC")
         println("   📤 Output: $OUTPUT_TOPIC")
-        println("   ⏱️  Window: ${WINDOW_SIZE.toMinutes()} minutes (Tumbling)")
+        println("   ⏱️  Window: ${WINDOW_SIZE.seconds} seconds (Tumbling)")
+        println("   ⚠️  Window emitted when next event arrives after window end")
     }
 }
