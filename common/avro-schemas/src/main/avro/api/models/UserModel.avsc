@@ -1,0 +1,15 @@
+{
+  "type":  "record",
+  "namespace":  "com.gaming.api.models",
+  "name": "UserModel",
+  "doc": "API response for user data",
+  "fields": [
+    {"name": "userId", "type": "string"},
+    {"name": "username", "type": "string"},
+    {"name": "email", "type": "string"},
+    {"name": "balance", "type":"double"},
+    {"name": "registeredAt", "type": "long"},
+    {"name": "lastLogin", "type": ["null", "long"], "default":  null},
+    {"name": "country", "type": ["null", "string"], "default": null}
+  ]
+}

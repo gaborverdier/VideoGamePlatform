@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.models",
+  "name": "GamePopularityScore",
+  "doc": "Game Popularity Score based on reviews and crashes",
+  "fields": [
+    {"name": "gameId", "type": "string"},
+    {"name": "score", "type": "int"}
+  ]
+}

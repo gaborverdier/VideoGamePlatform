@@ -1,0 +1,11 @@
+{
+  "type":  "record",
+  "namespace":  "com.gaming.api.models",
+  "name": "WishlistModel",
+  "doc": "API response for user wishlist (per game)",
+  "fields": [
+    {"name": "userId", "type": "string"},
+    {"name": "gameId", "type": "string"},
+    {"name": "addedAt", "type": "long"}
+  ]
+}

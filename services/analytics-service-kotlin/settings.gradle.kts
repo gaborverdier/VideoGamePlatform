@@ -12,3 +12,10 @@ plugins {
 
 rootProject.name = "analytics-service-kotlin"
 include("app")
+
+// Include common avro-schemas module
+includeBuild("../../common/avro-schemas") {
+    dependencySubstitution {
+        substitute(module("com.gaming:avro-schemas")).using(project(":"))
+    }
+}

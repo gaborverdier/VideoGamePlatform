@@ -32,6 +32,20 @@ services:
     networks:
       - app-net
 
+  kafka-init:
+    image: confluentinc/cp-kafka:7.8.3
+    container_name: kafka-init
+    depends_on:
+      - kafka
+    networks:
+      - app-net
+    volumes:
+      - ../scripts:/scripts:ro
+    environment:
+      BOOTSTRAP_SERVER: "kafka:29092"
+    entrypoint: ["/bin/sh", "/scripts/create-topics.sh"]
+    restart: "no"
+
   schema-registry:
     image: confluentinc/cp-schema-registry:7.8.3
     hostname: schema-registry
@@ -64,19 +78,21 @@ services:
     networks:
       - app-net
 
+
   postgres:
     image: postgres:16
     container_name: postgres
-    environment:
-      POSTGRES_DB: videogames_db
-      POSTGRES_USER: videogames_user
-      POSTGRES_PASSWORD: secretpassword
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespw
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./init-multi-db.sql:/docker-entrypoint-initdb.d/init-multi-db.sql:ro
     networks:
       - app-net
+
 
   pgadmin:
     image: dpage/pgadmin4:latest

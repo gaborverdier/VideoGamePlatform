@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.requests",
+  "name": "GameReleased",
+  "doc": "Game released Model",
+  "fields": [
+    {"name": "title", "type": "string"},
+    {"name": "publisherName", "type": "string"},
+    {"name": "publisherId", "type": "string"},
+    {"name": "platform", "type": "string"},
+    {"name": "genre", "type": "string"},
+    {"name": "releaseTimeStamp", "type": "long"},
+    {"name": "price", "type":  "double"},
+    {"name": "version", "type": "string"},
+    {"name": "description", "type": ["null", "string"], "default":  null}
+  ]
+}

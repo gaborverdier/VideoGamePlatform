@@ -1,0 +1,44 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.events",
+  "name": "GameCrashReported",
+  "doc": "Event published when a game crash is reported",
+  "fields":  [
+    {
+      "name": "crashId",
+      "type": "string",
+      "doc": "Unique identifier for the crash report"
+    },
+    {
+      "name": "userId",
+      "type": "string",
+      "doc": "User who experienced the crash"
+    },
+    {
+      "name": "gameId",
+      "type": "string",
+      "doc": "Game that crashed"
+    },
+    {
+      "name": "gameVersion",
+      "type": "string",
+      "doc": "Version of the game"
+    },
+    {
+      "name": "platform",
+      "type": "string",
+      "doc": "Platform where crash occurred"
+    },
+    {
+      "name": "errorMessage",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Error message from the crash"
+    },
+    {
+      "name": "crashTimestamp",
+      "type": "long",
+      "doc": "Unix timestamp (milliseconds) when crash occurred"
+    }
+  ]
+}

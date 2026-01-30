@@ -1,0 +1,27 @@
+meta {
+  name: CreateDLC
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8083/api/dlc/create
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "",
+    "gameId": "be0418fc-fa7c-490a-8a7d-0c1f3211614e",
+    "title": "un dlc",
+    "releaseTimeStamp": 20000000,
+    "description": "une description inutile",
+    "price": 19.9
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

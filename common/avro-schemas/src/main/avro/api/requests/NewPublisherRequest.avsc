@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.requests",
+  "name": "NewPublisherRequest",
+  "doc": "Publisher Request object",
+  "fields": [
+    {"name": "name", "type": "string"},
+    {"name": "email", "type": "string"},
+    {"name": "password", "type": "string"},
+    {"name" : "isCompany", "type": "boolean"}
+  ]
+}
