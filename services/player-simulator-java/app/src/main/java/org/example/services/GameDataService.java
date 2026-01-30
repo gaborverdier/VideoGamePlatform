@@ -98,7 +98,7 @@ public class GameDataService {
                     if (dlcs != null) {
                         for (DLCModel dm : dlcs) {
                             // map DLCModel -> local Game.DLC (no price available from API, use 0.0)
-                            g.addDLC(dm.getTitle(), 0.0);
+                            g.addDLC(dm.getTitle(), dm.getPrice());
                         }
                     }
                 } catch (Exception ex) {
@@ -267,7 +267,7 @@ public class GameDataService {
                         java.util.List<DLCModel> dlcs = getDLCsForGame(g.getId());
                         if (dlcs != null) {
                             for (DLCModel dm : dlcs) {
-                                g.addDLC(dm.getTitle(), 0.0);
+                                g.addDLC(dm.getTitle(), dm.getPrice());
                             }
                         }
                     } catch (Exception ignore) {

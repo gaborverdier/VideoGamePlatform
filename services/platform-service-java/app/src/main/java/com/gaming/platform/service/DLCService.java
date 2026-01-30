@@ -35,9 +35,7 @@ public class DLCService {
         dlc.setGameId(dlcModel.getGameId());
         dlc.setReleaseTimeStamp(dlcModel.getReleaseTimeStamp());
         dlc.setDescription(dlcModel.getDescription());
-        // set price from model if available, otherwise default to 0.0
-
-        dlc.setPrice(BigDecimal.valueOf(0.0));
+        dlc.setPrice(BigDecimal.valueOf(dlcModel.getPrice()));
 
         DLC savedDLC = dlcRepository.save(dlc);
         log.info("Created new DLC with ID {}", savedDLC.getId());
@@ -51,6 +49,7 @@ public class DLCService {
                 .setGameId(dlc.getGameId())
                 .setReleaseTimeStamp(dlc.getReleaseTimeStamp())
                 .setDescription(dlc.getDescription())
+                .setPrice(dlc.getPrice().doubleValue())
                 .build();
     }
 }

@@ -180,7 +180,7 @@ public class OwnedGameDetailsDialog {
                     // add if not already present (by title)
                     boolean exists = game.getAvailableDLCs().stream().anyMatch(d -> d.getName().equals(dm.getTitle()));
                     if (!exists) {
-                        game.addDLC(dm.getTitle(), 0.0);
+                        game.addDLC(dm.getTitle(), dm.getPrice());
                     }
                 }
             }
