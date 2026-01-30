@@ -204,7 +204,7 @@ public class EventConsumer {
         dlc.setGameId(event.getGameId());
         dlc.setTitle(event.getTitle());
         dlc.setDescription(event.getDescription());
-        dlc.setPrice(BigDecimal.valueOf(0.0));
+        dlc.setPrice(BigDecimal.valueOf(event.getPrice()));
         dlc.setReleaseTimeStamp(event.getReleaseTimeStamp());
         DLCRepository.save(dlc);
 

@@ -2,6 +2,7 @@ package org.example.models;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class Player {
@@ -35,7 +36,7 @@ public class Player {
     }
     
     private static String generateId() {
-        return "PLAYER-" + System.currentTimeMillis();
+        return UUID.randomUUID().toString();
     }
     
     // Getters

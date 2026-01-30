@@ -166,16 +166,36 @@ public class LoginDialog {
                         req.setCountry("N/A"); // TODO add country field
                         // Use centralized Avro ObjectMapper
                         String json = AvroJacksonConfig.avroObjectMapper().writeValueAsString(req);
-                        // Use centralized API client
-                        ApiClient.postJson("/api/users/register", json);
-                        // Registration successful
-                        Player player = new Player(usernameField.getText(), emailField.getText(), 100.0);
-                        SessionManager.getInstance().login(player);
-                        Alert success = new Alert(Alert.AlertType.INFORMATION);
-                        success.setTitle("Compte créé");
-                        success.setContentText("Bienvenue " + player.getUsername() + " !\nVous avez 100€ sur votre compte.");
-                        success.showAndWait();
-                        dialog.close();
+                        // Use centralized API client and capture platform response
+                        String responseJson = ApiClient.postJson("/api/users/register", json);
+                        ObjectMapper mapper = AvroJacksonConfig.avroObjectMapper();
+                        UserModel createdUser = null;
+                        try {
+                            createdUser = mapper.readValue(responseJson, UserModel.class);
+                        } catch (Exception parseEx) {
+                            System.out.println("[REGISTER] Error parsing platform response:");
+                            parseEx.printStackTrace();
+                        }
+
+                        if (createdUser != null && createdUser.getUserId() != null) {
+                            // Use platform-generated userId and balance
+                            String userId = createdUser.getUserId();
+                            String username = createdUser.getUsername();
+                            String email = createdUser.getEmail();
+                            double wallet = createdUser.getBalance();
+
+                            Player player = new Player(userId, username, email, wallet);
+                            SessionManager.getInstance().login(player);
+                            Alert success = new Alert(Alert.AlertType.INFORMATION);
+                            success.setTitle("Compte créé");
+                            success.setContentText("Bienvenue " + player.getUsername() + " !\nVous avez " + String.format("%.2f€", wallet) + " sur votre compte.");
+                            success.showAndWait();
+                            dialog.close();
+                        } else {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setContentText("Erreur lors de la création du compte: réponse invalide du serveur");
+                            alert.showAndWait();
+                        }
                     } catch (Exception ex) {
                         System.out.println("[REGISTER] Error during account creation:");
                         ex.printStackTrace();
