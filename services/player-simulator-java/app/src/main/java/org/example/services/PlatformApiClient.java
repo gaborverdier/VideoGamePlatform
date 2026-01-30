@@ -114,4 +114,14 @@ public class PlatformApiClient {
             return m.readValue(s, Long.class);
         }
     }
+
+    // POST /api/dlc-purchased/purchase/dlc/{dlcId}/user/{userId}
+    public void purchaseDLC(String userId, String dlcId) throws Exception {
+        ApiClient.postJson("/api/dlc-purchased/purchase/dlc/" + urlPath(dlcId) + "/user/" + urlPath(userId), "{}");
+    }
+
+    // GET /api/dlc-purchased/user/{userId}
+    public String getDLCPurchasesForUserJson(String userId) throws Exception {
+        return ApiClient.get("/api/dlc-purchased/user/" + urlPath(userId));
+    }
 }

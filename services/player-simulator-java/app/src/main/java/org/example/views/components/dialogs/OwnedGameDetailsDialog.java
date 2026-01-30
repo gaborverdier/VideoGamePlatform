@@ -315,103 +315,131 @@ public class OwnedGameDetailsDialog {
         
         VBox dlcList = new VBox(10);
         dlcList.setPadding(new javafx.geometry.Insets(5));
+        // Pre-mark DLCs as installed if backend shows the user purchased them
+        try {
+            org.example.models.Player current = SessionManager.getInstance().getCurrentPlayer();
+            if (current != null) {
+                PlatformApiClient api = new PlatformApiClient();
+                String purchasesJson = api.getDLCPurchasesForUserJson(current.getId());
+                if (purchasesJson != null && !purchasesJson.isEmpty()) {
+                    com.fasterxml.jackson.databind.ObjectMapper m = new com.fasterxml.jackson.databind.ObjectMapper();
+                    try {
+                        java.util.List<java.util.Map<String,Object>> list = m.readValue(purchasesJson, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<java.util.Map<String,Object>>>() {});
+                        java.util.Set<String> purchasedIds = new java.util.HashSet<>();
+                        for (java.util.Map<String,Object> entry : list) {
+                            Object v = entry.get("dlcId");
+                            if (v != null) purchasedIds.add(String.valueOf(v));
+                        }
+                        if (!purchasedIds.isEmpty()) {
+                            for (Game.DLC d : game.getAvailableDLCs()) {
+                                try {
+                                    if (d.getId() != null && purchasedIds.contains(d.getId())) d.setInstalled(true);
+                                } catch (Exception ignore) {}
+                            }
+                        }
+                    } catch (Exception ignore) {
+                        // ignore parse errors
+                    }
+                }
+            }
+        } catch (Exception ignore) {}
         
-        // Afficher tous les DLCs (installés et non installés)
+        // Afficher tous les DLCs (nom + statut installé + prix / bouton acheter)
         for (Game.DLC dlc : game.getAvailableDLCs()) {
-            VBox dlcItem = new VBox(5);
-            dlcItem.setPadding(new javafx.geometry.Insets(10));
-            dlcItem.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5;");
-            
-            HBox headerRow = new HBox(10);
-            headerRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-            
+            HBox row = new HBox(10);
+            row.setPadding(new javafx.geometry.Insets(10));
+            row.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 5;");
+            row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
             Label nameLabel = new Label(dlc.getName());
             nameLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
-            
+
             Label statusLabel = new Label(dlc.isInstalled() ? "✅ Installé" : "⬇ Non installé");
             statusLabel.setStyle("-fx-text-fill: " + (dlc.isInstalled() ? "#4CAF50" : "#FF9800") + ";");
-            
+
             javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
             javafx.scene.layout.HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
-            
+
             Label priceLabel = new Label(dlc.getFormattedPrice());
             priceLabel.setStyle("-fx-text-fill: #4CAF50; -fx-font-weight: bold; -fx-font-size: 14px;");
-            
-            headerRow.getChildren().addAll(nameLabel, statusLabel, spacer, priceLabel);
-            
-            // Infos supplémentaires pour DLC installé
-            HBox infoRow = new HBox(15);
-            infoRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-            
-            // Boutons d'action
-            HBox actionsRow = new HBox(10);
-            actionsRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-            
-            if (dlc.isInstalled()) {
-                Label dlcTimeLabel = new Label("⏱ " + dlc.getPlayedTime() + " min jouées");
-                dlcTimeLabel.setStyle("-fx-text-fill: #aaa;");
-                
-                infoRow.getChildren().addAll(dlcTimeLabel);
 
-                Button playDlcBtn = new Button("▶ Jouer");
-                playDlcBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
-                playDlcBtn.setOnAction(e -> {
-                    // Simuler 15 min de jeu sur le DLC
-                    dlc.addPlayedTime(15);
-                    dlcTimeLabel.setText("⏱ " + dlc.getPlayedTime() + " min jouées");
-                    Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setContentText("Vous avez joué 15 minutes au DLC " + dlc.getName() + " !");
-                    info.showAndWait();
-                });
-                
-                Button reviewDlcBtn = new Button("⭐ Évaluer");
-                reviewDlcBtn.setOnAction(e -> ReviewDialog.showForDLC(dlc, refreshCallback != null ? refreshCallback : onUpdate));
-                
-                actionsRow.getChildren().addAll(playDlcBtn, reviewDlcBtn);
-            } else {
-                // Acheter le DLC
+            row.getChildren().addAll(nameLabel, statusLabel, spacer, priceLabel);
+
+            if (!dlc.isInstalled()) {
                 Button buyBtn = new Button("Acheter");
                 buyBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
                 buyBtn.setOnAction(e -> {
-                    if (SessionManager.getInstance().getCurrentPlayer().getWallet() < dlc.getPrice()) {
+                    double price = dlc.getPrice();
+                    org.example.models.Player current = SessionManager.getInstance().getCurrentPlayer();
+                    if (current == null) {
+                        Alert error = new Alert(Alert.AlertType.ERROR);
+                        error.setContentText("Aucun joueur connecté.");
+                        error.showAndWait();
+                        return;
+                    }
+                    if (current.getWallet() < price) {
                         Alert error = new Alert(Alert.AlertType.ERROR);
                         error.setContentText("Solde insuffisant !");
                         error.showAndWait();
-                    } else {
-                        SessionManager.getInstance().getCurrentPlayer()
-                            .setWallet(SessionManager.getInstance().getCurrentPlayer().getWallet() - dlc.getPrice());
-                        
-                        game.installDLC(dlc);
-                        
-                        Alert success = new Alert(Alert.AlertType.INFORMATION);
-                        success.setContentText("DLC acheté et installé !");
-                        success.showAndWait();
-                        
-                        dialog.close();
-                        
-                        dlcBtn.setText("🎁 DLCs (" + game.getAvailableDLCs().size() + ")");
-                        
-                        if (onUpdate != null) onUpdate.run();
+                        return;
                     }
-                });
-                actionsRow.getChildren().addAll(buyBtn);
-            }
-            
-            // Avis
-            Button seeReviewsDlcBtn = new Button("Avis (" + dlc.getReviews().size() + ")");
-            seeReviewsDlcBtn.setOnAction(e -> ReviewsListDialog.showForDLC(dlc));
 
-            double avgRating = dlc.getAverageRating();
-            Label ratingLabel = new Label(avgRating > 0 ? String.format("⭐ %.1f/5", avgRating) : "Pas de note");
-            ratingLabel.setStyle("-fx-text-fill: #FFD700;");
-            actionsRow.getChildren().addAll(seeReviewsDlcBtn, ratingLabel);
-            
-            dlcItem.getChildren().addAll(headerRow);
-            if (!infoRow.getChildren().isEmpty()) {
-                dlcItem.getChildren().add(infoRow);
+                    // Perform purchase via platform API, then reload DLCs and purchases
+                    new Thread(() -> {
+                        PlatformApiClient api = new PlatformApiClient();
+                        try {
+                            String userId = current.getId();
+                            api.purchaseDLC(userId, dlc.getId());
+
+                            javafx.application.Platform.runLater(() -> current.setWallet(current.getWallet() - price));
+
+                            GameDataService.getInstance().reload();
+
+                            String purchasesJson = api.getDLCPurchasesForUserJson(userId);
+                            java.util.Set<String> purchasedIds = new java.util.HashSet<>();
+                            if (purchasesJson != null && !purchasesJson.isEmpty()) {
+                                com.fasterxml.jackson.databind.ObjectMapper m = new com.fasterxml.jackson.databind.ObjectMapper();
+                                try {
+                                    java.util.List<java.util.Map<String,Object>> list = m.readValue(purchasesJson, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<java.util.Map<String,Object>>>() {});
+                                    for (java.util.Map<String,Object> entry : list) {
+                                        Object v = entry.get("dlcId");
+                                        if (v != null) purchasedIds.add(String.valueOf(v));
+                                    }
+                                } catch (Exception ex) {
+                                    // ignore parse errors
+                                }
+                            }
+
+                            Game refreshed = GameDataService.getInstance().findGameById(game.getId());
+                            if (refreshed != null) {
+                                for (Game.DLC d : refreshed.getAvailableDLCs()) {
+                                    if (purchasedIds.contains(d.getId())) d.setInstalled(true);
+                                }
+                            }
+
+                            javafx.application.Platform.runLater(() -> {
+                                Alert success = new Alert(Alert.AlertType.INFORMATION);
+                                success.setContentText("DLC acheté et enregistré sur la plateforme !");
+                                success.showAndWait();
+                                dialog.close();
+                                dlcBtn.setText("🎁 DLCs (" + game.getAvailableDLCs().size() + ")");
+                                if (onUpdate != null) onUpdate.run();
+                                if (refreshCallback != null) refreshCallback.run();
+                            });
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                            javafx.application.Platform.runLater(() -> {
+                                Alert err = new Alert(Alert.AlertType.ERROR);
+                                err.setContentText("Échec de l'achat du DLC: " + ex.getMessage());
+                                err.showAndWait();
+                            });
+                        }
+                    }).start();
+                });
+                row.getChildren().add(buyBtn);
             }
-            dlcItem.getChildren().add(actionsRow);
-            dlcList.getChildren().add(dlcItem);
+
+            dlcList.getChildren().add(row);
         }
         
         scrollPane.setContent(dlcList);

@@ -28,6 +28,8 @@ public class DLCPurchasedService {
 
 
         DLCPurchased dlcPurchased = new DLCPurchased();
+        // ensure id is assigned (entity uses manual id assignment)
+        dlcPurchased.setId(java.util.UUID.randomUUID().toString());
         dlcPurchased.setDlcId(dlcId);
         dlcPurchased.setUserId(userId);
         dlcPurchasedRepository.save(dlcPurchased);

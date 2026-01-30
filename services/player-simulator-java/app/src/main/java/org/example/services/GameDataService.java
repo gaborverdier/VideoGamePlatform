@@ -97,8 +97,16 @@ public class GameDataService {
                     java.util.List<DLCModel> dlcs = getDLCsForGame(g.getId());
                     if (dlcs != null) {
                         for (DLCModel dm : dlcs) {
-                            // map DLCModel -> local Game.DLC (no price available from API, use 0.0)
-                            g.addDLC(dm.getTitle(), dm.getPrice());
+                            // prefer storing backend id when available
+                            try {
+                                if (dm.getId() != null) {
+                                    g.addDLC(dm.getId(), dm.getTitle(), dm.getPrice());
+                                } else {
+                                    g.addDLC(dm.getTitle(), dm.getPrice());
+                                }
+                            } catch (Exception ignore) {
+                                g.addDLC(dm.getTitle(), dm.getPrice());
+                            }
                         }
                     }
                 } catch (Exception ex) {
@@ -197,7 +205,6 @@ public class GameDataService {
             }
             // Note: DLCs for games are populated in loadFromBackend and when opening OwnedGameDetailsDialog.
             // Avoid fetching DLCs again here to prevent duplicates.
-
             // get installed flags and installed versions from local storage
             try {
                 java.util.Map<String, String> installed = InstalledGamesStore.getInstance().getInstalledWithVersions(userId);
@@ -209,6 +216,38 @@ public class GameDataService {
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
+            }
+
+            // Fetch DLC purchases for this user and mark matching DLCs as installed
+            try {
+                String purchasesJson = apiClient.getDLCPurchasesForUserJson(userId);
+                java.util.Set<String> purchasedIds = new java.util.HashSet<>();
+                if (purchasesJson != null && !purchasesJson.isEmpty()) {
+                    com.fasterxml.jackson.databind.ObjectMapper m = new com.fasterxml.jackson.databind.ObjectMapper();
+                    try {
+                        java.util.List<java.util.Map<String,Object>> list = m.readValue(purchasesJson, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<java.util.Map<String,Object>>>() {});
+                        for (java.util.Map<String,Object> entry : list) {
+                            Object v = entry.get("dlcId");
+                            if (v != null) purchasedIds.add(String.valueOf(v));
+                        }
+                    } catch (Exception ignore) {
+                        // ignore parse errors
+                    }
+                }
+
+                if (!purchasedIds.isEmpty()) {
+                    for (Game g : result) {
+                        try {
+                            for (Game.DLC d : g.getAvailableDLCs()) {
+                                if (d.getId() != null && purchasedIds.contains(d.getId())) {
+                                    d.setInstalled(true);
+                                }
+                            }
+                        } catch (Exception ignore) {}
+                    }
+                }
+            } catch (Exception ex) {
+                // non-fatal
             }
             return result;
         } catch (Exception e) {
@@ -267,8 +306,16 @@ public class GameDataService {
                         java.util.List<DLCModel> dlcs = getDLCsForGame(g.getId());
                         if (dlcs != null) {
                             for (DLCModel dm : dlcs) {
-                                g.addDLC(dm.getTitle(), dm.getPrice());
-                            }
+                                    try {
+                                        if (dm.getId() != null) {
+                                            g.addDLC(dm.getId(), dm.getTitle(), dm.getPrice());
+                                        } else {
+                                            g.addDLC(dm.getTitle(), dm.getPrice());
+                                        }
+                                    } catch (Exception ignore) {
+                                        g.addDLC(dm.getTitle(), dm.getPrice());
+                                    }
+                                }
                         }
                     } catch (Exception ignore) {
                         System.err.println("Failed to load DLCs for wishlist game " + g.getId() + ": " + ignore.getMessage());

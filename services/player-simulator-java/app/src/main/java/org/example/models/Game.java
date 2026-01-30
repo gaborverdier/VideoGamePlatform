@@ -1,4 +1,4 @@
-package org.example. models;
+package org.example.models;
 import com.gaming.api.models.GameModel;
 import javafx.scene.image.Image;
 import java.util.ArrayList;
@@ -160,6 +160,14 @@ public class Game {
         }
     }
 
+    // add DLC with explicit id (from backend)
+    public void addDLC(String id, String name, double price) {
+        boolean exists = availableDLCs.stream().anyMatch(d -> d.getId() != null && d.getId().equals(id));
+        if (!exists) {
+            availableDLCs.add(new DLC(id, name, price));
+        }
+    }
+
     public void installDLC(DLC dlc) {
         dlc.setInstalled(true);
     }
@@ -232,7 +240,11 @@ public class Game {
         private List<Review> reviews = new ArrayList<>();
         
         public DLC(String name, double price) {
-            this.id = "DLC-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 1000);
+            this("DLC-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 1000), name, price);
+        }
+
+        public DLC(String id, String name, double price) {
+            this.id = id;
             this.name = name;
             this.price = price;
             this.installed = false;

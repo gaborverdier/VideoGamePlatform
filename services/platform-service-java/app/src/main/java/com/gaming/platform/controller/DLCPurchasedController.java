@@ -13,14 +13,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gaming.platform.model.DLCPurchased;
 import com.gaming.platform.service.DLCPurchasedService;
+import lombok.RequiredArgsConstructor;
 
 
 
 @RestController
 @RequestMapping("/api/dlc-purchased")
+@RequiredArgsConstructor
 public class DLCPurchasedController {
 
-    private DLCPurchasedService dlcService;
+    private final DLCPurchasedService dlcService;
 
     @PostMapping("/purchase/dlc/{dlcId}/user/{userId}")
     public ResponseEntity<DLCPurchased> purchaseDLC(@PathVariable String dlcId, @PathVariable String userId, @RequestBody String entity) {
