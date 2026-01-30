@@ -32,6 +32,7 @@ public class EventProducer {
     private static final String USER_REGISTERED_TOPIC = "user-registered";
     private static final String GAME_PURCHASED_TOPIC = "game-purchased";
     private static final String NOTIFICATION_TOPIC = "new-notification";
+    private static final String GAME_REVIEWED_TOPIC = "game-reviewed";
 
     public EventProducer(@Qualifier("producerProperties") Properties producerProperties) {
         this.producerProperties = producerProperties;
@@ -112,6 +113,21 @@ public class EventProducer {
         } catch (Exception e) {
             log.error("❌ Error publishing GamePurchased event", e);
             throw new RuntimeException("Failed to publish GamePurchased event", e);
+        }
+    }
+
+    /**
+     * Publish GameReviewed event
+     */
+    public void publishGameReviewed(com.gaming.events.GameReviewed review) {
+        try {
+            sendEvent(GAME_REVIEWED_TOPIC, review.getReviewId(), review);
+            log.info("📤 Published GameReviewed event: User={}, Game={}, Rating={}/5",
+                    review.getUsername(), review.getGameId(), review.getRating());
+
+        } catch (Exception e) {
+            log.error("❌ Error publishing GameReviewed event", e);
+            throw new RuntimeException("Failed to publish GameReviewed event", e);
         }
     }
 

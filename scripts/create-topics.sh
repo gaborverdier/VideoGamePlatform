@@ -30,6 +30,7 @@ create_topic() {
 # USER / PLAYER EVENTS
 # ============================================
 create_topic "user-registered" 3 1
+create_topic "game-reviewed" 3 1
 
 # ============================================
 # GAME CATALOG EVENTS

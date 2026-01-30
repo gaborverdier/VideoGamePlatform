@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "namespace": "com.gaming.api.models",
+  "name": "GamePopularityScore",
+  "doc": "Game Popularity Score based on reviews and crashes",
+  "fields": [
+    {"name": "gameId", "type": "string"},
+    {"name": "popularityScore", "type": "double", "doc": "Calculated popularity score (0-100)"},
+    {"name": "averageRating", "type": "double", "doc": "Average review rating"},
+    {"name": "totalReviews", "type": "long", "doc": "Total number of reviews"},
+    {"name": "crashRate", "type": "double", "doc": "Crash rate (crashes per session)"},
+    {"name": "totalCrashes", "type": "long", "doc": "Total crashes in window"},
+    {"name": "timestamp", "type": "long", "doc": "Calculation timestamp"},
+    {"name": "windowStart", "type": "long", "doc": "Window start timestamp"},
+    {"name": "windowEnd", "type": "long", "doc": "Window end timestamp"}
+  ]
+}

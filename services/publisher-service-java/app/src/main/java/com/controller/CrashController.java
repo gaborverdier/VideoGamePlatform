@@ -1,6 +1,6 @@
 package com.controller;
 
-import com.model.CrashAggregation;
+import com.gaming.api.models.CrashAggregationModel;
 import com.service.CrashService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,20 +18,26 @@ public class CrashController {
     private CrashService crashService;
 
     @GetMapping
-    public ResponseEntity<List<CrashAggregation>> getAllCrashAggregations() {
+    public ResponseEntity<List<CrashAggregationModel>> getAllCrashAggregations() {
         return ResponseEntity.ok(crashService.getAllCrashes());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CrashAggregation> getCrashAggregationById(@PathVariable String id) {
-        Optional<CrashAggregation> crash = crashService.getCrashById(id);
+    public ResponseEntity<CrashAggregationModel> getCrashAggregationById(@PathVariable String id) {
+        Optional<CrashAggregationModel> crash = crashService.getCrashById(id);
         return crash.map(ResponseEntity::ok)
                     .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/game/{gameId}")
-    public ResponseEntity<List<CrashAggregation>> getCrashAggregationsByGame(@PathVariable String gameId) {
-        List<CrashAggregation> crashes = crashService.getCrashesByGame(gameId);
+    public ResponseEntity<List<CrashAggregationModel>> getCrashAggregationsByGame(@PathVariable String gameId) {
+        List<CrashAggregationModel> crashes = crashService.getCrashesByGame(gameId);
+        return ResponseEntity.ok(crashes);
+    }
+
+    @GetMapping("/publisher/{publisherId}")
+    public ResponseEntity<List<CrashAggregationModel>> getCrashAggregationsByPublisher(@PathVariable String publisherId) {
+        List<CrashAggregationModel> crashes = crashService.getCrashesByPublisher(publisherId);
         return ResponseEntity.ok(crashes);
     }
 }

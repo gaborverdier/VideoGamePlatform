@@ -22,6 +22,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final WishlistService wishlistService;
     private final GameService gameService;
+    private final com.gaming.platform.producer.EventProducer eventProducer;
 
     public Review saveFromEvent(GameReviewed event) {
         Review review = new Review();
@@ -35,6 +36,9 @@ public class ReviewService {
 
         try{
             Optional<GameModel> game = gameService.getGameById(event.getGameId());
+
+            // Publish GameReviewed event to Kafka
+            eventProducer.publishGameReviewed(event);
 
             wishlistService.createNotificationFromEvent(event);
             wishlistService.notifyWishlistUsersOfNewReview(event.getGameId(), game.map(GameModel::getTitle).orElse("Unknown Game"));
