@@ -171,7 +171,17 @@ public class OwnedGameDetailsDialog {
         });
 
         // DLCs button
+        // Try to prefer backend-populated DLCs if available in GameDataService
         int totalDLCs = game.getAvailableDLCs().size();
+        try {
+            Game backendGame = GameDataService.getInstance().findGameById(game.getId());
+            if (backendGame != null && backendGame.getAvailableDLCs() != null && !backendGame.getAvailableDLCs().isEmpty()) {
+                game.getAvailableDLCs().clear();
+                game.getAvailableDLCs().addAll(backendGame.getAvailableDLCs());
+                totalDLCs = game.getAvailableDLCs().size();
+            }
+        } catch (Exception ignore) {}
+
         Button dlcBtn = new Button("🎁 DLCs (" + totalDLCs + ")");
         dlcBtn.setMaxWidth(Double.MAX_VALUE);
         dlcBtn.setDisable(totalDLCs == 0);
@@ -187,6 +197,13 @@ public class OwnedGameDetailsDialog {
                             try {
                                 game.getReviews().clear();
                                 game.getReviews().addAll(refreshed.getReviews());
+                            } catch (Exception ignore) {}
+
+                            // ensure DLC list is updated from backend copy
+                            try {
+                                game.getAvailableDLCs().clear();
+                                if (refreshed.getAvailableDLCs() != null)
+                                    game.getAvailableDLCs().addAll(refreshed.getAvailableDLCs());
                             } catch (Exception ignore) {}
 
                             timeLabel.setText("Temps de jeu: " + game.getPlayedTime() + " min");
