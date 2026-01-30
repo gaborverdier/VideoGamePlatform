@@ -137,7 +137,7 @@ public class PlayerDashboard extends Application {
     
     private void refreshAll() {
         try {
-            GameDataService.getInstance();
+            GameDataService.getInstance().reload();
         } catch (Exception e) {
             // reload() handles its own error reporting, but guard here to avoid crashing UI
             e.printStackTrace();
