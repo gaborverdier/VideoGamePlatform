@@ -5,11 +5,12 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.model.CrashAggregation;
-import com.model.Game;
 import com.model.Review;
+import com.util.ApiClient;
+import com.util.AvroJacksonConfig;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -143,7 +144,7 @@ public class NotificationsTab extends ScrollPane {
     }
 
     public void addCrashReport(CrashAggregation crash) {
-        crashReports.add(crash);
+        crashReports.add(0, crash);
         updateView();
     }
 
@@ -152,7 +153,7 @@ public class NotificationsTab extends ScrollPane {
     }
 
     public void addReview(Review review) {
-        reviews.add(review);
+        reviews.add(0, review);
         updateView();
     }
 }
