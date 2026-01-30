@@ -95,7 +95,7 @@ public class GamePlayDialog {
         quitBtn.setStyle("-fx-background-color: #555; -fx-text-fill: white;");
         long sessionStart = System.currentTimeMillis();
         quitBtn.setOnAction(e -> {
-            // send session to platform server (non-blocking)
+            // send session to platform server in background, then invoke onUpdate and close dialog
             new Thread(() -> {
                 try {
                     String userId = SessionManager.getInstance().getCurrentPlayer() != null ? SessionManager.getInstance().getCurrentPlayer().getId() : null;
@@ -112,11 +112,13 @@ public class GamePlayDialog {
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
+                } finally {
+                    javafx.application.Platform.runLater(() -> {
+                        if (onUpdate != null) onUpdate.run();
+                        dialog.close();
+                    });
                 }
             }).start();
-
-            if (onUpdate != null) onUpdate.run();
-            dialog.close();
         });
         
         HBox crashBox = new HBox(10, crashType, crashMessageField);

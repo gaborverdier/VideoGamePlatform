@@ -1,10 +1,9 @@
 package org.example.views.components.dialogs;
 
 import org.example.models.Game;
-import org.example.services.SessionManager;
 import org.example.services.GameDataService;
 import org.example.services.PlatformApiClient;
-import com.gaming.api.models.DLCModel;
+import org.example.services.SessionManager;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -69,9 +68,9 @@ public class OwnedGameDetailsDialog {
                 PlatformApiClient api = new PlatformApiClient();
                 long totalMs = api.getTotalPlayedForGameAllTime(game.getId());
                 long totalMin = totalMs / 60_000L;
-                javafx.application.Platform.runLater(() -> {
-                    timeLabel.setText("Temps total de jeu: " + totalMin + " min ");
-                });
+                // cache the backend total on the Game instance so other dialogs can reuse it
+                game.setTotalPlayedAllTimeMs(totalMs);
+                javafx.application.Platform.runLater(() -> timeLabel.setText("Temps total de jeu: " + totalMin + " min "));
             } catch (Exception ex) {
                 // best-effort: ignore failures
             }
@@ -104,10 +103,33 @@ public class OwnedGameDetailsDialog {
             updateNowBtn.setText("🔁 Mettre à jour");
         }
 
+        // Open the updates dialog when clicking the update button
+        updateNowBtn.setOnAction(e -> showUpdatesDialog(game, updateNowBtn, onUpdate));
+
+        // refresh playtime from platform server (used after closing GamePlayDialog)
+        Runnable refreshPlaytime = () -> {
+            new Thread(() -> {
+                try {
+                    PlatformApiClient api = new PlatformApiClient();
+                    long totalMs = api.getTotalPlayedForGameAllTime(game.getId());
+                    long totalMin = totalMs / 60_000L;
+                    javafx.application.Platform.runLater(() -> timeLabel.setText("Temps total de jeu: " + totalMin + " min "));
+                } catch (Exception ex) {
+                    // ignore
+                }
+            }).start();
+        };
+
+        // composite update: refresh this dialog and forward onUpdate to parent if present
+        Runnable combinedOnUpdate = () -> {
+            try { refreshPlaytime.run(); } catch (Exception ignore) {}
+            if (onUpdate != null) onUpdate.run();
+        };
+
         // now assign handlers
         playBtn.setOnAction(e -> {
             if (game.isInstalled()) {
-                GamePlayDialog.show(game, onUpdate, SessionManager.getInstance().getPlayerController());
+                GamePlayDialog.show(game, combinedOnUpdate, SessionManager.getInstance().getPlayerController());
             } else {
                 GameInstallDialog.show(game, () -> {
                     statusLabel.setText("✅ Installé");
@@ -132,7 +154,6 @@ public class OwnedGameDetailsDialog {
 
         Button reviewBtn = new Button("⭐ Laisser un avis");
         reviewBtn.setMaxWidth(Double.MAX_VALUE);
-        reviewBtn.setOnAction(e -> ReviewDialog.show(game));
 
         Button seeReviewsBtn = new Button("Voir les avis (" + game.getReviews().size() + ")");
         seeReviewsBtn.setMaxWidth(Double.MAX_VALUE);
@@ -146,55 +167,56 @@ public class OwnedGameDetailsDialog {
             if (onUpdate != null) onUpdate.run();
         });
 
-        updateNowBtn.setOnAction(e -> {
-            String userId = SessionManager.getInstance().getCurrentPlayer() != null ? SessionManager.getInstance().getCurrentPlayer().getId() : null;
-            if (userId == null) return;
-            try {
-                GameDataService.getInstance().installGameForUser(userId, game.getId(), game.getVersion());
-                game.setInstalled(true);
-                game.setInstalledVersion(game.getVersion());
-                updateNowBtn.setDisable(true);
-                updateNowBtn.setStyle("");
-                updateNowBtn.setText("🔁 Mettre à jour");
-                statusLabel.setText("✅ Installé");
-                statusLabel.setStyle("-fx-text-fill: #4CAF50; -fx-font-size: 14px;");
-                playBtn.setText("▶ JOUER");
-                installedVerLabel.setText("Version installée: " + (game.getInstalledVersion() != null ? game.getInstalledVersion() : "N/A"));
-                Alert info = new Alert(Alert.AlertType.INFORMATION);
-                info.setContentText("Jeu mis à jour vers la version " + game.getVersion());
-                info.showAndWait();
-                if (onUpdate != null) onUpdate.run();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                Alert err = new Alert(Alert.AlertType.ERROR);
-                err.setContentText("Échec de la mise à jour : " + ex.getMessage());
-                err.showAndWait();
-            }
-        });
-        
-        // Populate remote DLCs (best-effort) so the DLC button state is correct
-        try {
-            java.util.List<DLCModel> remote = GameDataService.getInstance().getDLCsForGame(game.getId());
-            if (remote != null) {
-                for (DLCModel dm : remote) {
-                    // add if not already present (by title)
-                    boolean exists = game.getAvailableDLCs().stream().anyMatch(d -> d.getName().equals(dm.getTitle()));
-                    if (!exists) {
-                        game.addDLC(dm.getTitle(), dm.getPrice());
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            System.err.println("Failed to fetch DLCs for owned game " + game.getId() + ": " + ex.getMessage());
-        }
-
-        // DLCs
+        // DLCs button
         int totalDLCs = game.getAvailableDLCs().size();
         Button dlcBtn = new Button("🎁 DLCs (" + totalDLCs + ")");
         dlcBtn.setMaxWidth(Double.MAX_VALUE);
         dlcBtn.setDisable(totalDLCs == 0);
-        dlcBtn.setOnAction(e -> showDLCsDialog(game, dlcBtn, onUpdate));
-        
+
+        // centralised refresh routine: reload backend data and update visible controls
+        Runnable refreshFromBackend = () -> {
+            new Thread(() -> {
+                try {
+                    GameDataService.getInstance().reload();
+                    Game refreshed = GameDataService.getInstance().findGameById(game.getId());
+                    if (refreshed != null) {
+                        javafx.application.Platform.runLater(() -> {
+                            try {
+                                game.getReviews().clear();
+                                game.getReviews().addAll(refreshed.getReviews());
+                            } catch (Exception ignore) {}
+
+                            timeLabel.setText("Temps de jeu: " + game.getPlayedTime() + " min");
+                            installedVerLabel.setText("Version installée: " + (game.getInstalledVersion() != null ? game.getInstalledVersion() : "N/A"));
+                            statusLabel.setText(game.isInstalled() ? "✅ Installé" : "⬇ Pas encore installé");
+                            statusLabel.setStyle("-fx-text-fill: " + (game.isInstalled() ? "#4CAF50" : "#FF9800") + "; -fx-font-size: 14px;");
+                            seeReviewsBtn.setText("Voir les avis (" + game.getReviews().size() + ")");
+                            dlcBtn.setText("🎁 DLCs (" + game.getAvailableDLCs().size() + ")");
+                            favoriteBtn.setText(game.isFavorite() ? "❤ Retirer des favoris" : "❤ Ajouter aux favoris");
+
+                            boolean nowNeedsUpdate = game.isInstalled() && game.getVersion() != null && (game.getInstalledVersion() == null || !game.getVersion().equals(game.getInstalledVersion()));
+                            if (nowNeedsUpdate) {
+                                updateNowBtn.setDisable(false);
+                                updateNowBtn.setStyle("-fx-background-color: #e53935; -fx-text-fill: white; -fx-font-weight: bold;");
+                                updateNowBtn.setText("🔁 Mettre à jour → " + (game.getVersion() != null ? game.getVersion() : "N/A"));
+                            } else {
+                                updateNowBtn.setDisable(true);
+                                updateNowBtn.setStyle("");
+                                updateNowBtn.setText("🔁 Mettre à jour");
+                            }
+                        });
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }).start();
+
+            if (onUpdate != null) onUpdate.run();
+        };
+
+        reviewBtn.setOnAction(e -> ReviewDialog.show(game, refreshFromBackend));
+        dlcBtn.setOnAction(e -> showDLCsDialog(game, dlcBtn, onUpdate, refreshFromBackend));
+
         actionsBox.getChildren().addAll(playBtn, reviewBtn, seeReviewsBtn, favoriteBtn, updateNowBtn, dlcBtn);
         
         centerPane.getChildren().addAll(titleLabel, platformLabel, supportedLabel, statusLabel, timeLabel, new Separator(), actionsBox);
@@ -247,7 +269,7 @@ public class OwnedGameDetailsDialog {
         });
     }
     
-    private static void showDLCsDialog(Game game, Button dlcBtn, Runnable onUpdate) {
+    private static void showDLCsDialog(Game game, Button dlcBtn, Runnable onUpdate, Runnable refreshCallback) {
         if (game.getPendingDLCs().isEmpty() && game.getAvailableDLCs().stream().noneMatch(Game.DLC::isInstalled)) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("Aucun DLC disponible.");
@@ -324,7 +346,7 @@ public class OwnedGameDetailsDialog {
                 });
                 
                 Button reviewDlcBtn = new Button("⭐ Évaluer");
-                reviewDlcBtn.setOnAction(e -> ReviewDialog.showForDLC(dlc));
+                reviewDlcBtn.setOnAction(e -> ReviewDialog.showForDLC(dlc, refreshCallback != null ? refreshCallback : onUpdate));
                 
                 actionsRow.getChildren().addAll(playDlcBtn, reviewDlcBtn);
             } else {

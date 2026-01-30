@@ -35,6 +35,8 @@ public class Game {
     // Version info
     private String version; // backend/latest version
     private String installedVersion; // locally installed version
+    // Cached total played time reported by platform (milliseconds) - may be null if unknown
+    private Long totalPlayedAllTimeMs = null;
     
     // Constructeur complet
     public Game(String id, String name, double price, String genre, String publisherId, String publisherName,
@@ -195,6 +197,11 @@ public class Game {
 
     public String getInstalledVersion() { return installedVersion; }
     public void setInstalledVersion(String installedVersion) { this.installedVersion = installedVersion; }
+
+    // Backend-reported totals (cached)
+    public Long getTotalPlayedAllTimeMs() { return totalPlayedAllTimeMs; }
+    public void setTotalPlayedAllTimeMs(Long totalPlayedAllTimeMs) { this.totalPlayedAllTimeMs = totalPlayedAllTimeMs; }
+    public Long getTotalPlayedAllTimeMinutes() { return totalPlayedAllTimeMs == null ? null : (totalPlayedAllTimeMs / 60_000L); }
     
     @Override
     public String toString() {

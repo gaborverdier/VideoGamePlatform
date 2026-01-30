@@ -3,6 +3,7 @@ package org.example.views.components.dialogs;
 import org.example.models.Game;
 import org.example.models.Review;
 import org.example.services.SessionManager;
+import org.example.services.PlatformApiClient;
 import org.example.util.ApiClient;
 import org.example.util.AvroJacksonConfig;
 
@@ -24,25 +25,43 @@ import javafx.stage.Stage;
 
 public class ReviewDialog {
 
-    public static void show(Game game) {
-        if (game.getPlayedTime() < 30) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Temps de jeu insuffisant");
-            alert.setContentText("Vous devez jouer au moins 30 minutes avant de pouvoir laisser un avis.");
-            alert.showAndWait();
-            return;
-        }
+    public static void show(Game game, Runnable onSuccess) {
+        // Check playtime (local and backend) asynchronously, then open dialog if allowed
+        new Thread(() -> {
+            try {
+                long localMin = game.getPlayedTime();
+                long backendMin = 0L;
+                try {
+                    PlatformApiClient api = new PlatformApiClient();
+                    long totalMs = api.getTotalPlayedForGameAllTime(game.getId());
+                    backendMin = totalMs / 60_000L;
+                } catch (Exception ex) {
+                    // best-effort: ignore backend failures
+                }
 
-        Stage dialog = new Stage();
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.setTitle("Évaluer " + game.getName());
+                long effectiveMin = Math.max(localMin, backendMin);
+                if (effectiveMin < 30) {
+                    javafx.application.Platform.runLater(() -> {
+                        Alert alert = new Alert(Alert.AlertType.WARNING);
+                        alert.setTitle("Temps de jeu insuffisant");
+                        alert.setContentText("Vous devez jouer au moins 30 minutes avant de pouvoir laisser un avis.");
+                        alert.showAndWait();
+                    });
+                    return;
+                }
 
-        VBox root = new VBox(15);
-        root.setPadding(new Insets(20));
-        root.setStyle("-fx-background-color: #2b2b2b;");
+                // open UI on FX thread
+                javafx.application.Platform.runLater(() -> {
+                    Stage dialog = new Stage();
+                    dialog.initModality(Modality.APPLICATION_MODAL);
+                    dialog.setTitle("Évaluer " + game.getName());
 
-        Label titleLabel = new Label("Évaluer " + game.getName());
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;");
+                    VBox root = new VBox(15);
+                    root.setPadding(new Insets(20));
+                    root.setStyle("-fx-background-color: #2b2b2b;");
+
+                    Label titleLabel = new Label("Évaluer " + game.getName());
+                    titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;");
 
         // Sélection étoiles
         Label ratingLabel = new Label("Note:");
@@ -100,6 +119,13 @@ public class ReviewDialog {
                 success.setContentText("Avis publié !");
                 success.showAndWait();
 
+                // notify caller so UI can refresh from backend
+                try {
+                    if (onSuccess != null) onSuccess.run();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
                 dialog.close();
             }
         });
@@ -108,9 +134,15 @@ public class ReviewDialog {
 
         root.getChildren().addAll(titleLabel, ratingLabel, starsBox, commentLabel, commentArea, buttonBox);
 
-        Scene scene = new Scene(root, 500, 400);
-        dialog.setScene(scene);
-        dialog.showAndWait();
+                    Scene scene = new Scene(root, 500, 400);
+                    dialog.setScene(scene);
+                    dialog.showAndWait();
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     private static void postReview(Review review) {
@@ -130,7 +162,7 @@ public class ReviewDialog {
 
     }
 
-    public static void showForDLC(Game.DLC dlc) {
+    public static void showForDLC(Game.DLC dlc, Runnable onSuccess) {
         if (dlc.getPlayedTime() < 15) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Temps de jeu insuffisant");
@@ -203,6 +235,12 @@ public class ReviewDialog {
                 Alert success = new Alert(Alert.AlertType.INFORMATION);
                 success.setContentText("Avis publié !");
                 success.showAndWait();
+
+                try {
+                    if (onSuccess != null) onSuccess.run();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
 
                 dialog.close();
             }
