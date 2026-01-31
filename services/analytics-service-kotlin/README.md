@@ -9,12 +9,10 @@ Ce service implémente deux agrégations principales :
 ### 1. **Agrégation de Crashs par Jeu** 🔥
 - **Input Topic** : `game-crash-reported`
 - **Output Topic** : `crash-aggregated`
-- **Fenêtre** : Tumbling 5 minutes
+- **Fenêtre** : Tumbling 1 minutes
 - **Métriques** :
   - Nombre total de crashs
-  - Nombre d'utilisateurs uniques affectés
-  - Plateformes touchées
-  - Message d'erreur le plus fréquent
+  - Nombre d'utilisateurs affectés
 
 ### 2. **Score de Popularité des Jeux** ⭐
 - **Input Topics** : `game-session-started` + `game-crash-reported`
