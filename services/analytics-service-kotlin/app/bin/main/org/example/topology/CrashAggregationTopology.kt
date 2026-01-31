@@ -14,14 +14,14 @@ import java.time.Duration
  * Topology for aggregating game crash events
  * Input: game-crash-reported
  * Output: crash-aggregated
- * Window: Tumbling 5 minutes
+ * Window: Tumbling 1 minutes
  */
 class CrashAggregationTopology {
     
     companion object {
         private const val INPUT_TOPIC = "game-crash-reported"
         private const val OUTPUT_TOPIC = "crash-aggregated"
-        private val WINDOW_SIZE = Duration.ofSeconds(30)
+        private val WINDOW_SIZE = Duration.ofMinutes(1)
     }
     
     fun build(builder: StreamsBuilder) {
@@ -52,16 +52,16 @@ class CrashAggregationTopology {
             // Group by gameId
             .groupByKey(Grouped.with(Serdes.String(), crashSerde))
             
-            // Apply tumbling window of 30 seconds
-            .windowedBy(TimeWindows.ofSizeWithNoGrace(WINDOW_SIZE))
+            // Apply tumbling window of 10 seconds with grace period
+            // Grace period of 1 second allows late events but forces window to close
+            .windowedBy(TimeWindows.ofSizeAndGrace(WINDOW_SIZE, Duration.ofSeconds(1)))
             
             // Count crashes per window
             .count()
-            
-            // Suppress intermediate results - only emit when window closes
-            .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
         
         // 3. Transform to CrashAggregationModel
+        // Note: Without suppress(), this will emit on every update (every crash)
+        // The publisher will receive multiple updates per window as crashes occur
         val crashAggregation: KStream<String, CrashAggregationModel> = crashCounts
             .toStream()
             .map { windowedKey, count ->

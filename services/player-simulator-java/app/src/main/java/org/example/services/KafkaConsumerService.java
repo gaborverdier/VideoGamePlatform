@@ -108,6 +108,7 @@ public class KafkaConsumerService {
                     // Mettre à jour le jeu dans GameDataService
                     Game game = GameDataService.getInstance().findGameById(model.getGameId());
                     if (game != null) {
+                        game.setVersion(newVersion);
                         game.addUpdate(newVersion); // Ajouter la version aux mises à jour disponibles
                         System.out.println("Updated game " + model.getGameId() + " to version: " + newVersion);
                     } else {

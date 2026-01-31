@@ -72,8 +72,14 @@ public class PublisherDashboard {
 
         tabPane.getTabs().addAll(gamesTab, notificationsTabComponent);
 
+        // Initialiser la map des noms de jeux dans NotificationsTab avant de démarrer Kafka
+        List<Game> publishedGames = myGamesTab.getPublishedGames();
+        for (Game game : publishedGames) {
+            notificationsTab.updateGameName(game.getId(), game.getTitle());
+        }
+
         // Initialiser le consumer Kafka pour écouter les crashs en temps réel
-        List<String> gameIds = myGamesTab.getPublishedGames().stream()
+        List<String> gameIds = publishedGames.stream()
                 .map(Game::getId)
                 .collect(Collectors.toList());
         kafkaConsumerService = new PublisherKafkaConsumerService(
