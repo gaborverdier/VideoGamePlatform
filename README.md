@@ -25,7 +25,7 @@ An event-driven gaming platform leveraging Kafka, Avro, Schema Registry, and Pos
 - **Kafka**: Confluent cp-kafka:7.8.3 (KRaft mode).
 - **Schema Registry**: cp-schema-registry:7.8.3.
 - **Avro**: Gradle Avro plugin and Confluent Avro serializer.
-- **Kafka Streams**: For analytics/quality services.
+- **Kafka Streams**: For analytics services.
 
 ### Database
 - **Postgres**: Version 16.
@@ -58,12 +58,10 @@ VideoGamePlatform/
 │  │  └─ app/
 │  ├─ player-simulator-java/
 │  │  └─ app/
-│  ├─ analytics-service-kotlin/
-│  │  └─ app/
-│  └─ quality-service-kotlin/
+│  └─ analytics-service-kotlin/
 │     └─ app/
 └─ scripts/
-   └─ (SQL, helper scripts – to be filled)
+   └─ (SQL, helper scripts)
 ```
 
 ---
@@ -179,7 +177,6 @@ cd common/avro-schemas
 ### 7.2 Kotlin Services (Kafka Streams)
 - **Paths**:
   - `services/analytics-service-kotlin`.
-  - `services/quality-service-kotlin`.
 - **Run**:
   ```bash
   cd services/analytics-service-kotlin
