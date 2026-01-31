@@ -88,28 +88,12 @@ public class MyGamesTab extends ScrollPane {
         Label genreLabel = new Label("Genres: " + game.getGenre());
         genreLabel.setStyle("-fx-text-fill: #aaa;");
 
-        // Statistiques: note moyenne et temps de jeu moyen
-        double avgRating = 0.0;
-        double avgPlaytime = 0.0;
-        int ratingCount = 0;
-        int playtimeCount = 0;
-        if (notificationsTab != null && notificationsTab.getReviews() != null) {
-            for (com.model.Review r : notificationsTab.getReviews()) {
-                if (r.getGameName() != null && r.getGameName().equals(game.getTitle())) {
-                    ratingCount++;
-                    avgRating += r.getRating();
-                    if (r.getPlaytimeMinutes() != null) {
-                        playtimeCount++;
-                        avgPlaytime += r.getPlaytimeMinutes();
-                    }
-                }
-            }
-        }
-        String avgRatingText = ratingCount > 0 ? String.format("%.2f", avgRating / ratingCount) : "N/A";
-        String avgPlaytimeText = playtimeCount > 0 ? String.format("%d min", (int)Math.round(avgPlaytime / playtimeCount)) : "N/A";
-
-        Label statsLabel = new Label("Note moyenne: " + avgRatingText + "   |   Temps de jeu moyen: " + avgPlaytimeText);
+        // Statistiques: note moyenne (chargée depuis l'API)
+        Label statsLabel = new Label("Chargement de la note...");
         statsLabel.setStyle("-fx-text-fill: #ddd; -fx-font-size: 12px;");
+        
+        // Charger la note moyenne depuis l'API en arrière-plan
+        loadGameRating(game.getId(), statsLabel);
 
         // Boutons d'action
         HBox actionsBox = new HBox(10);
@@ -249,5 +233,75 @@ public class MyGamesTab extends ScrollPane {
             alert.setContentText("Erreur lors de la publication du jeu: " + ex.getMessage());
             alert.showAndWait();
         }
+    }
+
+    /**
+     * Charge la note moyenne d'un jeu depuis l'API
+     */
+    private void loadGameRating(String gameId, Label statsLabel) {
+        new Thread(() -> {
+            try {
+                System.out.println("[MyGamesTab] Loading rating for game: " + gameId);
+                
+                // Charger les reviews pour la note moyenne
+                String reviewsJson = ApiClient.get("/api/reviews/game/" + gameId);
+                System.out.println("[MyGamesTab] Reviews JSON response: " + reviewsJson);
+                
+                List<com.gaming.events.GameReviewed> reviews = AvroJacksonConfig.avroObjectMapper()
+                    .readValue(reviewsJson, new TypeReference<List<com.gaming.events.GameReviewed>>() {});
+                
+                System.out.println("[MyGamesTab] Parsed " + reviews.size() + " reviews");
+                
+                // Calculer la note moyenne
+                if (reviews.isEmpty()) {
+                    javafx.application.Platform.runLater(() -> {
+                        statsLabel.setText("⭐ Note: N/A (aucun avis)");
+                    });
+                    return;
+                }
+                
+                double avgRating = 0.0;
+                for (com.gaming.events.GameReviewed review : reviews) {
+                    avgRating += review.getRating();
+                }
+                avgRating = avgRating / reviews.size();
+                
+                System.out.println("[MyGamesTab] Average rating: " + avgRating);
+                
+                String stars = getStars(avgRating);
+                String finalText = "⭐ Note: " + stars + " " + String.format("%.1f", avgRating) + "/5 (" + reviews.size() + " avis)";
+                
+                javafx.application.Platform.runLater(() -> {
+                    statsLabel.setText(finalText);
+                });
+            } catch (Exception e) {
+                System.err.println("[MyGamesTab] Error loading rating for game " + gameId + ": " + e.getMessage());
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> {
+                    statsLabel.setText("⭐ Note: N/A (erreur de chargement)");
+                });
+            }
+        }).start();
+    }
+    
+    /**
+     * Convertit une note en étoiles visuelles
+     */
+    private String getStars(double rating) {
+        int fullStars = (int) rating;
+        boolean hasHalfStar = (rating - fullStars) >= 0.5;
+        int emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+        
+        StringBuilder stars = new StringBuilder();
+        for (int i = 0; i < fullStars; i++) {
+            stars.append("★");
+        }
+        if (hasHalfStar) {
+            stars.append("☆");
+        }
+        for (int i = 0; i < emptyStars; i++) {
+            stars.append("☆");
+        }
+        return stars.toString();
     }
 }
