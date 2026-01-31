@@ -22,7 +22,8 @@ Ce document explique en détail **comment fonctionne** chaque partie du Publishe
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                   PRESENTATION LAYER                         │
-│  - PublisherController (REST API)                           │
+│  - REST Controllers (Game, Patch, DLC, Publisher, Crash)   │
+│  - JavaFX UI (PublisherDashboard avec tabs)                │
 │  - Validation des entrées                                   │
 │  - Sérialisation JSON                                       │
 └─────────────────────────────────────────────────────────────┘
@@ -31,11 +32,12 @@ Ce document explique en détail **comment fonctionne** chaque partie du Publishe
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                   SERVICE LAYER                              │
-│  - PatchService (logique de déploiement de patches)        │
-│  - MetadataService (logique de mise à jour métadonnées)    │
-│  - VGSalesLoaderService (import des données)               │
-│  - AutoPatchSimulatorService (simulation)                  │
-│  - Transactions (@Transactional)                           │
+│  - PatchService (logique de publication de patches)        │
+│  - GameService (gestion catalogue éditeur)                  │
+│  - DLCService (création et gestion de DLC)                  │
+│  - PublisherService (authentification éditeur)              │
+│  - CrashService (analyse des crashs)                        │
+│  - Transactions (@Transactional)                            │
 │  - Règles métier                                            │
 └─────────────────────────────────────────────────────────────┘
                             │
@@ -59,11 +61,19 @@ Ce document explique en détail **comment fonctionne** chaque partie du Publishe
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
-│                   MESSAGING LAYER (Producers)                │
-│  - BaseKafkaProducer<T> (classe abstraite)                 │
-│  - GamePatchedProducer                                      │
-│  - GameMetadataProducer                                     │
+│                   MESSAGING LAYER (Producer)                 │
+│  - EventProducer (production d'événements Kafka)            │
 │  - Sérialisation Avro                                       │
+│  - Topics: game-released, game-patch-released, dlc-created │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            │ Kafka Protocol
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   MESSAGING LAYER (Consumers)                │
+│  - CrashAggregationConsumer (@KafkaListener)                │
+│  - Désérialisation Avro                                     │
+│  - Mise à jour des statistiques de crashs                   │
 └─────────────────────────────────────────────────────────────┘
                             │
                             │ Kafka Protocol
@@ -540,183 +550,300 @@ public PatchHistory deployPatch(String gameId, String changelog) {
 
 ## 4. Composants clés expliqués
 
-### 4.1 KafkaConfig (Configuration centralisée)
+### 4.1 EventProducer (Production Kafka)
 
 ```java
-@Configuration
-public class KafkaConfig {
+@Component
+public class EventProducer {
     
-    @Bean
-    public Map<String, Object> producerConfigs() {
-        Map<String, Object> props = new HashMap<>();
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
+    
+    public void send(String topic, String key, Object value) {
+        ProducerRecord<String, Object> record = new ProducerRecord<>(topic, key, value);
         
-        // 1. CONNEXION
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        // → Kafka brokers à contacter
-        
-        // 2. SÉRIALISATION
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        // → Clés sont des String
-        
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
-        // → Valeurs sont sérialisées en Avro
-        
-        props.put("schema.registry.url", "http://localhost:8081");
-        // → Validation des schémas Avro
-        
-        // 3. FIABILITÉ
-        props.put(ProducerConfig.ACKS_CONFIG, "all");
-        // → Attendre ACK de TOUS les réplicas (sécurité maximale)
-        // Options: 0 (aucun), 1 (leader seul), all (tous)
-        
-        props.put(ProducerConfig.RETRIES_CONFIG, 3);
-        // → Réessayer 3 fois en cas d'erreur réseau temporaire
-        
-        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
-        // → Éviter les doublons lors des retries
-        // Kafka assigne un ID unique et déduplique
-        
-        return props;
+        kafkaTemplate.send(record)
+            .whenComplete((result, ex) -> {
+                if (ex == null) {
+                    logger.info("✅ Event sent to topic: {} - Partition: {}, Offset: {}",
+                        topic, result.getRecordMetadata().partition(), 
+                        result.getRecordMetadata().offset());
+                } else {
+                    logger.error("❌ Failed to send event: {}", ex.getMessage());
+                }
+            });
     }
 }
 ```
 
-**Pourquoi `acks=all` ?**
-
-```
-Producer → Message
-            │
-            ├─> Leader (Partition 0)
-            │     ↓ replication
-            ├─> Follower 1
-            │     ↓ replication
-            └─> Follower 2
-
-acks=0 : Pas d'attente (rapide mais peut perdre des messages)
-acks=1 : Attendre le leader uniquement (équilibré)
-acks=all : Attendre leader + tous les followers (lent mais sûr)
+**Utilisation:**
+```java
+@Service
+public class PatchService {
+    @Autowired
+    private EventProducer eventProducer;
+    
+    public PatchModel createPatch(Patch patch) {
+        // Sauvegarde en base
+        Patch saved = patchRepository.save(patch);
+        
+        // Conversion vers DTO
+        PatchModel patchModel = patchMapper.toDTO(saved);
+        
+        // Envoi événement Kafka
+        String topic = "game-patch-released";
+        String key = String.valueOf(patchModel.getGameId());
+        eventProducer.send(topic, key, patchModel);
+        
+        return patchModel;
+    }
+}
 ```
 
 ---
 
-### 4.2 VGSalesLoaderService (Import CSV)
+### 4.2 CrashAggregationConsumer (Consommation Kafka)
 
-**Fonctionnement détaillé:**
+```java
+@Component
+public class CrashAggregationConsumer {
+    
+    @Autowired
+    private CrashService crashService;
+    
+    @KafkaListener(
+        topics = "crash-aggregated",
+        groupId = "publisher-service",
+        containerFactory = "kafkaListenerContainerFactory"
+    )
+    public void handleCrashAggregation(CrashAggregationModel aggregation) {
+        logger.info("📥 Crash aggregation received: gameId={}, count={}", 
+            aggregation.getGameId(), aggregation.getCrashCount());
+        
+        // Sauvegarde en base
+        CrashAggregation crash = new CrashAggregation();
+        crash.setId(aggregation.getId());
+        crash.setGameId(aggregation.getGameId());
+        crash.setCrashCount(aggregation.getCrashCount());
+        crash.setTimestamp(aggregation.getTimestamp());
+        crash.setWindowStart(aggregation.getWindowStart());
+        crash.setWindowEnd(aggregation.getWindowEnd());
+        
+        crashService.saveCrashAggregation(crash);
+        
+        // Alerte si seuil dépassé
+        if (aggregation.getCrashCount() > 10) {
+            logger.warn("⚠️ ALERTE: Le jeu {} a {} crashs (seuil: 10)",
+                aggregation.getGameId(), aggregation.getCrashCount());
+        }
+    }
+}
+```
+
+---
+
+### 4.3 PublisherDashboard (Interface JavaFX)
+
+```java
+public class PublisherDashboard {
+    
+    private Stage stage;
+    private TabPane tabPane;
+    
+    public PublisherDashboard(Stage stage) {
+        this.stage = stage;
+        setupUI();
+    }
+    
+    private void setupUI() {
+        tabPane = new TabPane();
+        
+        // Tab 1: Gestion des jeux
+        Tab gamesTab = new Tab("Mes Jeux");
+        gamesTab.setContent(new GamesTab());
+        gamesTab.setClosable(false);
+        
+        // Tab 2: Publication de patches
+        Tab patchesTab = new Tab("Patches");
+        patchesTab.setContent(new PatchesTab());
+        patchesTab.setClosable(false);
+        
+        // Tab 3: Création de DLC
+        Tab dlcTab = new Tab("DLC");
+        dlcTab.setContent(new DLCTab());
+        dlcTab.setClosable(false);
+        
+        // Tab 4: Statistiques de crashs
+        Tab crashTab = new Tab("Crashs");
+        crashTab.setContent(new NotificationsTab()); // Affiche crashs
+        crashTab.setClosable(false);
+        
+        tabPane.getTabs().addAll(gamesTab, patchesTab, dlcTab, crashTab);
+        
+        Scene scene = new Scene(tabPane, 1200, 800);
+        stage.setTitle("Publisher Dashboard");
+        stage.setScene(scene);
+    }
+    
+    public void show() {
+        stage.show();
+    }
+}
+```
+
+---
+
+### 4.4 GameService (Gestion des jeux)
 
 ```java
 @Service
-public class VGSalesLoaderService implements CommandLineRunner {
+public class GameService {
     
-    // 1. DÉMARRAGE AUTOMATIQUE
-    @Override
-    public void run(String... args) {
-        if (!autoLoad) return;
+    @Autowired
+    private GameRepository gameRepository;
+    
+    @Autowired
+    private PublisherRepository publisherRepository;
+    
+    @Autowired
+    private EventProducer eventProducer;
+    
+    @Transactional
+    public GameModel releaseGame(GameModel gameModel) {
+        // Validation
+        Publisher publisher = publisherRepository.findById(gameModel.getPublisherId())
+            .orElseThrow(() -> new IllegalArgumentException("Publisher not found"));
         
-        List<Game> games = loadGamesFromCSV();
-        saveGames(games);
+        // Création du jeu
+        Game game = new Game();
+        game.setId(UUID.randomUUID().toString());
+        game.setTitle(gameModel.getTitle());
+        game.setGenre(gameModel.getGenre());
+        game.setPlatform(gameModel.getPlatform());
+        game.setPrice(gameModel.getPrice());
+        game.setVersion("1.0.0");
+        game.setReleaseTimeStamp(System.currentTimeMillis());
+        game.setPublisher(publisher);
+        
+        // Sauvegarde
+        Game saved = gameRepository.save(game);
+        
+        // Publication événement Kafka
+        GameReleased event = GameReleased.newBuilder()
+            .setGameId(saved.getId())
+            .setTitle(saved.getTitle())
+            .setGenre(saved.getGenre())
+            .setPlatform(saved.getPlatform())
+            .setPrice(saved.getPrice())
+            .setReleaseTimestamp(saved.getReleaseTimeStamp())
+            .setPublisherId(publisher.getId())
+            .setPublisherName(publisher.getName())
+            .build();
+        
+        eventProducer.send("game-released", saved.getId(), event);
+        
+        return gameMapper.toDTO(saved);
+    }
+}
+```
+
+---
+
+### 4.5 NotificationsTab (Affichage des crashs)
+
+```java
+public class NotificationsTab extends ScrollPane {
+    
+    private VBox notificationsList;
+    private List<CrashAggregation> crashReports;
+    
+    public NotificationsTab() {
+        this.crashReports = new ArrayList<>();
+        
+        notificationsList = new VBox(10);
+        notificationsList.setPadding(new Insets(20));
+        notificationsList.setStyle("-fx-background-color: #2b2b2b;");
+        
+        loadCrashReports();
+        updateView();
+        
+        this.setContent(notificationsList);
+        this.setFitToWidth(true);
     }
     
-    // 2. PARSING CSV
-    private List<Game> loadGamesFromCSV() {
-        try (CSVReader reader = new CSVReader(new FileReader(csvFile))) {
-            List<String[]> allLines = reader.readAll();
+    private void loadCrashReports() {
+        try {
+            String json = ApiClient.get("/api/crash-aggregations");
+            ObjectMapper mapper = AvroJacksonConfig.getObjectMapper();
             
-            boolean isFirstLine = true;
-            for (String[] line : allLines) {
-                if (isFirstLine) {
-                    isFirstLine = false;
-                    continue; // Skip header
-                }
+            List<CrashAggregationModel> models = mapper.readValue(json,
+                new TypeReference<List<CrashAggregationModel>>() {});
+            
+            crashReports = models.stream()
+                .map(this::convertToEntity)
+                .sorted(Comparator.comparing(CrashAggregation::getTimestamp).reversed())
+                .collect(Collectors.toList());
                 
-                // 3. FILTRAGE
-                Game game = parseGameFromCSVLine(line);
-                if (game.getPublisher().equalsIgnoreCase(publisherFilter)) {
-                    games.add(game);
-                }
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return games;
     }
     
-    // 4. SAUVEGARDE (avec évitement de doublons)
-    private long saveGames(List<Game> games) {
-        for (Game game : games) {
-            if (!gameRepository.existsByTitle(game.getTitle())) {
-                gameRepository.save(game);
-                savedCount++;
-            }
+    private void updateView() {
+        notificationsList.getChildren().clear();
+        
+        if (crashReports.isEmpty()) {
+            Label emptyLabel = new Label("Aucun crash reporté");
+            emptyLabel.setStyle("-fx-text-fill: #aaa; -fx-font-size: 16px;");
+            notificationsList.getChildren().add(emptyLabel);
+            return;
         }
-        return savedCount;
+        
+        // Titre
+        Label title = new Label("🔴 Rapports de Crash");
+        title.setStyle("-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;");
+        notificationsList.getChildren().add(title);
+        
+        // Cartes de crash
+        for (CrashAggregation crash : crashReports) {
+            VBox card = createCrashCard(crash);
+            notificationsList.getChildren().add(card);
+        }
+    }
+    
+    private VBox createCrashCard(CrashAggregation crash) {
+        VBox card = new VBox(10);
+        card.setStyle("-fx-background-color: #1a1a1a; -fx-padding: 15px; -fx-border-color: #d32f2f; -fx-border-width: 2px;");
+        
+        // Jeu
+        String gameName = gameIdToName.getOrDefault(crash.getGameId(), crash.getGameId());
+        Label gameLabel = new Label("🎮 " + gameName);
+        gameLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
+        
+        // Nombre de crashs
+        Label countLabel = new Label("Nombre de crashs: " + crash.getCrashCount());
+        countLabel.setStyle("-fx-text-fill: #ff5252; -fx-font-size: 16px;");
+        
+        // Fenêtre temporelle
+        Label windowLabel = new Label(String.format("Fenêtre: %s - %s",
+            formatTimestamp(crash.getWindowStart()),
+            formatTimestamp(crash.getWindowEnd())));
+        windowLabel.setStyle("-fx-text-fill: #aaa;");
+        
+        // Alerte si seuil dépassé
+        if (crash.getCrashCount() > 10) {
+            Label alertLabel = new Label("⚠️ ALERTE: Seuil critique dépassé !");
+            alertLabel.setStyle("-fx-text-fill: #ff9800; -fx-font-weight: bold;");
+            card.getChildren().add(alertLabel);
+        }
+        
+        card.getChildren().addAll(gameLabel, countLabel, windowLabel);
+        return card;
     }
 }
-```
-
-**Cycle de vie:**
-
-```
-Application démarre
-  ↓
-Spring crée VGSalesLoaderService
-  ↓
-@PostConstruct / CommandLineRunner.run()
-  ↓
-loadGamesFromCSV()
-  │
-  ├─> Ouvre vgsales.csv
-  ├─> Parse ligne par ligne
-  ├─> Filtre selon publisher.name
-  └─> Retourne List<Game>
-  ↓
-saveGames(games)
-  │
-  ├─> Pour chaque jeu
-  ├─> Vérifie existsByTitle()
-  ├─> Si nouveau → save()
-  └─> Si existe → skip
-  ↓
-Application prête (jeux en base)
 ```
 
 ---
-
-### 4.3 AutoPatchSimulatorService (Simulation)
-
-```java
-@Service
-public class AutoPatchSimulatorService {
-    
-    // TÂCHE PLANIFIÉE
-    @Scheduled(fixedDelay = 120000, initialDelay = 30000)
-    public void simulateRandomPatch() {
-        // 1. Sélectionne un jeu aléatoire
-        Optional<Game> randomGame = gameRepository.findRandomGame();
-        
-        // 2. Génère un changelog aléatoire
-        String changelog = patchService.generateRandomChangelog();
-        
-        // 3. Déploie le patch
-        patchService.deployPatch(game.getId(), changelog);
-    }
-}
-```
-
-**Scheduling expliqué:**
-
-```
-fixedDelay = 120000 ms (2 minutes)
-initialDelay = 30000 ms (30 secondes)
-
-Timeline:
-t=0s    : Application démarre
-t=30s   : Première exécution
-t=150s  : Deuxième exécution (30 + 120)
-t=270s  : Troisième exécution (150 + 120)
-...
-
-fixedDelay vs fixedRate:
-- fixedDelay: Attendre 2min APRÈS la fin de l'exécution
-- fixedRate: Exécuter TOUTES les 2min (même si précédente pas terminée)
-```
 
 ---
 
@@ -848,17 +975,28 @@ Si Instance 2 crash:
 
 Ce Publisher Service démontre une architecture professionnelle avec :
 
-✅ **Code DRY** - Pas de duplication  
+✅ **REST API** - Endpoints pour gestion jeux, patches, DLC  
+✅ **JavaFX UI** - Interface graphique avec tabs pour l'éditeur  
+✅ **Event-Driven** - Production Kafka pour synchronisation  
+✅ **Kafka Consumer** - Réception des agrégations de crashs  
 ✅ **SOLID** - Séparation des responsabilités  
 ✅ **Clean Code** - Commentaires et nommage explicites  
-✅ **Patterns éprouvés** - Template Method, Repository, DI  
-✅ **Résilience** - Transactions, retry, error handling  
-✅ **Performance** - Index, partitioning, connection pooling  
-✅ **Documentation** - 600+ lignes de commentaires  
+✅ **Patterns éprouvés** - Repository, Service Layer, DI  
+✅ **Résilience** - Transactions, error handling  
+✅ **Performance** - Index BD, Kafka partitioning  
 
-**Pour toute question, référez-vous aux autres fichiers de documentation:**
-- [README.md](./README.md) - Guide utilisateur
-- [DOCUMENTATION.md](./DOCUMENTATION.md) - Référence technique
-- [TEST_SCRIPTS.md](./TEST_SCRIPTS.md) - Scripts de test
-- [SUMMARY.md](./SUMMARY.md) - Résumé exécutif
+**Endpoints API principaux:**
+- `/api/games` - Gestion du catalogue
+- `/api/patch` - Publication de patches
+- `/api/dlc` - Création de DLC
+- `/api/publishers` - Gestion éditeurs
+- `/api/crash-aggregations` - Statistiques de crashs
+
+**Events Kafka produits:**
+- `game-released` - Nouveau jeu publié
+- `game-patch-released` - Nouveau patch disponible
+- `dlc-created` - Nouveau DLC disponible
+
+**Events Kafka consommés:**
+- `crash-aggregated` - Agrégations de crashs depuis Analytics Service
 
