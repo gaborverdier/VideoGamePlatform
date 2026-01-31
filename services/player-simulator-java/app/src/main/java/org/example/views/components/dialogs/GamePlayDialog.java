@@ -63,6 +63,32 @@ public class GamePlayDialog {
         
         timeBox.getChildren().addAll(minusBtn, plusBtn);
         
+        // Session start time
+        long sessionStart = System.currentTimeMillis();
+        
+        // Method to save session time to platform-service
+        Runnable saveSessionTime = () -> {
+            new Thread(() -> {
+                try {
+                    String userId = SessionManager.getInstance().getCurrentPlayer() != null ? SessionManager.getInstance().getCurrentPlayer().getId() : null;
+                    if (userId != null && sessionMinutes[0] != 0) {
+                        long timePlayedMs = (long) sessionMinutes[0] * 60_000L;
+                        String json = String.format("{\"gameId\":\"%s\",\"userId\":\"%s\",\"startTimestamp\":%d,\"timePlayed\":%d}",
+                                game.getId(), userId, sessionStart, timePlayedMs);
+                        PlatformApiClient api = new PlatformApiClient();
+                        try {
+                            api.postSessionJson(json);
+                            System.out.println("Session saved: " + sessionMinutes[0] + " minutes");
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }).start();
+        };
+        
         // Crash options: choose a code and optional message
         ChoiceBox<String> crashType = new ChoiceBox<>();
         crashType.getItems().addAll("1 - Graphics", "2 - Network", "3 - Input", "99 - Unknown");
@@ -85,42 +111,33 @@ public class GamePlayDialog {
                 controller.reportCrash(game.getId(), "1.0", code, details);
             }
 
+            // Save session time before closing
+            saveSessionTime.run();
+
             Alert crash = new Alert(Alert.AlertType.ERROR);
             crash.setTitle("Crash !");
             crash.setHeaderText("Le jeu a planté !");
             crash.setContentText("Rapport de crash généré.\n(Sera envoyé via Kafka)");
             crash.showAndWait();
-            dialog.close();
+            
+            // Update UI and close
+            javafx.application.Platform.runLater(() -> {
+                if (onUpdate != null) onUpdate.run();
+                dialog.close();
+            });
         });
         
         Button quitBtn = new Button("Quitter le jeu");
         quitBtn.setStyle("-fx-background-color: #555; -fx-text-fill: white;");
-        long sessionStart = System.currentTimeMillis();
         quitBtn.setOnAction(e -> {
-            // send session to platform server in background, then invoke onUpdate and close dialog
-            new Thread(() -> {
-                try {
-                    String userId = SessionManager.getInstance().getCurrentPlayer() != null ? SessionManager.getInstance().getCurrentPlayer().getId() : null;
-                    if (userId != null && sessionMinutes[0] != 0) {
-                        long timePlayedMs = (long) sessionMinutes[0] * 60_000L;
-                        String json = String.format("{\"gameId\":\"%s\",\"userId\":\"%s\",\"startTimestamp\":%d,\"timePlayed\":%d}",
-                                game.getId(), userId, sessionStart, timePlayedMs);
-                        PlatformApiClient api = new PlatformApiClient();
-                        try {
-                            api.postSessionJson(json);
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                } finally {
-                    javafx.application.Platform.runLater(() -> {
-                        if (onUpdate != null) onUpdate.run();
-                        dialog.close();
-                    });
-                }
-            }).start();
+            // Save session time before closing
+            saveSessionTime.run();
+            
+            // Update UI and close
+            javafx.application.Platform.runLater(() -> {
+                if (onUpdate != null) onUpdate.run();
+                dialog.close();
+            });
         });
         
         HBox crashBox = new HBox(10, crashType, crashMessageField);

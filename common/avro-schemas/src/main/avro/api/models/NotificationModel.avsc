@@ -6,6 +6,10 @@
   "fields": [
     {"name": "notificationId", "type": "string"},
     {"name": "userId", "type": "string"},
+    {"name": "type", "type": ["null", "string"], "default": null, "doc": "Type of notification: GAME_UPDATE, GAME_DLC, PRICE_DROP, NEW_REVIEW"},
+    {"name": "gameId", "type": ["null", "string"], "default": null, "doc": "ID of the related game"},
+    {"name": "gameName", "type": ["null", "string"], "default": null, "doc": "Name of the related game"},
+    {"name": "title", "type": ["null", "string"], "default": null, "doc": "Notification title"},
     {"name": "description",  "type" : "string"},
     {"name": "date",  "type" : "long"}
   ]

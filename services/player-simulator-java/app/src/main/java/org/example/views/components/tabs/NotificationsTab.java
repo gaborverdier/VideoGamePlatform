@@ -35,16 +35,53 @@ public class NotificationsTab extends ScrollPane {
     }
 
     private Notification convertModelToNotification(NotificationModel model) {
-        // Map NotificationModel fields to Notification fields
-        // Adjust mapping as needed for your schema
+        // Use structured fields from NotificationModel
+        String type = model.getType() != null ? model.getType().toString() : null;
+        String gameId = model.getGameId() != null ? model.getGameId().toString() : null;
+        String gameName = model.getGameName() != null ? model.getGameName().toString() : "Notification";
+        String title = model.getTitle() != null ? model.getTitle().toString() : gameName;
+        String description = model.getDescription();
+        
+        // Map type string to Notification.Type enum
+        Notification.Type notifType = Notification.Type.NEW_REVIEW; // default
+        if (type != null) {
+            switch (type) {
+                case "GAME_UPDATE":
+                    notifType = Notification.Type.GAME_UPDATE;
+                    break;
+                case "GAME_DLC":
+                    notifType = Notification.Type.GAME_DLC;
+                    break;
+                case "PRICE_DROP":
+                    notifType = Notification.Type.PRICE_DROP;
+                    break;
+                case "NEW_REVIEW":
+                    notifType = Notification.Type.NEW_REVIEW;
+                    break;
+                default:
+                    notifType = Notification.Type.NEW_REVIEW;
+            }
+        }
+        
+        // Check if game is in favorites
+        boolean isFavorite = false;
+        if (allGames != null && gameId != null) {
+            for (Game game : allGames) {
+                if (gameId.equals(game.getId()) && game.isFavorite()) {
+                    isFavorite = true;
+                    break;
+                }
+            }
+        }
+        
         return new Notification(
             model.getNotificationId(),
-            Notification.Type.GAME_UPDATE, // TODO: map type if available
-            model.getDescription(), // or model.getTitle() if available
-            model.getDescription(),
+            notifType,
+            gameName,
+            title + " - " + description,
             model.getDate(),
-            false, // TODO: map favorite if available
-            model.getUserId() // or model.getRelatedGameId() if available
+            isFavorite,
+            gameId
         );
     }
     
@@ -159,11 +196,13 @@ public class NotificationsTab extends ScrollPane {
         List<Notification> favNotifs = notifications.stream()
             .filter(Notification::isFromFavorite)
             .sorted(Comparator.comparing(Notification::getCreatedAt).reversed())
+            .limit(10) // Limiter à 10 notifications
             .collect(Collectors.toList());
             
         List<Notification> otherNotifs = notifications.stream()
             .filter(n -> !n.isFromFavorite())
             .sorted(Comparator.comparing(Notification::getCreatedAt).reversed())
+            .limit(10) // Limiter à 10 notifications
             .collect(Collectors.toList());
         
         // Favoris en premier (bandeau rouge)

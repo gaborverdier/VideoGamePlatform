@@ -2,6 +2,7 @@ package org.example.views.components.dialogs;
 
 import org.example.models.Game;
 import org.example.services.GameDataService;
+import org.example.services.InstalledGamesStore;
 import org.example.services.PlatformApiClient;
 import org.example.services.SessionManager;
 
@@ -265,7 +266,11 @@ public class OwnedGameDetailsDialog {
     }
     
     private static void showUpdatesDialog(Game game, Button updateBtn, Runnable onUpdate) {
-        if (game.getPendingUpdates().isEmpty()) {
+        // Vérifier s'il y a une mise à jour disponible (version backend != version installée)
+        boolean needsUpdate = game.getVersion() != null && 
+                             (game.getInstalledVersion() == null || !game.getVersion().equals(game.getInstalledVersion()));
+        
+        if (!needsUpdate) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("Aucune mise à jour disponible.");
             alert.showAndWait();
@@ -273,20 +278,32 @@ public class OwnedGameDetailsDialog {
         }
         
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Mises à jour disponibles");
+        alert.setTitle("Mise à jour disponible");
         alert.setHeaderText(game.getName());
-        alert.setContentText("Installer :\n" + String.join("\n", game.getPendingUpdates()));
+        alert.setContentText("Installer la version " + game.getVersion() + " ?");
         
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                for (String update : new java.util.ArrayList<>(game.getPendingUpdates())) {
-                    game.installUpdate(update);
+                // Mettre à jour la version installée
+                game.setInstalledVersion(game.getVersion());
+                
+                // Sauvegarder dans le store local
+                try {
+                    String userId = SessionManager.getInstance().getCurrentPlayer() != null ? 
+                                   SessionManager.getInstance().getCurrentPlayer().getId() : null;
+                    if (userId != null) {
+                        InstalledGamesStore.getInstance().markInstalled(userId, game.getId(), game.getVersion());
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
-                updateBtn.setText("⬇ Télécharger MAJ (0)");
+                
+                updateBtn.setText("🔁 Mettre à jour");
                 updateBtn.setDisable(true);
+                updateBtn.setStyle("");
                 
                 Alert success = new Alert(Alert.AlertType.INFORMATION);
-                success.setContentText("Mises à jour installées !");
+                success.setContentText("Mise à jour installée !");
                 success.showAndWait();
                 
                 if (onUpdate != null) onUpdate.run();

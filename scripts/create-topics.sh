@@ -37,7 +37,6 @@ create_topic "game-reviewed" 3 1
 # ============================================
 create_topic "game-released" 3 1
 create_topic "game-updated" 5 1
-create_topic "game-deleted" 1 1
 create_topic "game-patch-released" 5 1
 create_topic "game-availability-changed" 3 1
 create_topic "dlc-released" 5 1
@@ -50,21 +49,15 @@ create_topic "game-purchased" 5 1
 create_topic "new-notification" 3 1
 
 # ============================================
-# GAMEPLAY / SESSION EVENTS
-# ============================================
-create_topic "game-session-started" 5 1
-create_topic "game-session-ended" 5 1
-
-# ============================================
-# QUALITY / CRASH EVENTS
+# CRASH EVENTS
 # ============================================
 create_topic "game-crash-reported" 5 1
+create_topic "crash-aggregated" 3 1
 
 # ============================================
-# ANALYTICS / AGGREGATION
+# ANALYTICS
 # ============================================
-create_topic "crash-aggregated" 3 1
 create_topic "game-popularity-score" 3 1
 
 echo "[kafka-init] All topics created successfully!"
-echo "[kafka-init] Total topics: 16"
+echo "[kafka-init] Total topics: 14"

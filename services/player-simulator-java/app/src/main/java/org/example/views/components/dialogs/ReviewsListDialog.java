@@ -67,10 +67,7 @@ public class ReviewsListDialog {
         Label starsLabel = new Label(review.getStars());
         starsLabel.setStyle("-fx-text-fill: #FFD700; -fx-font-size: 14px;");
         
-        Label timeLabel = new Label("(" + review.getFormattedPlaytime() + " de jeu)");
-        timeLabel.setStyle("-fx-text-fill: #aaa; -fx-font-size: 12px;");
-        
-        header.getChildren().addAll(authorLabel, starsLabel, timeLabel);
+        header.getChildren().addAll(authorLabel, starsLabel);
         
         Label commentLabel = new Label(review.getComment());
         commentLabel.setWrapText(true);

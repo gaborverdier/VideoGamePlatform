@@ -2,7 +2,9 @@ package com.services;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -14,7 +16,6 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 
 import com.gaming.api.models.CrashAggregationModel;
 import com.model.CrashAggregation;
-import com.model.Game;
 import com.views.components.tabs.NotificationsTab;
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
@@ -34,6 +35,9 @@ public class PublisherKafkaConsumerService {
     private final NotificationsTab notificationsTab;
     private final List<String> publisherGameIds;
     private final String publisherId;
+    
+    // Track latest crash count per window to only show final aggregation
+    private final Map<String, CrashAggregation> latestCrashPerWindow = new HashMap<>();
 
     public PublisherKafkaConsumerService(String publisherId, List<String> publisherGameIds, NotificationsTab notificationsTab) {
         this.publisherId = publisherId;
@@ -120,29 +124,40 @@ public class PublisherKafkaConsumerService {
                 
                 // Vérifier si ce crash concerne un jeu de cet éditeur
                 if (publisherGameIds.contains(gameId)) {
-                    System.out.println("[PublisherKafkaConsumer] Crash matches publisher's game, adding to UI");
+                    long crashCount = crashModel.getCrashCount();
+                    String windowId = crashModel.getId(); // Unique par fenêtre (gameId-windowStart)
+                    
+                    System.out.println("[PublisherKafkaConsumer] Crash update for windowId: " + windowId + ", count: " + crashCount);
                     
                     // Convertir en CrashAggregation pour l'affichage
                     CrashAggregation crash = CrashAggregation.builder()
-                            .id(crashModel.getId() != null ? crashModel.getId() : "crash-" + System.currentTimeMillis())
+                            .id(windowId)
                             .gameId(gameId)
-                            .crashCount(crashModel.getCrashCount())
+                            .crashCount(crashCount)
                             .timestamp(crashModel.getTimestamp() != 0 ? crashModel.getTimestamp() : System.currentTimeMillis())
-                            .windowStart(crashModel.getWindowStart() != 0 ? crashModel.getWindowStart() : System.currentTimeMillis() - 300000)
+                            .windowStart(crashModel.getWindowStart() != 0 ? crashModel.getWindowStart() : System.currentTimeMillis() - 10000)
                             .windowEnd(crashModel.getWindowEnd() != 0 ? crashModel.getWindowEnd() : System.currentTimeMillis())
                             .build();
                     
-                    // Créer un objet Game minimal pour l'affichage
-                    Game game = new Game();
-                    game.setId(gameId);
-                    game.setTitle("Game " + gameId); // Sera mis à jour si on a le titre
-                    crash.setGame(game);
-                    
-                    // Ajouter à l'interface sur le thread JavaFX
-                    Platform.runLater(() -> {
-                        notificationsTab.addCrashReport(crash);
-                        System.out.println("[PublisherKafkaConsumer] Crash added to UI");
-                    });
+                    // Vérifier si c'est une mise à jour d'une fenêtre existante
+                    CrashAggregation existingCrash = latestCrashPerWindow.get(windowId);
+                    if (existingCrash != null) {
+                        // Mise à jour : remplacer l'ancienne agrégation
+                        System.out.println("[PublisherKafkaConsumer] Updating existing crash (" + existingCrash.getCrashCount() + " -> " + crashCount + ")");
+                        latestCrashPerWindow.put(windowId, crash);
+                        
+                        Platform.runLater(() -> {
+                            notificationsTab.updateCrashReport(crash);
+                        });
+                    } else {
+                        // Nouveau crash
+                        System.out.println("[PublisherKafkaConsumer] New crash window, adding to UI");
+                        latestCrashPerWindow.put(windowId, crash);
+                        
+                        Platform.runLater(() -> {
+                            notificationsTab.addCrashReport(crash);
+                        });
+                    }
                 } else {
                     System.out.println("[PublisherKafkaConsumer] Crash ignored (not this publisher's game). Known games: " + publisherGameIds);
                 }

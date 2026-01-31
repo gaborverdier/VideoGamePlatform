@@ -214,12 +214,13 @@ public class EventConsumer {
         log.info("Notifying game owner of game {} about DLC {} release", dlc.getGameId(), dlc.getId());
         // get game owners from library service
         libraryService.getUsersWithGameInLibrary(dlc.getGameId()).forEach(userId -> {
-            System.out.println("Notifying user " + userId + " about patch for game " + dlc.getGameId());
-            String description = String.format("New DLC Released for Game %s: %s", dlc.getGameId(), dlc.getId());
-            notificationsService.createNotification(userId, description);
+            gameRepository.findById(dlc.getGameId()).ifPresent(game -> {
+                System.out.println("Notifying user " + userId + " about DLC for game " + dlc.getGameId());
+                String title = game.getTitle();
+                String description = String.format("%s - %s", dlc.getTitle(), dlc.getPrice());
+                notificationsService.createNotification(userId, "GAME_DLC", dlc.getGameId(), title, "Nouveau DLC disponible", description);
+            });
         });
-
-        notificationsService.createNotification(dlc.getGameId(), "New DLC Released: " + dlc.getId());
     }
 
     private void handleDLCReleasedGeneric(GenericRecord event) {
@@ -376,10 +377,12 @@ public class EventConsumer {
         // send notification to users about the patch
         // get list of users who have this game in library
         libraryService.getUsersWithGameInLibrary(gameId).forEach(userId -> {
-            System.out.println("Notifying user " + userId + " about patch for game " + gameId);
-            String description = String.format("New patch released for %s: version %s",
-                    event.getGameId(), event.getVersion());
-            notificationsService.createNotification(userId, description);
+            gameRepository.findById(gameId).ifPresent(game -> {
+                System.out.println("Notifying user " + userId + " about patch for game " + gameId);
+                String title = game.getTitle();
+                String description = String.format("Version %s", event.getVersion());
+                notificationsService.createNotification(userId, "GAME_UPDATE", gameId, title, "Nouvelle mise à jour", description);
+            });
         });
 
         log.info("Processed patch release notifications for game: {}", event.getGameId());

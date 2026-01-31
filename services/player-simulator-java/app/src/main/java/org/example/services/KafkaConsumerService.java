@@ -12,6 +12,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.example.models.Game;
 import org.example.models.Notification;
 import org.example.views.components.tabs.NotificationsTab;
 
@@ -95,6 +96,29 @@ public class KafkaConsumerService {
             // Convert NotificationModel to Notification
             Notification notification = convertModelToNotification(model);
 
+            // Si c'est une mise à jour de jeu, mettre à jour la version du jeu
+            if ("GAME_UPDATE".equals(model.getType()) && model.getGameId() != null) {
+                System.out.println("GAME_UPDATE notification received for game: " + model.getGameId());
+                
+                // Extraire la version de la description (format: "Version X.X.X")
+                String description = model.getDescription();
+                if (description != null && description.startsWith("Version ")) {
+                    String newVersion = description.substring("Version ".length()).trim();
+                    
+                    // Mettre à jour le jeu dans GameDataService
+                    Game game = GameDataService.getInstance().findGameById(model.getGameId());
+                    if (game != null) {
+                        game.setVersion(newVersion);
+                        game.addUpdate(newVersion); // Ajouter la version aux mises à jour disponibles
+                        System.out.println("Updated game " + model.getGameId() + " to version: " + newVersion);
+                    } else {
+                        System.err.println("Game " + model.getGameId() + " not found in local cache");
+                    }
+                } else {
+                    System.err.println("Could not extract version from notification description: " + description);
+                }
+            }
+
             // Add the notification to the NotificationsTab
             Platform.runLater(() -> notificationsTab.addNotificationToBeginning(notification));
         } else {
@@ -110,21 +134,59 @@ public class KafkaConsumerService {
         model.setDescription(record.get("description").toString());
         model.setDate((Long) record.get("date"));
         model.setUserId(record.get("userId").toString());
-        // Add other fields as necessary
+        
+        // Add new fields if they exist in the record
+        if (record.get("type") != null) {
+            model.setType(record.get("type").toString());
+        }
+        if (record.get("gameId") != null) {
+            model.setGameId(record.get("gameId").toString());
+        }
+        if (record.get("gameName") != null) {
+            model.setGameName(record.get("gameName").toString());
+        }
+        if (record.get("title") != null) {
+            model.setTitle(record.get("title").toString());
+        }
+        
         return model;
     }
 
     private Notification convertModelToNotification(NotificationModel model) {
-
-        model.getNotificationId();
+        // Use structured fields from NotificationModel
+        String type = model.getType();
+        String gameId = model.getGameId();
+        String gameName = model.getGameName() != null ? model.getGameName() : "Notification";
+        String title = model.getTitle() != null ? model.getTitle() : gameName;
+        String description = model.getDescription();
+        
+        // Map type string to Notification.Type enum
+        Notification.Type notifType = Notification.Type.NEW_REVIEW; // default
+        if (type != null) {
+            switch (type) {
+                case "GAME_UPDATE":
+                    notifType = Notification.Type.GAME_UPDATE;
+                    break;
+                case "GAME_DLC":
+                    notifType = Notification.Type.GAME_DLC;
+                    break;
+                case "PRICE_DROP":
+                    notifType = Notification.Type.PRICE_DROP;
+                    break;
+                case "NEW_REVIEW":
+                    notifType = Notification.Type.NEW_REVIEW;
+                    break;
+            }
+        }
+        
         return new Notification(
             model.getNotificationId(),
-            Notification.Type.GAME_UPDATE, // Example type, adjust as needed
-            "New Notification", // Title
-            model.getDescription(), // Description
-            model.getDate(), // Timestamp
-            false, // Favorite status
-            model.getUserId() // User ID or related ID
+            notifType,
+            gameName,
+            title + " - " + description,
+            model.getDate(),
+            false,
+            gameId
         );
     }
 
