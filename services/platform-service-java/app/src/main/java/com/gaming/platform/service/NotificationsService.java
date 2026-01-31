@@ -48,10 +48,35 @@ public class NotificationsService {
         return savedNotification;
     }
 
+    public Notification createNotification(String userId, String type, String gameId, String gameName, String title, String description) {
+        Notification notification = new Notification();
+        notification.setNotificationId(UUID.randomUUID().toString());
+        notification.setUserId(userId);
+        notification.setType(type);
+        notification.setGameId(gameId);
+        notification.setGameName(gameName);
+        notification.setTitle(title);
+        notification.setDescription(description);
+        notification.setTimestamp(Instant.now());
+        Notification savedNotification = notificationRepository.save(notification);
+        log.info("Created {} notification for user {} - Game: {}", type, userId, gameName);
+
+        NotificationModel notificationModel = toNotificationModel(savedNotification);
+
+        // send notification event via Kafka
+        eventProducer.publishNotification(notificationModel);
+
+        return savedNotification;
+    }
+
     private NotificationModel toNotificationModel(Notification notification) {
         return NotificationModel.newBuilder()
                 .setNotificationId(notification.getNotificationId())
                 .setUserId(notification.getUserId())
+                .setType(notification.getType())
+                .setGameId(notification.getGameId())
+                .setGameName(notification.getGameName())
+                .setTitle(notification.getTitle())
                 .setDescription(notification.getDescription())
                 .setDate(notification.getTimestamp().toEpochMilli())
                 .build();

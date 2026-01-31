@@ -93,20 +93,16 @@ public class WishlistService {
     public void notifyWishlistUsersOfNewReview(String gameId, String gameTitle) {
         List<Wishlist> wishlists = wishlistRepository.findByGameId(gameId);
         for (Wishlist wishlist : wishlists) {
-            NotificationModel notification = NotificationModel.newBuilder()
-                    .setNotificationId(UUID.randomUUID().toString())
-                    .setUserId(wishlist.getUserId())
-                    .setDescription("A new review has been posted for a game in your wishlist: " + gameTitle)
-                    .setDate(Instant.now().toEpochMilli())
-                    .build();
-            // send notification event via Kafka
-            kafkaProducerService.publishNotification(notification);
-            // also create notification in the database
-            notificationsService.createNotification(notification.getUserId(), notification.getDescription());
-
-            log.info("Created notification for user {}: {}", wishlist.getUserId(), notification.getDescription());
+            notificationsService.createNotification(
+                wishlist.getUserId(), 
+                "NEW_REVIEW", 
+                gameId, 
+                gameTitle, 
+                "Nouvel avis disponible", 
+                "Un nouvel avis a été posté"
+            );
+            log.info("Created NEW_REVIEW notification for user {} about game {}", wishlist.getUserId(), gameTitle);
         }
-
     }
 
 }
